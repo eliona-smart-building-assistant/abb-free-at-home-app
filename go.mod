@@ -1,4 +1,4 @@
-module template
+module abb-free-at-home
 
 go 1.20
 

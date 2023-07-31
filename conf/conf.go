@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"template/apiserver"
-	"template/appdb"
+	"abb-free-at-home/apiserver"
+	"abb-free-at-home/appdb"
 
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	"github.com/volatiletech/null/v8"

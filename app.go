@@ -17,8 +17,8 @@ package main
 
 import (
 	"net/http"
-	"template/apiserver"
-	"template/apiservices"
+	"abb-free-at-home/apiserver"
+	"abb-free-at-home/apiservices"
 
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	"github.com/eliona-smart-building-assistant/go-utils/log"

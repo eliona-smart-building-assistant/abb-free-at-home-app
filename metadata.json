@@ -1,20 +1,20 @@
 {
-  "name": "template",
+  "name": "abb-free-at-home",
   "elionaMinVersion": "v10.1.0",
   "displayName": {
-    "en": "App template",
-    "de": "App Vorlage"
+    "en": "ABB-free@home",
+    "de": "ABB-free@home"
   },
   "description": {
-    "en": "This template can be used to create an app stub for an Eliona environment.",
-    "de": "Diese Vorlage kann verwendet werden um eine App für Eliona zu erstellen."
+    "en": "Allows connecting ABB-free@home devices to Eliona environment",
+    "de": "Ermöglicht den Anschluss von ABB-free@home-Geräten an Eliona"
   },
   "dashboardTemplateNames": [
-    "Template"
+    "ABB-free@home"
   ],
   "apiUrl": "v1",
   "apiSpecificationPath": "/version/openapi.json",
-  "documentationUrl": "https://doc.eliona.io/eliona/referenzen/app-entwicklung",
+  "documentationUrl": "todo",
   "useEnvironment": [
     "CONNECTION_STRING",
     "API_ENDPOINT",

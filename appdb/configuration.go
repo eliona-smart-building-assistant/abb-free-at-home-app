@@ -187,14 +187,14 @@ var ConfigurationWhere = struct {
 	Enable            whereHelpernull_Bool
 	ProjectIds        whereHelpertypes_StringArray
 }{
-	ID:                whereHelperint64{field: "\"template\".\"configuration\".\"id\""},
-	APIAccessChangeMe: whereHelperstring{field: "\"template\".\"configuration\".\"api_access_change_me\""},
-	RefreshInterval:   whereHelperint32{field: "\"template\".\"configuration\".\"refresh_interval\""},
-	RequestTimeout:    whereHelperint32{field: "\"template\".\"configuration\".\"request_timeout\""},
-	AssetFilter:       whereHelpernull_JSON{field: "\"template\".\"configuration\".\"asset_filter\""},
-	Active:            whereHelpernull_Bool{field: "\"template\".\"configuration\".\"active\""},
-	Enable:            whereHelpernull_Bool{field: "\"template\".\"configuration\".\"enable\""},
-	ProjectIds:        whereHelpertypes_StringArray{field: "\"template\".\"configuration\".\"project_ids\""},
+	ID:                whereHelperint64{field: "\"abb_free_at_home\".\"configuration\".\"id\""},
+	APIAccessChangeMe: whereHelperstring{field: "\"abb_free_at_home\".\"configuration\".\"api_access_change_me\""},
+	RefreshInterval:   whereHelperint32{field: "\"abb_free_at_home\".\"configuration\".\"refresh_interval\""},
+	RequestTimeout:    whereHelperint32{field: "\"abb_free_at_home\".\"configuration\".\"request_timeout\""},
+	AssetFilter:       whereHelpernull_JSON{field: "\"abb_free_at_home\".\"configuration\".\"asset_filter\""},
+	Active:            whereHelpernull_Bool{field: "\"abb_free_at_home\".\"configuration\".\"active\""},
+	Enable:            whereHelpernull_Bool{field: "\"abb_free_at_home\".\"configuration\".\"enable\""},
+	ProjectIds:        whereHelpertypes_StringArray{field: "\"abb_free_at_home\".\"configuration\".\"project_ids\""},
 }
 
 // ConfigurationRels is where relationship names are stored.
@@ -538,7 +538,7 @@ func (o *Configuration) Assets(mods ...qm.QueryMod) assetQuery {
 	}
 
 	queryMods = append(queryMods,
-		qm.Where("\"template\".\"asset\".\"configuration_id\"=?", o.ID),
+		qm.Where("\"abb_free_at_home\".\"asset\".\"configuration_id\"=?", o.ID),
 	)
 
 	return Assets(queryMods...)
@@ -600,8 +600,8 @@ func (configurationL) LoadAssets(ctx context.Context, e boil.ContextExecutor, si
 	}
 
 	query := NewQuery(
-		qm.From(`template.asset`),
-		qm.WhereIn(`template.asset.configuration_id in ?`, args...),
+		qm.From(`abb_free_at_home.asset`),
+		qm.WhereIn(`abb_free_at_home.asset.configuration_id in ?`, args...),
 	)
 	if mods != nil {
 		mods.Apply(query)
@@ -681,7 +681,7 @@ func (o *Configuration) AddAssets(ctx context.Context, exec boil.ContextExecutor
 			}
 		} else {
 			updateQuery := fmt.Sprintf(
-				"UPDATE \"template\".\"asset\" SET %s WHERE %s",
+				"UPDATE \"abb_free_at_home\".\"asset\" SET %s WHERE %s",
 				strmangle.SetParamNames("\"", "\"", 1, []string{"configuration_id"}),
 				strmangle.WhereClause("\"", "\"", 2, assetPrimaryKeyColumns),
 			)
@@ -722,10 +722,10 @@ func (o *Configuration) AddAssets(ctx context.Context, exec boil.ContextExecutor
 
 // Configurations retrieves all the records using an executor.
 func Configurations(mods ...qm.QueryMod) configurationQuery {
-	mods = append(mods, qm.From("\"template\".\"configuration\""))
+	mods = append(mods, qm.From("\"abb_free_at_home\".\"configuration\""))
 	q := NewQuery(mods...)
 	if len(queries.GetSelect(q)) == 0 {
-		queries.SetSelect(q, []string{"\"template\".\"configuration\".*"})
+		queries.SetSelect(q, []string{"\"abb_free_at_home\".\"configuration\".*"})
 	}
 
 	return configurationQuery{q}
@@ -746,7 +746,7 @@ func FindConfiguration(ctx context.Context, exec boil.ContextExecutor, iD int64,
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"template\".\"configuration\" where \"id\"=$1", sel,
+		"select %s from \"abb_free_at_home\".\"configuration\" where \"id\"=$1", sel,
 	)
 
 	q := queries.Raw(query, iD)
@@ -808,9 +808,9 @@ func (o *Configuration) Insert(ctx context.Context, exec boil.ContextExecutor, c
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"template\".\"configuration\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"abb_free_at_home\".\"configuration\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"template\".\"configuration\" %sDEFAULT VALUES%s"
+			cache.query = "INSERT INTO \"abb_free_at_home\".\"configuration\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -882,7 +882,7 @@ func (o *Configuration) Update(ctx context.Context, exec boil.ContextExecutor, c
 			return 0, errors.New("appdb: unable to update configuration, could not build whitelist")
 		}
 
-		cache.query = fmt.Sprintf("UPDATE \"template\".\"configuration\" SET %s WHERE %s",
+		cache.query = fmt.Sprintf("UPDATE \"abb_free_at_home\".\"configuration\" SET %s WHERE %s",
 			strmangle.SetParamNames("\"", "\"", 1, wl),
 			strmangle.WhereClause("\"", "\"", len(wl)+1, configurationPrimaryKeyColumns),
 		)
@@ -973,7 +973,7 @@ func (o ConfigurationSlice) UpdateAll(ctx context.Context, exec boil.ContextExec
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := fmt.Sprintf("UPDATE \"template\".\"configuration\" SET %s WHERE %s",
+	sql := fmt.Sprintf("UPDATE \"abb_free_at_home\".\"configuration\" SET %s WHERE %s",
 		strmangle.SetParamNames("\"", "\"", 1, colNames),
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), len(colNames)+1, configurationPrimaryKeyColumns, len(o)))
 
@@ -1068,7 +1068,7 @@ func (o *Configuration) Upsert(ctx context.Context, exec boil.ContextExecutor, u
 			conflict = make([]string, len(configurationPrimaryKeyColumns))
 			copy(conflict, configurationPrimaryKeyColumns)
 		}
-		cache.query = buildUpsertQueryPostgres(dialect, "\"template\".\"configuration\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"abb_free_at_home\".\"configuration\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(configurationType, configurationMapping, insert)
 		if err != nil {
@@ -1133,7 +1133,7 @@ func (o *Configuration) Delete(ctx context.Context, exec boil.ContextExecutor) (
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), configurationPrimaryKeyMapping)
-	sql := "DELETE FROM \"template\".\"configuration\" WHERE \"id\"=$1"
+	sql := "DELETE FROM \"abb_free_at_home\".\"configuration\" WHERE \"id\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1207,7 +1207,7 @@ func (o ConfigurationSlice) DeleteAll(ctx context.Context, exec boil.ContextExec
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "DELETE FROM \"template\".\"configuration\" WHERE " +
+	sql := "DELETE FROM \"abb_free_at_home\".\"configuration\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, configurationPrimaryKeyColumns, len(o))
 
 	if boil.IsDebug(ctx) {
@@ -1281,7 +1281,7 @@ func (o *ConfigurationSlice) ReloadAll(ctx context.Context, exec boil.ContextExe
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "SELECT \"template\".\"configuration\".* FROM \"template\".\"configuration\" WHERE " +
+	sql := "SELECT \"abb_free_at_home\".\"configuration\".* FROM \"abb_free_at_home\".\"configuration\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, configurationPrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
@@ -1304,7 +1304,7 @@ func ConfigurationExistsG(ctx context.Context, iD int64) (bool, error) {
 // ConfigurationExists checks if the Configuration row exists.
 func ConfigurationExists(ctx context.Context, exec boil.ContextExecutor, iD int64) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"template\".\"configuration\" where \"id\"=$1 limit 1)"
+	sql := "select exists(select 1 from \"abb_free_at_home\".\"configuration\" where \"id\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)

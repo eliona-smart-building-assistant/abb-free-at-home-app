@@ -16,10 +16,11 @@
 package apiservices
 
 import (
+	"abb-free-at-home/apiserver"
+	"abb-free-at-home/conf"
 	"context"
 	"errors"
 	"net/http"
-	"template/apiserver"
 )
 
 // ConfigurationApiService is a service that implements the logic for the ConfigurationApiServicer
@@ -33,24 +34,49 @@ func NewConfigurationApiService() apiserver.ConfigurationApiServicer {
 	return &ConfigurationApiService{}
 }
 
-// GetConfigurations - Get example configurations
 func (s *ConfigurationApiService) GetConfigurations(ctx context.Context) (apiserver.ImplResponse, error) {
-	// TODO - update GetConfigurations with the required logic for this service method.
-	// Add api_configuration_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, []Configuration{}) or use other options such as http.Ok ...
-	//return Response(200, []Configuration{}), nil
-
-	return apiserver.Response(http.StatusNotImplemented, nil), errors.New("GetConfigurations method not implemented")
+	configs, err := conf.GetConfigs(ctx)
+	if err != nil {
+		return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
+	}
+	return apiserver.Response(http.StatusOK, configs), nil
 }
 
-// PostConfiguration - Creates an example configuration
-func (s *ConfigurationApiService) PostConfiguration(ctx context.Context, configuration apiserver.Configuration) (apiserver.ImplResponse, error) {
-	// TODO - update PostConfiguration with the required logic for this service method.
-	// Add api_configuration_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+func (s *ConfigurationApiService) PostConfiguration(ctx context.Context, config apiserver.Configuration) (apiserver.ImplResponse, error) {
+	insertedConfig, err := conf.InsertConfig(ctx, config)
+	if err != nil {
+		return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
+	}
+	return apiserver.Response(http.StatusCreated, insertedConfig), nil
+}
 
-	//TODO: Uncomment the next line to return response Response(201, Configuration{}) or use other options such as http.Ok ...
-	//return Response(201, Configuration{}), nil
+func (s *ConfigurationApiService) GetConfigurationById(ctx context.Context, configId int64) (apiserver.ImplResponse, error) {
+	config, err := conf.GetConfig(ctx, configId)
+	if errors.Is(err, conf.ErrBadRequest) {
+		return apiserver.ImplResponse{Code: http.StatusBadRequest}, nil
+	}
+	if err != nil {
+		return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
+	}
+	return apiserver.Response(http.StatusOK, config), nil
+}
 
-	return apiserver.Response(http.StatusNotImplemented, nil), errors.New("PostConfiguration method not implemented")
+func (s *ConfigurationApiService) PutConfigurationById(ctx context.Context, configId int64, config apiserver.Configuration) (apiserver.ImplResponse, error) {
+	config.Id = &configId
+	upsertedConfig, err := conf.InsertConfig(ctx, config)
+	if err != nil {
+		return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
+	}
+	return apiserver.Response(http.StatusCreated, upsertedConfig), nil
+}
+
+func (s *ConfigurationApiService) DeleteConfigurationById(ctx context.Context, configId int64) (apiserver.ImplResponse, error) {
+	err := conf.DeleteConfig(ctx, configId)
+	if errors.Is(err, conf.ErrBadRequest) {
+		return apiserver.ImplResponse{Code: http.StatusBadRequest}, nil
+	}
+	if err != nil {
+		return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
+	}
+	return apiserver.ImplResponse{Code: http.StatusNoContent}, nil
 }

@@ -1,6 +1,6 @@
-# App Template
+# ABB-free@home App
 
-This template is a part of the Eliona App SDK. It can be used to create an app stub for an Eliona environment.
+This app enables connecting ABB-free@home devices to Eliona environment.
 
 ## Configuration
 
@@ -16,10 +16,7 @@ This initialization can be handled by the `reset.sql` script.
 
 ### Environment variables
 
-<mark>Todo: Describe further environment variables tables the app needs for configuration</mark>
-
-
-- `APPNAME`: must be set to `template`. Some resources use this name to identify the app inside an Eliona environment.
+- `APPNAME`: must be set to `abb-free-at-home`. Some resources use this name to identify the app inside an Eliona environment.
 
 - `CONNECTION_STRING`: configures the [Eliona database](https://github.com/eliona-smart-building-assistant/go-eliona/tree/main/db). Otherwise, the app can't be initialized and started. (e.g. `postgres://user:pass@localhost:5432/iot`)
 
@@ -27,19 +24,17 @@ This initialization can be handled by the `reset.sql` script.
 
 - `API_TOKEN`: defines the secret to authenticate the app and access the Eliona API.
 
-- `API_SERVER_PORT`(optional): define the port the API server listens. The default value is Port `3000`. <mark>Todo: Decide if the app needs its own API. If so, an API server have to implemented and the port have to be configurable.</mark>
+- `API_SERVER_PORT`(optional): define the port the API server listens. The default value is `3000`.
 
 - `LOG_LEVEL`(optional): defines the minimum level that should be [logged](https://github.com/eliona-smart-building-assistant/go-utils/blob/main/log/README.md). The default level is `info`.
 
 ### Database tables ###
 
-<mark>Todo: Describe other tables if the app needs them.</mark>
+The app requires configuration data that remains in the database. To do this, the app creates its own database schema `abb_free_at_home` during initialization. To modify and handle the configuration data the app provides an API access. Have a look at the [API specification](https://eliona-smart-building-assistant.github.io/open-api-docs/?https://raw.githubusercontent.com/eliona-smart-building-assistant/abb-free-at-home-app/develop/openapi.yaml) how the configuration tables should be used.
 
-The app requires configuration data that remains in the database. To do this, the app creates its own database schema `template` during initialization. To modify and handle the configuration data the app provides an API access. Have a look at the [API specification](https://eliona-smart-building-assistant.github.io/open-api-docs/?https://raw.githubusercontent.com/eliona-smart-building-assistant/app-template/develop/openapi.yaml) how the configuration tables should be used.
+- `abb_free_at_home.configuration`: Contains configuration of the app. Editable through the API.
 
-- `template.configuration`: Contains configuration of the app. Editable through the API.
-
-- `template.asset`: Provides asset mapping. Maps broker's asset IDs to Eliona asset IDs.
+- `abb_free_at_home.asset`: Provides asset mapping. Maps broker's asset IDs to Eliona asset IDs.
 
 **Generation**: to generate access method to database see Generation section below.
 
@@ -50,7 +45,7 @@ The app requires configuration data that remains in the database. To do this, th
 
 The app provides its own API to access configuration data and other functions. The full description of the API is defined in the `openapi.yaml` OpenAPI definition file.
 
-- [API Reference](https://eliona-smart-building-assistant.github.io/open-api-docs/?https://raw.githubusercontent.com/eliona-smart-building-assistant/app-template/develop/openapi.yaml) shows Details of the API
+- [API Reference](https://eliona-smart-building-assistant.github.io/open-api-docs/?https://raw.githubusercontent.com/eliona-smart-building-assistant/abb-free-at-home-app/develop/openapi.yaml) shows details of the API
 
 **Generation**: to generate api server stub see Generation section below.
 
@@ -59,15 +54,15 @@ The app provides its own API to access configuration data and other functions. T
 
 This app creates Eliona asset types and attribute sets during initialization.
 
-The data is written for each KentixONE device, structured into different subtypes of Elinoa assets. The following subtypes are defined:
+The data is written for each device, structured into different subtypes of Elinoa assets. The following subtypes are defined:
 
 - `Info`: Static data which provides information about a device like address and firmware info.
 - `Status`: Device status information, like battery level.
-- `Input`: Current locations and values reported by Kontakt.io sensors.
+- `Input`: Current values reported by ABB-free@home sensors.
 
 ### Continuous asset creation ###
 
-Assets for all devices connected to the Template account are created automatically when the configuration is added.
+Assets for all devices connected to the ABB-free@home account are created automatically when the configuration is added.
 
 To select which assets to create, a filter could be specified in config. The schema of the filter is defined in the `openapi.yaml` file.
 

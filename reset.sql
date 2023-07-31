@@ -18,51 +18,51 @@
 -- registration (which you can optionally remove as well by uncommenting the last command).
 
 DELETE FROM versioning.patches
-WHERE app_name = 'template';
+WHERE app_name = 'abb-free-at-home';
 
 INSERT INTO public.eliona_store (app_name, category, version)
-VALUES ('template', 'app', '1.0.0')
+VALUES ('abb-free-at-home', 'app', '1.0.0')
 	ON CONFLICT (app_name) DO UPDATE SET version = '1.0.0';
 
 INSERT INTO public.eliona_app (app_name, enable)
-VALUES ('template', 't')
+VALUES ('abb-free-at-home', 't')
 	ON CONFLICT (app_name) DO UPDATE SET initialized_at = null;
 
-DROP SCHEMA IF EXISTS template CASCADE;
+DROP SCHEMA IF EXISTS abb_free_at_home CASCADE;
 
 DELETE FROM heap
 WHERE asset_id IN (
 	SELECT asset_id
 	FROM asset
-	WHERE asset_type LIKE E'template\\_%'
+	WHERE asset_type LIKE E'abb_free_at_home\\_%'
 );
 
 DELETE FROM attribute_schema
-WHERE asset_type LIKE E'template\\_%';
+WHERE asset_type LIKE E'abb_free_at_home\\_%';
 
 DELETE FROM asset
-WHERE asset_type LIKE E'template\\_%';
+WHERE asset_type LIKE E'abb_free_at_home\\_%';
 
 DELETE FROM asset_type
-WHERE asset_type LIKE E'template\\_%';
+WHERE asset_type LIKE E'abb_free_at_home\\_%';
 
 DELETE FROM public.widget_data
 WHERE widget_id IN (
 	SELECT public.widget.id
 	FROM public.widget
 	JOIN public.dashboard USING (dashboard_id)
-	WHERE public.dashboard.name LIKE 'Template%'
+	WHERE public.dashboard.name = 'ABB-free@home'
 );
 
 DELETE FROM public.widget
 WHERE dashboard_id IN (
 	SELECT dashboard_id
 	FROM public.dashboard
-	WHERE name LIKE 'Template%'
+	WHERE name = 'ABB-free@home'
 );
 
 DELETE FROM public.dashboard
-WHERE name LIKE 'Template%';
+WHERE name = 'ABB-free@home';
 
--- DELETE FROM eliona_app WHERE app_name = 'template';
--- DELETE FROM eliona_store WHERE app_name = 'template';
+-- DELETE FROM eliona_app WHERE app_name = 'abb-free-at-home';
+-- DELETE FROM eliona_store WHERE app_name = 'abb-free-at-home';

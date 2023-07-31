@@ -13,10 +13,10 @@
 --  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 --  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-create schema if not exists template;
+create schema if not exists abb_free_at_home;
 
 -- Should be editable by eliona frontend.
-create table if not exists template.configuration
+create table if not exists abb_free_at_home.configuration
 (
 	id                   bigserial primary key,
 	api_access_change_me text not null,
@@ -28,10 +28,10 @@ create table if not exists template.configuration
 	project_ids          text[]
 );
 
-create table if not exists template.asset
+create table if not exists abb_free_at_home.asset
 (
 	id               bigserial primary key,
-	configuration_id bigserial not null references template.configuration(id),
+	configuration_id bigserial not null references abb_free_at_home.configuration(id),
 	project_id       text      not null,
 	global_asset_id  text      not null,
 	asset_id         integer

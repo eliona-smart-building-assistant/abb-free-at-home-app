@@ -17,32 +17,32 @@ openapi: 3.0.3
 
 info:
   version: 1.0.0
-  title: App template API
-  description: API to access and configure the app template
+  title: ABB Free@Home App API
+  description: API to access and configure the ABB Free@Home App
 externalDocs:
-  description: Find out more about the app template
-  url: https://github.com/eliona-smart-building-assistant/app-template
+  description: Find out more about the ABB Free@Home App
+  url: https://github.com/eliona-smart-building-assistant/abb-free-at-home-app
 servers:
-  - url: http://template/v1
+  - url: http://abb-free-at-home/v1
 
 tags:
   - name: Configuration
     description: Configure the app
     externalDocs:
-      url: https://github.com/eliona-smart-building-assistant/app-template
+      url: https://github.com/eliona-smart-building-assistant/abb-free-at-home-app
 
   - name: Version
     description: API version
     externalDocs:
-      url: https://github.com/eliona-smart-building-assistant/app-template
+      url: https://github.com/eliona-smart-building-assistant/abb-free-at-home-app
 
   - name: Customization
     description: Help to customize Eliona environment
     externalDocs:
-      url: https://github.com/eliona-smart-building-assistant/app-template
+      url: https://github.com/eliona-smart-building-assistant/abb-free-at-home-app
 
 paths:
-  /configurations:
+  /configs:
     get:
       tags:
         - Configuration
@@ -57,7 +57,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Configuration'
+                  $ref: "#/components/schemas/Configuration"
     post:
       tags:
         - Configuration
@@ -68,14 +68,66 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Configuration'
+              $ref: "#/components/schemas/Configuration"
       responses:
         "201":
           description: Successfully created a configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Configuration'
+                $ref: "#/components/schemas/Configuration"
+
+  /configs/{config-id}:
+    get:
+      tags:
+        - Configuration
+      summary: Get configuration
+      description: Gets information about the configuration with the given id
+      parameters:
+        - $ref: "#/components/parameters/config-id"
+      operationId: getConfigurationById
+      responses:
+        "200":
+          description: Successfully returned configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Configuration"
+        "400":
+          description: Bad request
+    put:
+      tags:
+        - Configuration
+      summary: Updates a configuration
+      description: Updates a configuration
+      parameters:
+        - $ref: "#/components/parameters/config-id"
+      operationId: putConfigurationById
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Configuration"
+      responses:
+        "200":
+          description: Successfully updated a configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Configuration"
+    delete:
+      tags:
+        - Configuration
+      summary: Deletes a configuration
+      description: Removes information about the configuration with the given id
+      parameters:
+        - $ref: "#/components/parameters/config-id"
+      operationId: deleteConfigurationById
+      responses:
+        "204":
+          description: Successfully deleted configured configuration
+        "400":
+          description: Bad request
 
   /version:
     get:
@@ -124,7 +176,7 @@ paths:
           required: true
           schema:
             type: string
-            example: Template
+            example: ABB-free@home
         - name: projectId
           in: query
           description: Define the project the dashboard should be
@@ -138,11 +190,23 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/eliona-smart-building-assistant/eliona-api/main/openapi.yaml#/components/schemas/Dashboard'
+                $ref: "https://raw.githubusercontent.com/eliona-smart-building-assistant/eliona-api/main/openapi.yaml#/components/schemas/Dashboard"
         "404":
           description: Template name not found
 
 components:
+  parameters:
+    config-id:
+      name: config-id
+      in: path
+      description: The id of the config
+      example: 4711
+      required: true
+      schema:
+        type: integer
+        format: int64
+        example: 4711
+
   schemas:
     Configuration:
       type: object

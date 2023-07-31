@@ -21,7 +21,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"template/apiserver"
+	"abb-free-at-home/apiserver"
 
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	"github.com/eliona-smart-building-assistant/go-utils/log"

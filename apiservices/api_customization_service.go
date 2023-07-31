@@ -16,9 +16,9 @@
 package apiservices
 
 import (
+	"abb-free-at-home/apiserver"
 	"context"
 	"net/http"
-	"template/apiserver"
 )
 
 // CustomizationApiService is a service that implements the logic for the CustomizationApiServicer
@@ -34,7 +34,7 @@ func NewCustomizationApiService() apiserver.CustomizationApiServicer {
 
 // GetDashboardTemplateByName - Get a full dashboard template
 func (s *CustomizationApiService) GetDashboardTemplateByName(ctx context.Context, dashboardTemplateName string, projectId string) (apiserver.ImplResponse, error) {
-	if dashboardTemplateName == "Template" {
+	if dashboardTemplateName == "ABB-free@home" {
 		return apiserver.ImplResponse{Code: http.StatusNotImplemented}, nil
 	} else {
 		return apiserver.ImplResponse{Code: http.StatusNotFound}, nil

@@ -18,7 +18,7 @@ package broker
 import (
 	"fmt"
 	"reflect"
-	"template/apiserver"
+	"abb-free-at-home/apiserver"
 
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 )

@@ -16,8 +16,8 @@
 package main
 
 import (
-	"template/conf"
-	"template/eliona"
+	"abb-free-at-home/conf"
+	"abb-free-at-home/eliona"
 	"time"
 
 	"github.com/eliona-smart-building-assistant/go-eliona/app"
