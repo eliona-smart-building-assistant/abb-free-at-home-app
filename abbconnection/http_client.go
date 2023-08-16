@@ -20,6 +20,7 @@ package abbconnection
 import (
 	"bytes"
 	"crypto/tls"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -30,14 +31,14 @@ type HttpClient struct {
 	Client *http.Client
 }
 
-func NewHttpClient(useTls bool, checkServerCert bool, connectionTimeoutMs int) *HttpClient {
+func NewHttpClient(useTls bool, checkServerCert bool, connectionTimeout int) *HttpClient {
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: !checkServerCert},
 	}
 
 	httpClient := http.Client{
-		Timeout:   time.Duration(connectionTimeoutMs * int(time.Millisecond)),
+		Timeout:   time.Duration(connectionTimeout * int(time.Second)),
 		Transport: tr,
 	}
 
@@ -66,15 +67,13 @@ func (c *HttpClient) RequestWithQuerys(method string, url string, body *[]byte, 
 	var responseBody []byte
 	var requestHandle *http.Request
 	var err error
-
 	if body == nil {
 		requestHandle, err = http.NewRequest(method, url, nil)
 	} else {
 		requestHandle, err = http.NewRequest(method, url, bytes.NewBuffer(*body))
 	}
-
 	if err != nil {
-		return nil, -1, err
+		return nil, -1, fmt.Errorf("creating request: %v", err)
 	}
 
 	requestHandle.Header = c.Header
@@ -94,8 +93,8 @@ func (c *HttpClient) RequestWithQuerys(method string, url string, body *[]byte, 
 	}
 
 	if err != nil {
-		return nil, -1, err
+		return nil, -1, fmt.Errorf("getting response: %v", err)
 	}
 
-	return responseBody, response.StatusCode, err
+	return responseBody, response.StatusCode, nil
 }

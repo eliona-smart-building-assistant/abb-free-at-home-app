@@ -38,10 +38,10 @@ func main() {
 	boil.SetDB(database)
 
 	// Set the database logging level.
-	if log.Lev() >= log.DebugLevel {
-		boil.DebugMode = true
-		boil.DebugWriter = log.GetWriter(log.DebugLevel, "database")
-	}
+	// if log.Lev() >= log.DebugLevel {
+	// 	boil.DebugMode = true
+	// 	boil.DebugWriter = log.GetWriter(log.DebugLevel, "database")
+	// }
 
 	// Necessary to close used init resources, because db.Pool() is used in this app.
 	defer db.ClosePool()
@@ -55,7 +55,7 @@ func main() {
 
 	// Starting the service to collect the data for this app.
 	common.WaitForWithOs(
-		common.Loop(doAnything, time.Second),
+		common.Loop(collectData, time.Second),
 		listenApi,
 	)
 

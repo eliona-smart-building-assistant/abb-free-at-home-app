@@ -70,7 +70,7 @@ type Api struct {
 
 func NewCloudApi(clientId string, clientSecret string,
 	baseUrl string, oauth2RedirectURL string, ocpApimSubscriptionKey string,
-	timeoutMs int, oauthReturn <-chan OauthReturn) *Api {
+	timeout int, oauthReturn <-chan OauthReturn) *Api {
 
 	api := Api{
 		Credentials: Credentials{
@@ -79,9 +79,9 @@ func NewCloudApi(clientId string, clientSecret string,
 		},
 		Auth:        *NewABBAuthorization(clientId, clientSecret, oauth2RedirectURL),
 		BaseUrl:     baseUrl,
-		Req:         abbconnection.NewHttpClient(true, true, timeoutMs),
+		Req:         abbconnection.NewHttpClient(true, true, timeout),
 		WebsocketUp: false,
-		Timeout:     timeoutMs,
+		Timeout:     timeout,
 		oauthReturn: oauthReturn,
 	}
 
@@ -92,7 +92,7 @@ func NewCloudApi(clientId string, clientSecret string,
 }
 
 func NewLocalApi(user string, password string,
-	baseUrl string, timeoutMs int) *Api {
+	baseUrl string, timeout int) *Api {
 	api := Api{
 		Credentials: Credentials{
 			BasicAuth: true,
@@ -100,9 +100,9 @@ func NewLocalApi(user string, password string,
 			Password:  password,
 		},
 		BaseUrl:     baseUrl,
-		Req:         abbconnection.NewHttpClient(true, true, timeoutMs),
+		Req:         abbconnection.NewHttpClient(true, true, timeout),
 		WebsocketUp: false,
-		Timeout:     timeoutMs,
+		Timeout:     timeout,
 	}
 
 	api.Req.AddHeader("Content-Type", "application/json")
@@ -308,26 +308,25 @@ func (api *Api) GetWebsocketUrl() (string, error) {
 
 func (api *Api) GetConfiguration() (DataFormat, error) {
 	config := DataFormat{}
-	tentants := make(map[string]Tentant)
+	systems := make(map[string]System)
 
 	body, code, err := api.request(abbconnection.REQUEST_METHOD_GET, API_PATH_CONFIGURATION, nil)
 	if err != nil {
-		return config, err
+		return config, fmt.Errorf("requesting configuration API %v: %v", api.BaseUrl+API_PATH_CONFIGURATION, err)
 	}
 	if code != http.StatusOK {
-		errorText := fmt.Sprintf("response with code %d", code)
-		return config, errors.New(errorText)
+		return config, fmt.Errorf("configuration %v response with code %d", api.BaseUrl+API_PATH_CONFIGURATION, code)
 	}
 
-	err = json.Unmarshal(body, &tentants)
+	err = json.Unmarshal(body, &systems)
 
-	return DataFormat{Tentants: tentants}, err
+	return DataFormat{Systems: systems}, err
 }
 
-func (api *Api) WriteDatapoint(tenant string, deviceId string, channel string, datapoint string, value interface{}) error {
+func (api *Api) WriteDatapoint(system string, deviceId string, channel string, datapoint string, value interface{}) error {
 	var reqBody []byte
 
-	dpPath := tenant + "/" + deviceId + "." + channel + "." + datapoint
+	dpPath := system + "/" + deviceId + "." + channel + "." + datapoint
 
 	switch v := value.(type) {
 	case string:

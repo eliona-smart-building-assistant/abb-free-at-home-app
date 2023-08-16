@@ -25,57 +25,67 @@ import (
 
 // Configuration is an object representing the database table.
 type Configuration struct {
-	ID                int64             `boil:"id" json:"id" toml:"id" yaml:"id"`
-	APIAccessChangeMe string            `boil:"api_access_change_me" json:"api_access_change_me" toml:"api_access_change_me" yaml:"api_access_change_me"`
-	RefreshInterval   int32             `boil:"refresh_interval" json:"refresh_interval" toml:"refresh_interval" yaml:"refresh_interval"`
-	RequestTimeout    int32             `boil:"request_timeout" json:"request_timeout" toml:"request_timeout" yaml:"request_timeout"`
-	AssetFilter       null.JSON         `boil:"asset_filter" json:"asset_filter,omitempty" toml:"asset_filter" yaml:"asset_filter,omitempty"`
-	Active            null.Bool         `boil:"active" json:"active,omitempty" toml:"active" yaml:"active,omitempty"`
-	Enable            null.Bool         `boil:"enable" json:"enable,omitempty" toml:"enable" yaml:"enable,omitempty"`
-	ProjectIds        types.StringArray `boil:"project_ids" json:"project_ids,omitempty" toml:"project_ids" yaml:"project_ids,omitempty"`
+	ID              int64             `boil:"id" json:"id" toml:"id" yaml:"id"`
+	APIURL          string            `boil:"api_url" json:"api_url" toml:"api_url" yaml:"api_url"`
+	APIUsername     string            `boil:"api_username" json:"api_username" toml:"api_username" yaml:"api_username"`
+	APIPassword     string            `boil:"api_password" json:"api_password" toml:"api_password" yaml:"api_password"`
+	RefreshInterval int32             `boil:"refresh_interval" json:"refresh_interval" toml:"refresh_interval" yaml:"refresh_interval"`
+	RequestTimeout  int32             `boil:"request_timeout" json:"request_timeout" toml:"request_timeout" yaml:"request_timeout"`
+	AssetFilter     null.JSON         `boil:"asset_filter" json:"asset_filter,omitempty" toml:"asset_filter" yaml:"asset_filter,omitempty"`
+	Active          null.Bool         `boil:"active" json:"active,omitempty" toml:"active" yaml:"active,omitempty"`
+	Enable          null.Bool         `boil:"enable" json:"enable,omitempty" toml:"enable" yaml:"enable,omitempty"`
+	ProjectIds      types.StringArray `boil:"project_ids" json:"project_ids,omitempty" toml:"project_ids" yaml:"project_ids,omitempty"`
 
 	R *configurationR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L configurationL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var ConfigurationColumns = struct {
-	ID                string
-	APIAccessChangeMe string
-	RefreshInterval   string
-	RequestTimeout    string
-	AssetFilter       string
-	Active            string
-	Enable            string
-	ProjectIds        string
+	ID              string
+	APIURL          string
+	APIUsername     string
+	APIPassword     string
+	RefreshInterval string
+	RequestTimeout  string
+	AssetFilter     string
+	Active          string
+	Enable          string
+	ProjectIds      string
 }{
-	ID:                "id",
-	APIAccessChangeMe: "api_access_change_me",
-	RefreshInterval:   "refresh_interval",
-	RequestTimeout:    "request_timeout",
-	AssetFilter:       "asset_filter",
-	Active:            "active",
-	Enable:            "enable",
-	ProjectIds:        "project_ids",
+	ID:              "id",
+	APIURL:          "api_url",
+	APIUsername:     "api_username",
+	APIPassword:     "api_password",
+	RefreshInterval: "refresh_interval",
+	RequestTimeout:  "request_timeout",
+	AssetFilter:     "asset_filter",
+	Active:          "active",
+	Enable:          "enable",
+	ProjectIds:      "project_ids",
 }
 
 var ConfigurationTableColumns = struct {
-	ID                string
-	APIAccessChangeMe string
-	RefreshInterval   string
-	RequestTimeout    string
-	AssetFilter       string
-	Active            string
-	Enable            string
-	ProjectIds        string
+	ID              string
+	APIURL          string
+	APIUsername     string
+	APIPassword     string
+	RefreshInterval string
+	RequestTimeout  string
+	AssetFilter     string
+	Active          string
+	Enable          string
+	ProjectIds      string
 }{
-	ID:                "configuration.id",
-	APIAccessChangeMe: "configuration.api_access_change_me",
-	RefreshInterval:   "configuration.refresh_interval",
-	RequestTimeout:    "configuration.request_timeout",
-	AssetFilter:       "configuration.asset_filter",
-	Active:            "configuration.active",
-	Enable:            "configuration.enable",
-	ProjectIds:        "configuration.project_ids",
+	ID:              "configuration.id",
+	APIURL:          "configuration.api_url",
+	APIUsername:     "configuration.api_username",
+	APIPassword:     "configuration.api_password",
+	RefreshInterval: "configuration.refresh_interval",
+	RequestTimeout:  "configuration.request_timeout",
+	AssetFilter:     "configuration.asset_filter",
+	Active:          "configuration.active",
+	Enable:          "configuration.enable",
+	ProjectIds:      "configuration.project_ids",
 }
 
 // Generated where
@@ -178,23 +188,27 @@ func (w whereHelpertypes_StringArray) IsNotNull() qm.QueryMod {
 }
 
 var ConfigurationWhere = struct {
-	ID                whereHelperint64
-	APIAccessChangeMe whereHelperstring
-	RefreshInterval   whereHelperint32
-	RequestTimeout    whereHelperint32
-	AssetFilter       whereHelpernull_JSON
-	Active            whereHelpernull_Bool
-	Enable            whereHelpernull_Bool
-	ProjectIds        whereHelpertypes_StringArray
+	ID              whereHelperint64
+	APIURL          whereHelperstring
+	APIUsername     whereHelperstring
+	APIPassword     whereHelperstring
+	RefreshInterval whereHelperint32
+	RequestTimeout  whereHelperint32
+	AssetFilter     whereHelpernull_JSON
+	Active          whereHelpernull_Bool
+	Enable          whereHelpernull_Bool
+	ProjectIds      whereHelpertypes_StringArray
 }{
-	ID:                whereHelperint64{field: "\"abb_free_at_home\".\"configuration\".\"id\""},
-	APIAccessChangeMe: whereHelperstring{field: "\"abb_free_at_home\".\"configuration\".\"api_access_change_me\""},
-	RefreshInterval:   whereHelperint32{field: "\"abb_free_at_home\".\"configuration\".\"refresh_interval\""},
-	RequestTimeout:    whereHelperint32{field: "\"abb_free_at_home\".\"configuration\".\"request_timeout\""},
-	AssetFilter:       whereHelpernull_JSON{field: "\"abb_free_at_home\".\"configuration\".\"asset_filter\""},
-	Active:            whereHelpernull_Bool{field: "\"abb_free_at_home\".\"configuration\".\"active\""},
-	Enable:            whereHelpernull_Bool{field: "\"abb_free_at_home\".\"configuration\".\"enable\""},
-	ProjectIds:        whereHelpertypes_StringArray{field: "\"abb_free_at_home\".\"configuration\".\"project_ids\""},
+	ID:              whereHelperint64{field: "\"abb_free_at_home\".\"configuration\".\"id\""},
+	APIURL:          whereHelperstring{field: "\"abb_free_at_home\".\"configuration\".\"api_url\""},
+	APIUsername:     whereHelperstring{field: "\"abb_free_at_home\".\"configuration\".\"api_username\""},
+	APIPassword:     whereHelperstring{field: "\"abb_free_at_home\".\"configuration\".\"api_password\""},
+	RefreshInterval: whereHelperint32{field: "\"abb_free_at_home\".\"configuration\".\"refresh_interval\""},
+	RequestTimeout:  whereHelperint32{field: "\"abb_free_at_home\".\"configuration\".\"request_timeout\""},
+	AssetFilter:     whereHelpernull_JSON{field: "\"abb_free_at_home\".\"configuration\".\"asset_filter\""},
+	Active:          whereHelpernull_Bool{field: "\"abb_free_at_home\".\"configuration\".\"active\""},
+	Enable:          whereHelpernull_Bool{field: "\"abb_free_at_home\".\"configuration\".\"enable\""},
+	ProjectIds:      whereHelpertypes_StringArray{field: "\"abb_free_at_home\".\"configuration\".\"project_ids\""},
 }
 
 // ConfigurationRels is where relationship names are stored.
@@ -225,8 +239,8 @@ func (r *configurationR) GetAssets() AssetSlice {
 type configurationL struct{}
 
 var (
-	configurationAllColumns            = []string{"id", "api_access_change_me", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
-	configurationColumnsWithoutDefault = []string{"api_access_change_me"}
+	configurationAllColumns            = []string{"id", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
+	configurationColumnsWithoutDefault = []string{"api_url", "api_username", "api_password"}
 	configurationColumnsWithDefault    = []string{"id", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
 	configurationPrimaryKeyColumns     = []string{"id"}
 	configurationGeneratedColumns      = []string{}

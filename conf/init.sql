@@ -18,14 +18,16 @@ create schema if not exists abb_free_at_home;
 -- Should be editable by eliona frontend.
 create table if not exists abb_free_at_home.configuration
 (
-	id                   bigserial primary key,
-	api_access_change_me text not null,
-	refresh_interval     integer not null default 60,
-	request_timeout      integer not null default 120,
-	asset_filter         json,
-	active               boolean default false,
-	enable               boolean default false,
-	project_ids          text[]
+	id               bigserial primary key,
+	api_url          text not null,
+	api_username     text not null,
+	api_password     text not null,
+	refresh_interval integer not null default 60,
+	request_timeout  integer not null default 120,
+	asset_filter     json,
+	active           boolean default false,
+	enable           boolean default false,
+	project_ids      text[]
 );
 
 create table if not exists abb_free_at_home.asset

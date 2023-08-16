@@ -218,10 +218,20 @@ components:
           description: Internal identifier for the configured API (created automatically).
           readOnly: true
           nullable: true
-        apiAccessChangeMe:
+        apiUrl:
           type: string
           format: string
-          description: There should be things like API address, access keys and so on.
+          description: URL of the ABB API (local or cloud).
+          example: 10.10.10.101
+        apiUsername:
+          type: string
+          format: string
+          description: ABB API username.
+          example: 10.10.10.101
+        apiPassword:
+          type: string
+          format: string
+          description: ABB API password.
           example: 10.10.10.101
         enable:
           type: boolean

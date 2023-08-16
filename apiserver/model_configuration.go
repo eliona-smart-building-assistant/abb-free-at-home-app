@@ -15,8 +15,14 @@ type Configuration struct {
 	// Internal identifier for the configured API (created automatically).
 	Id *int64 `json:"id,omitempty"`
 
-	// There should be things like API address, access keys and so on.
-	ApiAccessChangeMe string `json:"apiAccessChangeMe,omitempty"`
+	// URL of the ABB API (local or cloud).
+	ApiUrl string `json:"apiUrl,omitempty"`
+
+	// ABB API username.
+	ApiUsername string `json:"apiUsername,omitempty"`
+
+	// ABB API password.
+	ApiPassword string `json:"apiPassword,omitempty"`
 
 	// Flag to enable or disable fetching from this API
 	Enable *bool `json:"enable,omitempty"`

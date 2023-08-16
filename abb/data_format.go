@@ -56,7 +56,7 @@ type Device struct {
 	Interface   interface{}        `json:"interface"`
 	Room        interface{}        `json:"room"`
 }
-type Tentant struct {
+type System struct {
 	ConnectionState string            `json:"connectionState"`
 	Devices         map[string]Device `json:"devices"`
 	SysApName       string            `json:"sysapName"`
@@ -75,10 +75,10 @@ type Room struct {
 	AssetId interface{}
 }
 type DataFormat struct {
-	Tentants map[string]Tentant `json:""`
+	Systems map[string]System `json:""`
 }
 
-// function id description (yes, abb send's the id as string)
+// function id description (yes, abb sends the id as string)
 const (
 	FID_SWITCH_SENSOR                                  = 0x0000
 	FID_DIMMING_SENSOR                                 = 0x0001
@@ -159,11 +159,11 @@ const (
 	PID_ABS_TEMPERATURE_SET                        = 0x0140 // set reg temp on room controller
 )
 
-func WsFormatToApiFormat(wsFormat *WsObject) map[string]Tentant {
+func WsFormatToApiFormat(wsFormat *WsObject) map[string]System {
 	dataFormat := DataFormat{
-		Tentants: map[string]Tentant{},
+		Systems: map[string]System{},
 	}
-	t := Tentant{
+	t := System{
 		Devices: map[string]Device{},
 	}
 	d := Device{
@@ -182,7 +182,7 @@ func WsFormatToApiFormat(wsFormat *WsObject) map[string]Tentant {
 
 			if len(assignmentSplit) != 3 {
 				log.Println("not matching len")
-				return dataFormat.Tentants
+				return dataFormat.Systems
 			}
 
 			if strings.Contains(assignmentSplit[2], "odp") {
@@ -200,9 +200,9 @@ func WsFormatToApiFormat(wsFormat *WsObject) map[string]Tentant {
 			d.Channels[assignmentSplit[1]] = c
 			t.Devices[assignmentSplit[0]] = d
 
-			dataFormat.Tentants[tentant] = t
+			dataFormat.Systems[tentant] = t
 		}
 	}
 
-	return dataFormat.Tentants
+	return dataFormat.Systems
 }

@@ -16,12 +16,12 @@
 package conf
 
 import (
+	"abb-free-at-home/apiserver"
+	"abb-free-at-home/appdb"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"abb-free-at-home/apiserver"
-	"abb-free-at-home/appdb"
 
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	"github.com/volatiletech/null/v8"
@@ -75,7 +75,9 @@ func DeleteConfig(ctx context.Context, configID int64) error {
 }
 
 func dbConfigFromApiConfig(apiConfig apiserver.Configuration) (dbConfig appdb.Configuration, err error) {
-	dbConfig.APIAccessChangeMe = apiConfig.ApiAccessChangeMe
+	dbConfig.APIURL = apiConfig.ApiUrl
+	dbConfig.APIUsername = apiConfig.ApiUsername
+	dbConfig.APIPassword = apiConfig.ApiPassword
 
 	dbConfig.ID = null.Int64FromPtr(apiConfig.Id).Int64
 	dbConfig.Enable = null.BoolFromPtr(apiConfig.Enable)
@@ -97,7 +99,9 @@ func dbConfigFromApiConfig(apiConfig apiserver.Configuration) (dbConfig appdb.Co
 }
 
 func apiConfigFromDbConfig(dbConfig *appdb.Configuration) (apiConfig apiserver.Configuration, err error) {
-	apiConfig.ApiAccessChangeMe = dbConfig.APIAccessChangeMe
+	apiConfig.ApiUrl = dbConfig.APIURL
+	apiConfig.ApiUsername = dbConfig.APIUsername
+	apiConfig.ApiPassword = dbConfig.APIPassword
 
 	apiConfig.Id = &dbConfig.ID
 	apiConfig.Enable = dbConfig.Enable.Ptr()
