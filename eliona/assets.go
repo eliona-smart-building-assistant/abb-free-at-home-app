@@ -15,11 +15,139 @@
 
 package eliona
 
+import (
+	"abb-free-at-home/apiserver"
+	"abb-free-at-home/broker"
+	"abb-free-at-home/conf"
+	"context"
+	"fmt"
+
+	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
+	"github.com/eliona-smart-building-assistant/go-eliona/asset"
+	"github.com/eliona-smart-building-assistant/go-utils/common"
+	"github.com/eliona-smart-building-assistant/go-utils/log"
+)
+
 type Asset interface {
 	AssetType() string
 	Id() string
 }
 
-//
-// Todo: Define anything for eliona like writing assets or heap data
-//
+func CreateAssetsIfNecessary(config apiserver.Configuration, systems []broker.System) error {
+	for _, projectId := range conf.ProjIds(config) {
+		rootAssetID, err := upsertRootAsset(config, projectId)
+		if err != nil {
+			return fmt.Errorf("upserting root asset: %v", err)
+		}
+		for _, system := range systems {
+			assetType := "abb_free_at_home_system"
+			_, systemAssetID, err := upsertAsset(assetData{
+				config:                  config,
+				projectId:               projectId,
+				parentLocationalAssetId: &rootAssetID,
+				identifier:              fmt.Sprintf("%s_%s", assetType, system.ID),
+				assetType:               assetType,
+				name:                    system.Name,
+				description:             fmt.Sprintf("%s (%v)", system.Name, system.ID),
+			})
+			if err != nil {
+				return fmt.Errorf("upserting system %s: %v", system.ID, err)
+			}
+			for _, device := range system.Devices {
+				assetType := "abb_free_at_home_device"
+				_, deviceAssetID, err := upsertAsset(assetData{
+					config:                  config,
+					projectId:               projectId,
+					parentFunctionalAssetId: &systemAssetID,
+					parentLocationalAssetId: &rootAssetID,
+					identifier:              fmt.Sprintf("%s_%s", assetType, device.ID),
+					assetType:               assetType,
+					name:                    device.Name,
+					description:             fmt.Sprintf("%s (%v)", device.Name, device.ID),
+				})
+				if err != nil {
+					return fmt.Errorf("upserting device %s: %v", device.ID, err)
+				}
+				for _, channel := range device.Channels {
+					assetType := "abb_free_at_home_channel"
+					_, _, err := upsertAsset(assetData{
+						config:                  config,
+						projectId:               projectId,
+						parentFunctionalAssetId: &deviceAssetID,
+						parentLocationalAssetId: &	,
+						identifier:              fmt.Sprintf("%s_%s", assetType, channel.ID),
+						assetType:               assetType,
+						name:                    channel.Name,
+						description:             fmt.Sprintf("%s (%v)", channel.Name, channel.ID),
+					})
+					if err != nil {
+						return fmt.Errorf("upserting channel %s: %v", channel.ID, err)
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func upsertRootAsset(config apiserver.Configuration, projectId string) (int32, error) {
+	_, rootAssetID, err := upsertAsset(assetData{
+		config:                  config,
+		projectId:               projectId,
+		parentLocationalAssetId: nil,
+		identifier:              "abb_free_at_home_root",
+		assetType:               "abb_free_at_home_root",
+		name:                    "ABB-free@home",
+		description:             "Root asset for ABB-free@home devices",
+	})
+	return rootAssetID, err
+}
+
+type assetData struct {
+	config                  apiserver.Configuration
+	projectId               string
+	parentFunctionalAssetId *int32
+	parentLocationalAssetId *int32
+	identifier              string
+	assetType               string
+	name                    string
+	description             string
+}
+
+func upsertAsset(d assetData) (created bool, assetID int32, err error) {
+	// Get known asset id from configuration
+	currentAssetID, err := conf.GetAssetId(context.Background(), d.config, d.projectId, d.identifier)
+	if err != nil {
+		return false, 0, fmt.Errorf("finding asset ID: %v", err)
+	}
+	if currentAssetID != nil {
+		return false, *currentAssetID, nil
+	}
+
+	a := api.Asset{
+		ProjectId:               d.projectId,
+		GlobalAssetIdentifier:   d.identifier,
+		Name:                    *api.NewNullableString(common.Ptr(d.name)),
+		AssetType:               d.assetType,
+		Description:             *api.NewNullableString(common.Ptr(d.description)),
+		ParentFunctionalAssetId: *api.NewNullableInt32(d.parentFunctionalAssetId),
+		ParentLocationalAssetId: *api.NewNullableInt32(d.parentLocationalAssetId),
+		IsTracker:               *api.NewNullableBool(common.Ptr(false)),
+	}
+	newID, err := asset.UpsertAsset(a)
+	if err != nil {
+		return false, 0, fmt.Errorf("upserting asset %+v into Eliona: %v", a, err)
+	}
+	if newID == nil {
+		return false, 0, fmt.Errorf("cannot create asset %s", d.name)
+	}
+
+	// Remember the asset id for further usage
+	if err := conf.InsertAsset(context.Background(), d.config, d.projectId, d.identifier, *newID); err != nil {
+		return false, 0, fmt.Errorf("inserting asset to config db: %v", err)
+	}
+
+	log.Debug("eliona", "Created new asset for project %s and device %s.", d.projectId, d.identifier)
+
+	return true, *newID, nil
+}

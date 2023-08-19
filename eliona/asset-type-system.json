@@ -1,0 +1,12 @@
+{
+	"attributes": [],
+	"custom": false,
+	"icon": null,
+	"name": "abb_free_at_home_system",
+	"translation": {
+		"de": "ABB-free@home System",
+		"en": "ABB-free@home System"
+	},
+	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-SystemFH",
+	"vendor": "ABB"
+}

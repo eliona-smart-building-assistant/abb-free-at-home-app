@@ -12,7 +12,7 @@
   "dashboardTemplateNames": [
     "ABB-free@home"
   ],
-  "apiUrl": "v1",
+  "apiUrl": "http://localhost:3030/v1",
   "apiSpecificationPath": "/version/openapi.json",
   "documentationUrl": "todo",
   "useEnvironment": [

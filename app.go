@@ -16,20 +16,19 @@
 package main
 
 import (
-	"abb-free-at-home/abb"
 	"abb-free-at-home/apiserver"
 	"abb-free-at-home/apiservices"
+	"abb-free-at-home/broker"
 	"abb-free-at-home/conf"
+	"abb-free-at-home/eliona"
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/eliona-smart-building-assistant/go-utils/common"
+	utilshttp "github.com/eliona-smart-building-assistant/go-utils/http"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
-
-var value = 0
 
 // collectData is the main app function which is called periodically
 func collectData() {
@@ -80,25 +79,15 @@ func collectData() {
 }
 
 func collectResources(config apiserver.Configuration) error {
-	api := abb.NewLocalApi(config.ApiUsername, config.ApiPassword, config.ApiUrl, int(*config.RequestTimeout))
-
-	abbConfiguration, err := api.GetConfiguration()
+	systems, err := broker.GetSystems(config)
 	if err != nil {
 		log.Error("abb", "getting abb configuration: %v", err)
 		return err
 	}
-	fmt.Printf("%v", abbConfiguration)
-
-	value = (value + 1) % 2
-	if err := api.WriteDatapoint("00000000-0000-0000-0000-000000000000", "ABB700C6CB81", "ch0003", "idp0000", value); err != nil {
-		log.Error("abb", "setting datapoint: %v", err)
+	if err := eliona.CreateAssetsIfNecessary(config, systems); err != nil {
+		log.Error("eliona", "creating assets: %v", err)
 		return err
 	}
-	// fmt.Printf("got %v equipment.\n", len(equipment))
-	// if err := eliona.CreateEquipmentAssetsIfNecessary(config, equipment); err != nil {
-	// 	log.Error("eliona", "creating equipment assets: %v", err)
-	// 	return err
-	// }
 
 	// for _, v := range equipment {
 	// 	assets = append(assets, v)
@@ -114,10 +103,11 @@ func collectResources(config apiserver.Configuration) error {
 
 // listenApi starts the API server and listen for requests
 func listenApi() {
-	err := http.ListenAndServe(":"+common.Getenv("API_SERVER_PORT", "3000"), apiserver.NewRouter(
-		apiserver.NewConfigurationApiController(apiservices.NewConfigurationApiService()),
-		apiserver.NewVersionApiController(apiservices.NewVersionApiService()),
-		apiserver.NewCustomizationApiController(apiservices.NewCustomizationApiService()),
-	))
+	err := http.ListenAndServe(":"+common.Getenv("API_SERVER_PORT", "3000"), utilshttp.NewCORSEnabledHandler(
+		apiserver.NewRouter(
+			apiserver.NewConfigurationApiController(apiservices.NewConfigurationApiService()),
+			apiserver.NewVersionApiController(apiservices.NewVersionApiService()),
+			apiserver.NewCustomizationApiController(apiservices.NewCustomizationApiService()),
+		)))
 	log.Fatal("main", "API server: %v", err)
 }

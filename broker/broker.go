@@ -16,23 +16,85 @@
 package broker
 
 import (
+	"abb-free-at-home/abb"
+	"abb-free-at-home/apiserver"
 	"fmt"
 	"reflect"
-	"abb-free-at-home/apiserver"
 
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 )
 
-type ExampleDevice struct {
-	ID   string `eliona:"id" subtype:"info"`
-	Name string `eliona:"name,filterable" subtype:"info"`
+type Asset interface {
+	AssetType() string
+	Id() string
 }
 
-func GetTags(config apiserver.Configuration) ([]ExampleDevice, error) {
-	return nil, nil
+type System struct {
+	ID      string `eliona:"system_id,filterable"`
+	Name    string `eliona:"system_name,filterable"`
+	Devices []Device
 }
 
-func (tag *ExampleDevice) AdheresToFilter(filter [][]apiserver.FilterRule) (bool, error) {
+type Device struct {
+	ID       string `eliona:"device_id,filterable"`
+	Name     string `eliona:"device_name,filterable"`
+	Channels []Channel
+}
+
+type Channel struct {
+	ID   string `eliona:"channel_id,filterable"`
+	Name string `eliona:"channel_name,filterable"`
+}
+
+func GetSystems(config apiserver.Configuration) ([]System, error) {
+	api := abb.NewLocalApi(config.ApiUsername, config.ApiPassword, config.ApiUrl, int(*config.RequestTimeout))
+	abbConfiguration, err := api.GetConfiguration()
+	if err != nil {
+		return nil, fmt.Errorf("getting configuration: %v", err)
+	}
+
+	var systems []System
+	for id, system := range abbConfiguration.Systems {
+		s := System{
+			ID:   id,
+			Name: system.SysApName,
+		}
+		// fmt.Printf("system: %v\n", id)
+		// fmt.Printf("ConnectionState: %v\n", system.ConnectionState)
+		// fmt.Printf("Floorplan: %v\n", system.Floorplan)
+		// fmt.Printf("SysAP: %v\n", system.SysApName)
+		for id, device := range system.Devices {
+			d := Device{
+				ID:   s.ID + "_" + id,
+				Name: device.DisplayName.(string),
+			}
+			// 	fmt.Printf("device: %v\n", id)
+			// 	fmt.Printf("DeviceName: %v\n", device.DisplayName)
+			// 	fmt.Printf("Floor: %v\n", device.Floor)
+			// 	fmt.Printf("Room: %v\n", device.Room)
+			// 	fmt.Printf("Interface: %v\n", device.Interface)
+			for id, channel := range device.Channels {
+				c := Channel{
+					ID:   d.ID + "_" + id,
+					Name: channel.DisplayName.(string),
+				}
+				d.Channels = append(d.Channels, c)
+				// 		fmt.Printf("channel: %v\n", id)
+				// 		fmt.Printf("ChannelName: %v\n", channel.DisplayName)
+				// 		fmt.Printf("FunctionId: %v\n", channel.FunctionId)
+				// 		for _, output := range channel.Outputs {
+				// 			fmt.Printf("OutputPairingId: %v\n", output.PairingId)
+				// 			fmt.Printf("OutputValue: %v\n", output.Value)
+				// 		}
+			}
+			s.Devices = append(s.Devices, d)
+		}
+		systems = append(systems, s)
+	}
+	return systems, nil
+}
+
+func (tag *System) AdheresToFilter(filter [][]apiserver.FilterRule) (bool, error) {
 	f := apiFilterToCommonFilter(filter)
 	fp, err := structToMap(tag)
 	if err != nil {

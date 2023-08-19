@@ -16,16 +16,24 @@
 package eliona
 
 import (
+	"fmt"
+
+	"github.com/eliona-smart-building-assistant/go-eliona/asset"
 	"github.com/eliona-smart-building-assistant/go-utils/db"
 )
 
-// InitEliona initialize the app in aliona
 func InitEliona(connection db.Connection) error {
-
-	//
-	// Todo: do anything which is necessary to initialize the app within Eliona like creating asset types
-	//
-
+	if err := asset.InitAssetTypeFile("eliona/asset-type-root.json")(connection); err != nil {
+		return fmt.Errorf("init root asset type: %v", err)
+	}
+	if err := asset.InitAssetTypeFile("eliona/asset-type-system.json")(connection); err != nil {
+		return fmt.Errorf("init system asset type: %v", err)
+	}
+	if err := asset.InitAssetTypeFile("eliona/asset-type-device.json")(connection); err != nil {
+		return fmt.Errorf("init device asset type: %v", err)
+	}
+	if err := asset.InitAssetTypeFile("eliona/asset-type-channel.json")(connection); err != nil {
+		return fmt.Errorf("init channel asset type: %v", err)
+	}
 	return nil
-
 }

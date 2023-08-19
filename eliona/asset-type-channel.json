@@ -1,0 +1,12 @@
+{
+	"attributes": [],
+	"custom": false,
+	"icon": null,
+	"name": "abb_free_at_home_channel",
+	"translation": {
+		"de": "ABB-free@home Channel",
+		"en": "ABB-free@home Channel"
+	},
+	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
+	"vendor": "ABB"
+}
