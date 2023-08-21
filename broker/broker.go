@@ -76,7 +76,7 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 			for id, channel := range device.Channels {
 				c := Channel{
 					ID:   d.ID + "_" + id,
-					Name: channel.DisplayName.(string),
+					Name: channel.DisplayName.(string) + " " + id,
 				}
 				d.Channels = append(d.Channels, c)
 				// 		fmt.Printf("channel: %v\n", id)

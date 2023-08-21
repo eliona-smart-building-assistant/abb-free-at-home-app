@@ -74,7 +74,7 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []broker.Sy
 						config:                  config,
 						projectId:               projectId,
 						parentFunctionalAssetId: &deviceAssetID,
-						parentLocationalAssetId: &	,
+						parentLocationalAssetId: &deviceAssetID,
 						identifier:              fmt.Sprintf("%s_%s", assetType, channel.ID),
 						assetType:               assetType,
 						name:                    channel.Name,
