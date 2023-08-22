@@ -27,6 +27,7 @@ import (
 type Asset interface {
 	AssetType() string
 	Id() string
+	Name() string
 }
 
 type System struct {
@@ -38,12 +39,24 @@ type System struct {
 type Device struct {
 	ID       string `eliona:"device_id,filterable"`
 	Name     string `eliona:"device_name,filterable"`
-	Channels []Channel
+	Channels []Asset
 }
 
 type Channel struct {
-	ID   string `eliona:"channel_id,filterable"`
-	Name string `eliona:"channel_name,filterable"`
+	id   string `eliona:"channel_id,filterable"`
+	name string `eliona:"channel_name,filterable"`
+}
+
+func (c Channel) AssetType() string {
+	return "abb_free_at_home_channel"
+}
+
+func (c Channel) Id() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.id)
+}
+
+func (c Channel) Name() string {
+	return c.name
 }
 
 func GetSystems(config apiserver.Configuration) ([]System, error) {
@@ -79,13 +92,13 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 					Name: channel.DisplayName.(string) + " " + id,
 				}
 				d.Channels = append(d.Channels, c)
-				// 		fmt.Printf("channel: %v\n", id)
-				// 		fmt.Printf("ChannelName: %v\n", channel.DisplayName)
-				// 		fmt.Printf("FunctionId: %v\n", channel.FunctionId)
-				// 		for _, output := range channel.Outputs {
-				// 			fmt.Printf("OutputPairingId: %v\n", output.PairingId)
-				// 			fmt.Printf("OutputValue: %v\n", output.Value)
-				// 		}
+				fmt.Printf("channel: %v\n", id)
+				fmt.Printf("ChannelName: %v\n", channel.DisplayName)
+				fmt.Printf("FunctionId: %v\n", channel.FunctionId)
+				for _, input := range channel.Inputs {
+					fmt.Printf("OutputPairingId: %v\n", input.PairingId)
+					fmt.Printf("OutputValue: %v\n", input.Value)
+				}
 			}
 			s.Devices = append(s.Devices, d)
 		}

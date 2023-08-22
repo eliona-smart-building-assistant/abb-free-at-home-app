@@ -69,19 +69,18 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []broker.Sy
 					return fmt.Errorf("upserting device %s: %v", device.ID, err)
 				}
 				for _, channel := range device.Channels {
-					assetType := "abb_free_at_home_channel"
 					_, _, err := upsertAsset(assetData{
 						config:                  config,
 						projectId:               projectId,
 						parentFunctionalAssetId: &deviceAssetID,
 						parentLocationalAssetId: &deviceAssetID,
-						identifier:              fmt.Sprintf("%s_%s", assetType, channel.ID),
-						assetType:               assetType,
-						name:                    channel.Name,
-						description:             fmt.Sprintf("%s (%v)", channel.Name, channel.ID),
+						identifier:              channel.Id(),
+						assetType:               channel.AssetType(),
+						name:                    channel.Name(),
+						description:             fmt.Sprintf("%s (%v)", channel.Name(), channel.Id()),
 					})
 					if err != nil {
-						return fmt.Errorf("upserting channel %s: %v", channel.ID, err)
+						return fmt.Errorf("upserting channel %s: %v", channel.Id(), err)
 					}
 				}
 			}
