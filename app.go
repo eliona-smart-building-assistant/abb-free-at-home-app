@@ -89,14 +89,9 @@ func collectResources(config apiserver.Configuration) error {
 		return err
 	}
 
-	// for _, v := range equipment {
-	// 	assets = append(assets, v)
-	// }
-
-	// if err := eliona.UpsertAssetData(config, assets); err != nil {
-	// 	log.Error("eliona", "inserting room data into Eliona: %v", err)
+	// if err := eliona.UpsertSystemsData(config, systems); err != nil {
+	// 	log.Error("eliona", "inserting data into Eliona: %v", err)
 	// 	return err
-
 	// }
 	return nil
 }

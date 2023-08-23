@@ -20,8 +20,10 @@ import (
 	"abb-free-at-home/apiserver"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/eliona-smart-building-assistant/go-utils/common"
+	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
 type Asset interface {
@@ -59,6 +61,25 @@ func (c Channel) Name() string {
 	return c.name
 }
 
+type Switch struct {
+	id          string `eliona:"channel_id,filterable"`
+	name        string `eliona:"channel_name,filterable"`
+	SwitchState int8   `eliona:"switch_state" subtype:"input"`
+	Switch      int8   `eliona:"switch" subtype:"output"`
+}
+
+func (c Switch) AssetType() string {
+	return "abb_free_at_home_switch_sensor"
+}
+
+func (c Switch) Id() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.id)
+}
+
+func (c Switch) Name() string {
+	return c.name
+}
+
 func GetSystems(config apiserver.Configuration) ([]System, error) {
 	api := abb.NewLocalApi(config.ApiUsername, config.ApiPassword, config.ApiUrl, int(*config.RequestTimeout))
 	abbConfiguration, err := api.GetConfiguration()
@@ -87,17 +108,43 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 			// 	fmt.Printf("Room: %v\n", device.Room)
 			// 	fmt.Printf("Interface: %v\n", device.Interface)
 			for id, channel := range device.Channels {
-				c := Channel{
-					ID:   d.ID + "_" + id,
-					Name: channel.DisplayName.(string) + " " + id,
+				var c Asset
+				fid, err := strconv.ParseInt(channel.FunctionId, 16, 0)
+				if err != nil {
+					log.Debug("broker", "parsing functionID %s: %v", channel.FunctionId, err)
+
+				}
+				switch fid {
+				case abb.FID_SWITCH_ACTUATOR:
+					switchStateStr := channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET)
+					switchState, err := strconv.ParseInt(switchStateStr, 10, 8)
+					if err != nil {
+						return nil, fmt.Errorf("parsing output value %s: %v", switchStateStr, err)
+					}
+					c = Switch{
+						id:          d.ID + "_" + id,
+						name:        channel.DisplayName.(string) + " " + id,
+						SwitchState: int8(switchState),
+					}
+				default:
+					c = Channel{
+						id:   d.ID + "_" + id,
+						name: channel.DisplayName.(string) + " " + id,
+					}
 				}
 				d.Channels = append(d.Channels, c)
 				fmt.Printf("channel: %v\n", id)
 				fmt.Printf("ChannelName: %v\n", channel.DisplayName)
 				fmt.Printf("FunctionId: %v\n", channel.FunctionId)
-				for _, input := range channel.Inputs {
-					fmt.Printf("OutputPairingId: %v\n", input.PairingId)
-					fmt.Printf("OutputValue: %v\n", input.Value)
+				for id, input := range channel.Inputs {
+					fmt.Printf("InputID: %v\n", id)
+					fmt.Printf("InputPairingId: %v\n", input.PairingId)
+					fmt.Printf("InputValue: %v\n", input.Value)
+				}
+				for id, output := range channel.Outputs {
+					fmt.Printf("OutputID: %v\n", id)
+					fmt.Printf("OutputPairingId: %v\n", output.PairingId)
+					fmt.Printf("OutputValue: %v\n", output.Value)
 				}
 			}
 			s.Devices = append(s.Devices, d)

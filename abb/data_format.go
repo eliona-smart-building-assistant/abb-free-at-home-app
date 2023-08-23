@@ -34,19 +34,19 @@ type WsObject map[string]struct {
 }
 
 type Input struct {
-	Value     string      `json:"value"`
-	PairingId interface{} `json:"pairingID"`
+	Value     string `json:"value"`
+	PairingId int    `json:"pairingID"`
 }
 type Output struct {
-	Value     string      `json:"value"`
-	PairingId interface{} `json:"pairingID"`
+	Value     string `json:"value"`
+	PairingId int    `json:"pairingID"`
 }
 type Channel struct {
 	DisplayName interface{}       `json:"displayName"`
 	Floor       interface{}       `json:"floor"`
 	Inputs      map[string]Input  `json:"inputs"`
 	Outputs     map[string]Output `json:"outputs"`
-	FunctionId  interface{}       `json:"functionID"`
+	FunctionId  string            `json:"functionID"`
 	Room        interface{}       `json:"room"`
 }
 type Device struct {
@@ -76,6 +76,24 @@ type Room struct {
 }
 type DataFormat struct {
 	Systems map[string]System `json:""`
+}
+
+func (c *Channel) FindInputValueByPairingID(pairingId int) string {
+	for _, i := range c.Inputs {
+		if i.PairingId == pairingId {
+			return i.Value
+		}
+	}
+	return ""
+}
+
+func (c *Channel) FindOutputValueByPairingID(pairingId int) string {
+	for _, o := range c.Outputs {
+		if o.PairingId == pairingId {
+			return o.Value
+		}
+	}
+	return ""
 }
 
 // function id description (yes, abb sends the id as string)
