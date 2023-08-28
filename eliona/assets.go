@@ -45,13 +45,13 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []broker.Sy
 				config:                  config,
 				projectId:               projectId,
 				parentLocationalAssetId: &rootAssetID,
-				identifier:              fmt.Sprintf("%s_%s", assetType, system.ID),
+				identifier:              fmt.Sprintf("%s_%s", assetType, system.GAI),
 				assetType:               assetType,
 				name:                    system.Name,
-				description:             fmt.Sprintf("%s (%v)", system.Name, system.ID),
+				description:             fmt.Sprintf("%s (%v)", system.Name, system.GAI),
 			})
 			if err != nil {
-				return fmt.Errorf("upserting system %s: %v", system.ID, err)
+				return fmt.Errorf("upserting system %s: %v", system.GAI, err)
 			}
 			for _, device := range system.Devices {
 				assetType := "abb_free_at_home_device"
@@ -60,27 +60,37 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []broker.Sy
 					projectId:               projectId,
 					parentFunctionalAssetId: &systemAssetID,
 					parentLocationalAssetId: &rootAssetID,
-					identifier:              fmt.Sprintf("%s_%s", assetType, device.ID),
+					identifier:              fmt.Sprintf("%s_%s", assetType, device.GAI),
 					assetType:               assetType,
 					name:                    device.Name,
-					description:             fmt.Sprintf("%s (%v)", device.Name, device.ID),
+					description:             fmt.Sprintf("%s (%v)", device.Name, device.GAI),
 				})
 				if err != nil {
-					return fmt.Errorf("upserting device %s: %v", device.ID, err)
+					return fmt.Errorf("upserting device %s: %v", device.GAI, err)
 				}
 				for _, channel := range device.Channels {
-					_, _, err := upsertAsset(assetData{
+					created, channelAssetID, err := upsertAsset(assetData{
 						config:                  config,
 						projectId:               projectId,
 						parentFunctionalAssetId: &deviceAssetID,
 						parentLocationalAssetId: &deviceAssetID,
-						identifier:              channel.Id(),
+						identifier:              channel.GAI(),
 						assetType:               channel.AssetType(),
 						name:                    channel.Name(),
-						description:             fmt.Sprintf("%s (%v)", channel.Name(), channel.Id()),
+						description:             fmt.Sprintf("%s (%v)", channel.Name(), channel.GAI()),
 					})
 					if err != nil {
-						return fmt.Errorf("upserting channel %s: %v", channel.Id(), err)
+						return fmt.Errorf("upserting channel %s: %v", channel.GAI(), err)
+					}
+					if created {
+						if _, ok := channel.(broker.Switch); ok {
+							log.Info("tag", "Here")
+							// TODO: unmock!
+							err := conf.InsertInput(channelAssetID, system.ID, device.ID, channel.Id(), "idp0000")
+							if err != nil {
+								return fmt.Errorf("inserting input: %v", err)
+							}
+						}
 					}
 				}
 			}

@@ -106,3 +106,43 @@ func listenApi() {
 		)))
 	log.Fatal("main", "API server: %v", err)
 }
+
+func listenForOutputChanges() {
+	outputs, err := eliona.ListenForOutputChanges()
+	if err != nil {
+		log.Error("eliona", "listening for output changes: %v", err)
+		return
+	}
+	for output := range outputs {
+		val, ok := output.Data["switch"]
+		if !ok {
+			log.Error("eliona", "no 'switch' attribute in data")
+			return
+		}
+		value := int8(val.(float64))
+		switch value {
+		case 0, 1:
+			setAsset(output.AssetId, value)
+		default:
+			log.Error("eliona", "invalid value '%v' in 'switch' attribute", val)
+		}
+	}
+}
+
+func setAsset(assetID int32, val int8) {
+	input, err := conf.FetchInput(assetID)
+	if err != nil {
+		log.Fatal("conf", "fetching input for assetID %v: %v", assetID, err)
+		return
+	}
+	config, err := conf.GetConfigForInput(input)
+	if err != nil {
+		log.Error("conf", "getting config for input %v: %v", input.ID, err)
+		return
+	}
+	log.Debug("broker", "setting value %v for asset %v", val, assetID)
+	if err := broker.SetInput(config, input, val); err != nil {
+		log.Error("broker", "setting value %v for asset %v: %v", val, assetID, err)
+		return
+	}
+}

@@ -184,3 +184,39 @@ func GetAssetId(ctx context.Context, config apiserver.Configuration, projId stri
 	}
 	return common.Ptr(dbAsset[0].AssetID.Int32), nil
 }
+
+func InsertInput(assetId int32, systemId, deviceId, channelId, datapoint string) error {
+	input := appdb.Input{
+		AssetID:   assetId,
+		SystemID:  systemId,
+		DeviceID:  deviceId,
+		ChannelID: channelId,
+		Datapoint: datapoint,
+	}
+	return input.InsertG(context.Background(), boil.Infer())
+}
+
+func FetchInput(assetId int32) (appdb.Input, error) {
+	input, err := appdb.Inputs(
+		// TODO: This is not unique!
+		appdb.InputWhere.AssetID.EQ(assetId),
+	).OneG(context.Background())
+	if err != nil {
+		return appdb.Input{}, err
+	}
+	return *input, nil
+}
+
+func GetConfigForInput(input appdb.Input) (config apiserver.Configuration, err error) {
+	asset, err := input.Asset().OneG(context.Background())
+	if err != nil {
+		err = fmt.Errorf("fetching asset: %v", err)
+		return
+	}
+	c, err := asset.Configuration().OneG(context.Background())
+	if err != nil {
+		err = fmt.Errorf("fetching configuration: %v", err)
+		return
+	}
+	return apiConfigFromDbConfig(c)
+}

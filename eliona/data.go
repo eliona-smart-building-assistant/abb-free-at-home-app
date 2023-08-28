@@ -16,8 +16,8 @@ func UpsertSystemsData(config apiserver.Configuration, systems []broker.System) 
 		for _, system := range systems {
 			for _, device := range system.Devices {
 				for _, channel := range device.Channels {
-					log.Debug("Eliona", "upserting data for asset: config %d and asset '%v'", config.Id, channel.Id())
-					assetId, err := conf.GetAssetId(context.Background(), config, projectId, channel.Id())
+					log.Debug("Eliona", "upserting data for asset: config %d and asset '%v'", config.Id, channel.GAI())
+					assetId, err := conf.GetAssetId(context.Background(), config, projectId, channel.GAI())
 					if err != nil {
 						return err
 					}

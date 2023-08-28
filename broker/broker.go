@@ -18,6 +18,7 @@ package broker
 import (
 	"abb-free-at-home/abb"
 	"abb-free-at-home/apiserver"
+	"abb-free-at-home/appdb"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -28,24 +29,28 @@ import (
 
 type Asset interface {
 	AssetType() string
-	Id() string
+	GAI() string
 	Name() string
+	Id() string
 }
 
 type System struct {
 	ID      string `eliona:"system_id,filterable"`
+	GAI     string `eliona:"system_id,filterable"`
 	Name    string `eliona:"system_name,filterable"`
 	Devices []Device
 }
 
 type Device struct {
 	ID       string `eliona:"device_id,filterable"`
+	GAI      string
 	Name     string `eliona:"device_name,filterable"`
 	Channels []Asset
 }
 
 type Channel struct {
 	id   string `eliona:"channel_id,filterable"`
+	gai  string
 	name string `eliona:"channel_name,filterable"`
 }
 
@@ -53,16 +58,21 @@ func (c Channel) AssetType() string {
 	return "abb_free_at_home_channel"
 }
 
-func (c Channel) Id() string {
-	return fmt.Sprintf("%s_%s", c.AssetType(), c.id)
+func (c Channel) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.gai)
 }
 
 func (c Channel) Name() string {
 	return c.name
 }
 
+func (c Channel) Id() string {
+	return c.id
+}
+
 type Switch struct {
 	id          string `eliona:"channel_id,filterable"`
+	gai         string
 	name        string `eliona:"channel_name,filterable"`
 	SwitchState int8   `eliona:"switch_state" subtype:"input"`
 	Switch      int8   `eliona:"switch" subtype:"output"`
@@ -72,12 +82,16 @@ func (c Switch) AssetType() string {
 	return "abb_free_at_home_switch_sensor"
 }
 
-func (c Switch) Id() string {
-	return fmt.Sprintf("%s_%s", c.AssetType(), c.id)
+func (c Switch) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.gai)
 }
 
 func (c Switch) Name() string {
 	return c.name
+}
+
+func (c Switch) Id() string {
+	return c.id
 }
 
 func GetSystems(config apiserver.Configuration) ([]System, error) {
@@ -91,6 +105,7 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 	for id, system := range abbConfiguration.Systems {
 		s := System{
 			ID:   id,
+			GAI:  id,
 			Name: system.SysApName,
 		}
 		// fmt.Printf("system: %v\n", id)
@@ -99,7 +114,8 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 		// fmt.Printf("SysAP: %v\n", system.SysApName)
 		for id, device := range system.Devices {
 			d := Device{
-				ID:   s.ID + "_" + id,
+				ID:   id,
+				GAI:  s.GAI + "_" + id,
 				Name: device.DisplayName.(string),
 			}
 			// 	fmt.Printf("device: %v\n", id)
@@ -108,11 +124,14 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 			// 	fmt.Printf("Room: %v\n", device.Room)
 			// 	fmt.Printf("Interface: %v\n", device.Interface)
 			for id, channel := range device.Channels {
+				if channel.FunctionId == "" {
+					log.Debug("broker", "skipped channel %v with empty functionID", channel.DisplayName)
+					continue
+				}
 				var c Asset
 				fid, err := strconv.ParseInt(channel.FunctionId, 16, 0)
 				if err != nil {
-					log.Debug("broker", "parsing functionID %s: %v", channel.FunctionId, err)
-
+					log.Error("broker", "parsing functionID %s: %v", channel.FunctionId, err)
 				}
 				switch fid {
 				case abb.FID_SWITCH_ACTUATOR:
@@ -122,30 +141,32 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 						return nil, fmt.Errorf("parsing output value %s: %v", switchStateStr, err)
 					}
 					c = Switch{
-						id:          d.ID + "_" + id,
+						id:          id,
+						gai:         d.GAI + "_" + id,
 						name:        channel.DisplayName.(string) + " " + id,
 						SwitchState: int8(switchState),
 					}
 				default:
 					c = Channel{
-						id:   d.ID + "_" + id,
+						id:   id,
+						gai:  d.GAI + "_" + id,
 						name: channel.DisplayName.(string) + " " + id,
 					}
 				}
 				d.Channels = append(d.Channels, c)
-				fmt.Printf("channel: %v\n", id)
-				fmt.Printf("ChannelName: %v\n", channel.DisplayName)
-				fmt.Printf("FunctionId: %v\n", channel.FunctionId)
-				for id, input := range channel.Inputs {
-					fmt.Printf("InputID: %v\n", id)
-					fmt.Printf("InputPairingId: %v\n", input.PairingId)
-					fmt.Printf("InputValue: %v\n", input.Value)
-				}
-				for id, output := range channel.Outputs {
-					fmt.Printf("OutputID: %v\n", id)
-					fmt.Printf("OutputPairingId: %v\n", output.PairingId)
-					fmt.Printf("OutputValue: %v\n", output.Value)
-				}
+				// fmt.Printf("channel: %v\n", id)
+				// fmt.Printf("ChannelName: %v\n", channel.DisplayName)
+				// fmt.Printf("FunctionId: %v\n", channel.FunctionId)
+				// for id, input := range channel.Inputs {
+				// 	fmt.Printf("InputID: %v\n", id)
+				// 	fmt.Printf("InputPairingId: %v\n", input.PairingId)
+				// 	fmt.Printf("InputValue: %v\n", input.Value)
+				// }
+				// for id, output := range channel.Outputs {
+				// 	fmt.Printf("OutputID: %v\n", id)
+				// 	fmt.Printf("OutputPairingId: %v\n", output.PairingId)
+				// 	fmt.Printf("OutputValue: %v\n", output.Value)
+				// }
 			}
 			s.Devices = append(s.Devices, d)
 		}
@@ -206,4 +227,9 @@ func apiFilterToCommonFilter(input [][]apiserver.FilterRule) [][]common.FilterRu
 		}
 	}
 	return result
+}
+
+func SetInput(config apiserver.Configuration, output appdb.Input, value any) error {
+	api := abb.NewLocalApi(config.ApiUsername, config.ApiPassword, config.ApiUrl, int(*config.RequestTimeout))
+	return api.WriteDatapoint(output.SystemID, output.DeviceID, output.ChannelID, output.Datapoint, value)
 }

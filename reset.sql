@@ -30,20 +30,20 @@ VALUES ('abb-free-at-home', 't')
 
 DROP SCHEMA IF EXISTS abb_free_at_home CASCADE;
 
-DELETE FROM heap
+DELETE FROM public.heap
 WHERE asset_id IN (
 	SELECT asset_id
-	FROM asset
+	FROM public.asset
 	WHERE asset_type LIKE E'abb_free_at_home\\_%'
 );
 
-DELETE FROM attribute_schema
+DELETE FROM public.attribute_schema
 WHERE asset_type LIKE E'abb_free_at_home\\_%';
 
-DELETE FROM asset
+DELETE FROM public.asset
 WHERE asset_type LIKE E'abb_free_at_home\\_%';
 
-DELETE FROM asset_type
+DELETE FROM public.asset_type
 WHERE asset_type LIKE E'abb_free_at_home\\_%';
 
 DELETE FROM public.widget_data

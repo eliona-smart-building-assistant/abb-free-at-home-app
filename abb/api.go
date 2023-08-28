@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -324,26 +323,10 @@ func (api *Api) GetConfiguration() (DataFormat, error) {
 }
 
 func (api *Api) WriteDatapoint(system string, deviceId string, channel string, datapoint string, value interface{}) error {
-	var reqBody []byte
-
 	dpPath := system + "/" + deviceId + "." + channel + "." + datapoint
-
-	switch v := value.(type) {
-	case string:
-		reqBody = []byte(v)
-	case int:
-		reqBody = []byte(strconv.Itoa(v))
-	case float64:
-		// reqBody = []byte(strconv.FormatFloat(v, 'E', -1, 64))
-		reqBody = []byte(fmt.Sprint(v))
-	// case float32:
-	// 	reqBody = []byte(strconv.FormatFloat(float64(v), 'E', -1, 32))
-	default:
-		log.Printf("no converter in WriteDatapoint() for type %T\r\n", value)
-	}
+	reqBody := []byte(fmt.Sprint(value))
 
 	log.Println("write up datapoint:", dpPath, " value: ", string(reqBody))
-
 	body, code, err := api.request(abbconnection.REQUEST_METHOD_PUT, API_PATH_UPSTREAM+dpPath, &reqBody)
 
 	if err != nil {
