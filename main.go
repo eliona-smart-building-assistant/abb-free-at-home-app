@@ -16,7 +16,6 @@
 package main
 
 import (
-	"abb-free-at-home/conf"
 	"abb-free-at-home/eliona"
 	"time"
 
@@ -49,7 +48,6 @@ func main() {
 	// Init the app before the first run.
 	app.Init(db.Pool(), app.AppName(),
 		app.ExecSqlFile("conf/init.sql"),
-		conf.InitConfiguration,
 		eliona.InitEliona,
 	)
 
