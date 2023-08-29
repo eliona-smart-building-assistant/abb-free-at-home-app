@@ -18,7 +18,17 @@
 			"translation": {
 				"de": "Schalter",
 				"en": "Switch"
-			}
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
 		}
 	],
 	"custom": false,
