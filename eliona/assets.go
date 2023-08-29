@@ -83,12 +83,12 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []broker.Sy
 						return fmt.Errorf("upserting channel %s: %v", channel.GAI(), err)
 					}
 					if created {
-						if _, ok := channel.(broker.Switch); ok {
-							log.Info("tag", "Here")
-							// TODO: unmock!
-							err := conf.InsertInput(channelAssetID, system.ID, device.ID, channel.Id(), "idp0000")
-							if err != nil {
-								return fmt.Errorf("inserting input: %v", err)
+						if sw, ok := channel.(broker.Switch); ok {
+							for function, datapoint := range sw.Inputs {
+								err := conf.InsertInput(channelAssetID, system.ID, device.ID, channel.Id(), datapoint, function)
+								if err != nil {
+									return fmt.Errorf("inserting input: %v", err)
+								}
 							}
 						}
 					}

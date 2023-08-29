@@ -29,6 +29,7 @@ type Input struct {
 	DeviceID  string `boil:"device_id" json:"device_id" toml:"device_id" yaml:"device_id"`
 	ChannelID string `boil:"channel_id" json:"channel_id" toml:"channel_id" yaml:"channel_id"`
 	Datapoint string `boil:"datapoint" json:"datapoint" toml:"datapoint" yaml:"datapoint"`
+	Function  string `boil:"function" json:"function" toml:"function" yaml:"function"`
 
 	R *inputR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L inputL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -41,6 +42,7 @@ var InputColumns = struct {
 	DeviceID  string
 	ChannelID string
 	Datapoint string
+	Function  string
 }{
 	ID:        "id",
 	AssetID:   "asset_id",
@@ -48,6 +50,7 @@ var InputColumns = struct {
 	DeviceID:  "device_id",
 	ChannelID: "channel_id",
 	Datapoint: "datapoint",
+	Function:  "function",
 }
 
 var InputTableColumns = struct {
@@ -57,6 +60,7 @@ var InputTableColumns = struct {
 	DeviceID  string
 	ChannelID string
 	Datapoint string
+	Function  string
 }{
 	ID:        "input.id",
 	AssetID:   "input.asset_id",
@@ -64,6 +68,7 @@ var InputTableColumns = struct {
 	DeviceID:  "input.device_id",
 	ChannelID: "input.channel_id",
 	Datapoint: "input.datapoint",
+	Function:  "input.function",
 }
 
 // Generated where
@@ -75,6 +80,7 @@ var InputWhere = struct {
 	DeviceID  whereHelperstring
 	ChannelID whereHelperstring
 	Datapoint whereHelperstring
+	Function  whereHelperstring
 }{
 	ID:        whereHelperint64{field: "\"abb_free_at_home\".\"input\".\"id\""},
 	AssetID:   whereHelperint32{field: "\"abb_free_at_home\".\"input\".\"asset_id\""},
@@ -82,6 +88,7 @@ var InputWhere = struct {
 	DeviceID:  whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"device_id\""},
 	ChannelID: whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"channel_id\""},
 	Datapoint: whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"datapoint\""},
+	Function:  whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"function\""},
 }
 
 // InputRels is where relationship names are stored.
@@ -112,8 +119,8 @@ func (r *inputR) GetAsset() *Asset {
 type inputL struct{}
 
 var (
-	inputAllColumns            = []string{"id", "asset_id", "system_id", "device_id", "channel_id", "datapoint"}
-	inputColumnsWithoutDefault = []string{"asset_id", "system_id", "device_id", "channel_id", "datapoint"}
+	inputAllColumns            = []string{"id", "asset_id", "system_id", "device_id", "channel_id", "datapoint", "function"}
+	inputColumnsWithoutDefault = []string{"asset_id", "system_id", "device_id", "channel_id", "datapoint", "function"}
 	inputColumnsWithDefault    = []string{"id"}
 	inputPrimaryKeyColumns     = []string{"id"}
 	inputGeneratedColumns      = []string{}

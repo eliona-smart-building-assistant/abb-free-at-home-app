@@ -46,7 +46,8 @@ create table if not exists abb_free_at_home.input
 	system_id  text not null,
 	device_id  text not null,
 	channel_id text not null,
-	datapoint  text not null
+	datapoint  text not null,
+	function   text not null
 );
 
 -- Makes the new objects available for all other init steps

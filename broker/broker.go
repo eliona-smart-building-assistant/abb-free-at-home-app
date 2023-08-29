@@ -27,6 +27,14 @@ import (
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
+const (
+	function_switch = "switch"
+)
+
+var Functions = []string{
+	function_switch,
+}
+
 type Asset interface {
 	AssetType() string
 	GAI() string
@@ -73,9 +81,10 @@ func (c Channel) Id() string {
 type Switch struct {
 	id          string `eliona:"channel_id,filterable"`
 	gai         string
-	name        string `eliona:"channel_name,filterable"`
-	SwitchState int8   `eliona:"switch_state" subtype:"input"`
-	Switch      int8   `eliona:"switch" subtype:"output"`
+	name        string            `eliona:"channel_name,filterable"`
+	SwitchState int8              `eliona:"switch_state" subtype:"input"`
+	Switch      int8              `eliona:"switch" subtype:"output"`
+	Inputs      map[string]string // map[function]datapoint
 }
 
 func (c Switch) AssetType() string {
@@ -140,11 +149,18 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 					if err != nil {
 						return nil, fmt.Errorf("parsing output value %s: %v", switchStateStr, err)
 					}
+					inputs := make(map[string]string)
+					for datapoint, input := range channel.Inputs {
+						if input.PairingId == abb.PID_SWITCH_ON_OFF_SET {
+							inputs[function_switch] = datapoint
+						}
+					}
 					c = Switch{
 						id:          id,
 						gai:         d.GAI + "_" + id,
 						name:        channel.DisplayName.(string) + " " + id,
 						SwitchState: int8(switchState),
+						Inputs:      inputs,
 					}
 				default:
 					c = Channel{

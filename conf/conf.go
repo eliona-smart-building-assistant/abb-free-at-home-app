@@ -185,21 +185,22 @@ func GetAssetId(ctx context.Context, config apiserver.Configuration, projId stri
 	return common.Ptr(dbAsset[0].AssetID.Int32), nil
 }
 
-func InsertInput(assetId int32, systemId, deviceId, channelId, datapoint string) error {
+func InsertInput(assetId int32, systemId, deviceId, channelId, datapoint, function string) error {
 	input := appdb.Input{
 		AssetID:   assetId,
 		SystemID:  systemId,
 		DeviceID:  deviceId,
 		ChannelID: channelId,
 		Datapoint: datapoint,
+		Function:  function,
 	}
 	return input.InsertG(context.Background(), boil.Infer())
 }
 
-func FetchInput(assetId int32) (appdb.Input, error) {
+func FetchInput(assetId int32, function string) (appdb.Input, error) {
 	input, err := appdb.Inputs(
-		// TODO: This is not unique!
 		appdb.InputWhere.AssetID.EQ(assetId),
+		appdb.InputWhere.Function.EQ(function),
 	).OneG(context.Background())
 	if err != nil {
 		return appdb.Input{}, err

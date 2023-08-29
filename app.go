@@ -114,23 +114,25 @@ func listenForOutputChanges() {
 		return
 	}
 	for output := range outputs {
-		val, ok := output.Data["switch"]
-		if !ok {
-			log.Error("eliona", "no 'switch' attribute in data")
-			return
-		}
-		value := int8(val.(float64))
-		switch value {
-		case 0, 1:
-			setAsset(output.AssetId, value)
-		default:
-			log.Error("eliona", "invalid value '%v' in 'switch' attribute", val)
+		for _, function := range broker.Functions {
+			val, ok := output.Data[function]
+			if !ok {
+				log.Error("eliona", "no '%v' attribute in data", function)
+				return
+			}
+			value := int8(val.(float64))
+			switch value {
+			case 0, 1:
+				setAsset(output.AssetId, function, value)
+			default:
+				log.Error("eliona", "invalid value '%v' in '%v' attribute", val, function)
+			}
 		}
 	}
 }
 
-func setAsset(assetID int32, val int8) {
-	input, err := conf.FetchInput(assetID)
+func setAsset(assetID int32, function string, val int8) {
+	input, err := conf.FetchInput(assetID, function)
 	if err != nil {
 		log.Fatal("conf", "fetching input for assetID %v: %v", assetID, err)
 		return
