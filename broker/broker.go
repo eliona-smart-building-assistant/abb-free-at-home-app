@@ -29,17 +29,13 @@ import (
 
 const (
 	function_switch = "switch"
+	function_dimmer = "dimmer"
 )
 
 var Functions = []string{
+	// Note: Depends on order.
+	function_dimmer,
 	function_switch,
-}
-
-type Asset interface {
-	AssetType() string
-	GAI() string
-	Name() string
-	Id() string
 }
 
 type System struct {
@@ -56,10 +52,35 @@ type Device struct {
 	Channels []Asset
 }
 
+type Asset interface {
+	AssetType() string
+	GAI() string
+	Name() string
+	Id() string
+	Inputs() map[string]string // map[function]datapoint
+}
+
+type AssetBase struct {
+	id     string `eliona:"channel_id,filterable"`
+	gai    string
+	name   string `eliona:"channel_name,filterable"`
+	inputs map[string]string
+}
+
+func (a AssetBase) Name() string {
+	return a.name
+}
+
+func (a AssetBase) Id() string {
+	return a.id
+}
+
+func (a AssetBase) Inputs() map[string]string {
+	return a.inputs
+}
+
 type Channel struct {
-	id   string `eliona:"channel_id,filterable"`
-	gai  string
-	name string `eliona:"channel_name,filterable"`
+	AssetBase
 }
 
 func (c Channel) AssetType() string {
@@ -70,21 +91,10 @@ func (c Channel) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.gai)
 }
 
-func (c Channel) Name() string {
-	return c.name
-}
-
-func (c Channel) Id() string {
-	return c.id
-}
-
 type Switch struct {
-	id          string `eliona:"channel_id,filterable"`
-	gai         string
-	name        string            `eliona:"channel_name,filterable"`
-	SwitchState int8              `eliona:"switch_state" subtype:"input"`
-	Switch      int8              `eliona:"switch" subtype:"output"`
-	Inputs      map[string]string // map[function]datapoint
+	AssetBase
+	SwitchState int8 `eliona:"switch_state" subtype:"input"`
+	Switch      int8 `eliona:"switch" subtype:"output"`
 }
 
 func (c Switch) AssetType() string {
@@ -95,12 +105,20 @@ func (c Switch) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.gai)
 }
 
-func (c Switch) Name() string {
-	return c.name
+type Dimmer struct {
+	AssetBase
+	SwitchState int8 `eliona:"switch_state" subtype:"input"`
+	DimmerState int8 `eliona:"dimmer_state" subtype:"input"`
+	Switch      int8 `eliona:"switch" subtype:"output"`
+	Dimmer      int8 `eliona:"dimmer" subtype:"output"`
 }
 
-func (c Switch) Id() string {
-	return c.id
+func (c Dimmer) AssetType() string {
+	return "abb_free_at_home_dimmer_sensor"
+}
+
+func (c Dimmer) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.gai)
 }
 
 func GetSystems(config apiserver.Configuration) ([]System, error) {
@@ -142,6 +160,11 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 				if err != nil {
 					log.Error("broker", "parsing functionID %s: %v", channel.FunctionId, err)
 				}
+				assetBase := AssetBase{
+					id:   id,
+					gai:  d.GAI + "_" + id,
+					name: channel.DisplayName.(string) + " " + id,
+				}
 				switch fid {
 				case abb.FID_SWITCH_ACTUATOR:
 					switchStateStr := channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET)
@@ -155,18 +178,40 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 							inputs[function_switch] = datapoint
 						}
 					}
+					assetBase.inputs = inputs
 					c = Switch{
-						id:          id,
-						gai:         d.GAI + "_" + id,
-						name:        channel.DisplayName.(string) + " " + id,
+						AssetBase:   assetBase,
 						SwitchState: int8(switchState),
-						Inputs:      inputs,
+					}
+				case abb.FID_DIMMING_ACTUATOR:
+					switchStateStr := channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET)
+					switchState, err := strconv.ParseInt(switchStateStr, 10, 8)
+					if err != nil {
+						return nil, fmt.Errorf("parsing output value %s: %v", switchStateStr, err)
+					}
+					dimmerStateStr := channel.FindOutputValueByPairingID(abb.PID_ACTUAL_DIM_VALUE_0_100_GET)
+					dimmerState, err := strconv.ParseInt(dimmerStateStr, 10, 8)
+					if err != nil {
+						return nil, fmt.Errorf("parsing output value %s: %v", dimmerStateStr, err)
+					}
+					inputs := make(map[string]string)
+					for datapoint, input := range channel.Inputs {
+						switch input.PairingId {
+						case abb.PID_SWITCH_ON_OFF_SET:
+							inputs[function_switch] = datapoint
+						case abb.PID_ABSOLUTE_VALUE_0_100_SET:
+							inputs[function_dimmer] = datapoint
+						}
+					}
+					assetBase.inputs = inputs
+					c = Dimmer{
+						AssetBase:   assetBase,
+						SwitchState: int8(switchState),
+						DimmerState: int8(dimmerState),
 					}
 				default:
 					c = Channel{
-						id:   id,
-						gai:  d.GAI + "_" + id,
-						name: channel.DisplayName.(string) + " " + id,
+						AssetBase: assetBase,
 					}
 				}
 				d.Channels = append(d.Channels, c)

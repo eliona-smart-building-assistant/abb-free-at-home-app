@@ -22,6 +22,7 @@ import (
 	"abb-free-at-home/conf"
 	"abb-free-at-home/eliona"
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -114,24 +115,19 @@ func listenForOutputChanges() {
 		return
 	}
 	for output := range outputs {
+		fmt.Println(output)
 		for _, function := range broker.Functions {
 			val, ok := output.Data[function]
 			if !ok {
-				log.Error("eliona", "no '%v' attribute in data", function)
-				return
+				continue
 			}
-			value := int8(val.(float64))
-			switch value {
-			case 0, 1:
-				setAsset(output.AssetId, function, value)
-			default:
-				log.Error("eliona", "invalid value '%v' in '%v' attribute", val, function)
-			}
+			setAsset(output.AssetId, function, val)
+			fmt.Println(function)
 		}
 	}
 }
 
-func setAsset(assetID int32, function string, val int8) {
+func setAsset(assetID int32, function string, val any) {
 	input, err := conf.FetchInput(assetID, function)
 	if err != nil {
 		log.Fatal("conf", "fetching input for assetID %v: %v", assetID, err)

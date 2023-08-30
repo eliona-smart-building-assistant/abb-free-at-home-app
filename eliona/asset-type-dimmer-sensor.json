@@ -1,0 +1,65 @@
+{
+	"attributes": [
+		{
+			"enable": true,
+			"name": "switch_state",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Schalterzustand",
+				"en": "Switch state"
+			}
+		},
+		{
+			"enable": true,
+			"name": "dimmer_state",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"unit": "%",
+			"translation": {
+				"de": "Dimmzustand",
+				"en": "Dimmer state"
+			}
+		},
+		{
+			"enable": true,
+			"name": "switch",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Schalter",
+				"en": "Switch"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
+		},
+		{
+			"enable": true,
+			"name": "dimmer",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"unit": "%",
+			"translation": {
+				"de": "Dimmer",
+				"en": "Dimmer"
+			}
+		}
+	],
+	"custom": false,
+	"icon": null,
+	"name": "abb_free_at_home_dimmer_sensor",
+	"translation": {
+		"de": "ABB-free@home Dimmsensor",
+		"en": "ABB-free@home Dimmer sensor"
+	},
+	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
+	"vendor": "ABB"
+}

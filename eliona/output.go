@@ -11,9 +11,8 @@ import (
 
 // on assets (only output attributes). Returns a channel with all changes.
 func ListenForOutputChanges() (chan api.Data, error) {
-	reconnectTime, _ := time.ParseDuration("30s")
 	outputs := make(chan api.Data)
-	go http.ListenWebSocketWithReconnect(newWebsocket, reconnectTime, outputs)
+	go http.ListenWebSocketWithReconnect(newWebsocket, time.Duration(0), outputs)
 	return outputs, nil
 }
 

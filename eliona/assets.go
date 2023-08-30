@@ -83,12 +83,10 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []broker.Sy
 						return fmt.Errorf("upserting channel %s: %v", channel.GAI(), err)
 					}
 					if created {
-						if sw, ok := channel.(broker.Switch); ok {
-							for function, datapoint := range sw.Inputs {
-								err := conf.InsertInput(channelAssetID, system.ID, device.ID, channel.Id(), datapoint, function)
-								if err != nil {
-									return fmt.Errorf("inserting input: %v", err)
-								}
+						for function, datapoint := range channel.Inputs() {
+							err := conf.InsertInput(channelAssetID, system.ID, device.ID, channel.Id(), datapoint, function)
+							if err != nil {
+								return fmt.Errorf("inserting input: %v", err)
 							}
 						}
 					}
