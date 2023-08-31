@@ -208,6 +208,11 @@ func FetchInput(assetId int32, function string) (appdb.Input, error) {
 	return *input, nil
 }
 
+func UpdateInput(input appdb.Input) error {
+	_, err := input.UpdateG(context.Background(), boil.Infer())
+	return err
+}
+
 func GetConfigForInput(input appdb.Input) (config apiserver.Configuration, err error) {
 	asset, err := input.Asset().OneG(context.Background())
 	if err != nil {

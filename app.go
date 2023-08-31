@@ -121,16 +121,21 @@ func listenForOutputChanges() {
 			if !ok {
 				continue
 			}
-			setAsset(output.AssetId, function, val)
+			value := int32(val.(float64))
+			setAsset(output.AssetId, function, value)
 			fmt.Println(function)
 		}
 	}
 }
 
-func setAsset(assetID int32, function string, val any) {
+func setAsset(assetID int32, function string, val int32) {
 	input, err := conf.FetchInput(assetID, function)
 	if err != nil {
 		log.Fatal("conf", "fetching input for assetID %v: %v", assetID, err)
+		return
+	}
+	if input.LastWritten.Valid && input.LastWritten.Int32 == val {
+		log.Debug("broker", "skipped setting value %v for asset %v, same as last written", val, assetID)
 		return
 	}
 	config, err := conf.GetConfigForInput(input)
@@ -141,6 +146,12 @@ func setAsset(assetID int32, function string, val any) {
 	log.Debug("broker", "setting value %v for asset %v", val, assetID)
 	if err := broker.SetInput(config, input, val); err != nil {
 		log.Error("broker", "setting value %v for asset %v: %v", val, assetID, err)
+		return
+	}
+	input.LastWritten.Int32 = val
+	input.LastWritten.Valid = true
+	if err := conf.UpdateInput(input); err != nil {
+		log.Error("conf", "updating input: %v", err)
 		return
 	}
 }

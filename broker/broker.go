@@ -170,7 +170,12 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 					switchStateStr := channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET)
 					switchState, err := strconv.ParseInt(switchStateStr, 10, 8)
 					if err != nil {
-						return nil, fmt.Errorf("parsing output value %s: %v", switchStateStr, err)
+						return nil, fmt.Errorf("parsing output value '%s': %v", switchStateStr, err)
+					}
+					switchInputStr := channel.FindInputValueByPairingID(abb.PID_SWITCH_ON_OFF_SET)
+					switchInput, err := strconv.ParseInt(switchInputStr, 10, 8)
+					if err != nil {
+						return nil, fmt.Errorf("parsing input value '%s': %v", switchInputStr, err)
 					}
 					inputs := make(map[string]string)
 					for datapoint, input := range channel.Inputs {
@@ -182,17 +187,28 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 					c = Switch{
 						AssetBase:   assetBase,
 						SwitchState: int8(switchState),
+						Switch:      int8(switchInput),
 					}
 				case abb.FID_DIMMING_ACTUATOR:
 					switchStateStr := channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET)
 					switchState, err := strconv.ParseInt(switchStateStr, 10, 8)
 					if err != nil {
-						return nil, fmt.Errorf("parsing output value %s: %v", switchStateStr, err)
+						return nil, fmt.Errorf("parsing output value '%s': %v", switchStateStr, err)
+					}
+					switchInputStr := channel.FindInputValueByPairingID(abb.PID_SWITCH_ON_OFF_SET)
+					switchInput, err := strconv.ParseInt(switchInputStr, 10, 8)
+					if err != nil {
+						return nil, fmt.Errorf("parsing input value '%s': %v", switchInputStr, err)
 					}
 					dimmerStateStr := channel.FindOutputValueByPairingID(abb.PID_ACTUAL_DIM_VALUE_0_100_GET)
 					dimmerState, err := strconv.ParseInt(dimmerStateStr, 10, 8)
 					if err != nil {
-						return nil, fmt.Errorf("parsing output value %s: %v", dimmerStateStr, err)
+						return nil, fmt.Errorf("parsing output value '%s': %v", dimmerStateStr, err)
+					}
+					dimmerInputStr := channel.FindInputValueByPairingID(abb.PID_ABSOLUTE_VALUE_0_100_SET)
+					dimmerInput, err := strconv.ParseInt(dimmerInputStr, 10, 8)
+					if err != nil {
+						return nil, fmt.Errorf("parsing input value '%s': %v", dimmerInputStr, err)
 					}
 					inputs := make(map[string]string)
 					for datapoint, input := range channel.Inputs {
@@ -207,7 +223,9 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 					c = Dimmer{
 						AssetBase:   assetBase,
 						SwitchState: int8(switchState),
+						Switch:      int8(switchInput),
 						DimmerState: int8(dimmerState),
+						Dimmer:      int8(dimmerInput),
 					}
 				default:
 					c = Channel{
