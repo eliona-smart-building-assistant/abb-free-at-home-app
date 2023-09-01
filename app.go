@@ -134,8 +134,13 @@ func setAsset(assetID int32, function string, val int32) {
 		log.Fatal("conf", "fetching input for assetID %v: %v", assetID, err)
 		return
 	}
-	if input.LastWritten.Valid && input.LastWritten.Int32 == val {
+	if input.LastWrittenValue.Valid && input.LastWrittenValue.Int32 == val {
 		log.Debug("broker", "skipped setting value %v for asset %v, same as last written", val, assetID)
+		return
+	}
+	if input.LastWrittenTime.Valid && time.Since(input.LastWrittenTime.Time).Seconds() < 10 {
+		fmt.Println(time.Since(input.LastWrittenTime.Time).Seconds())
+		log.Debug("broker", "skipped setting value %v for asset %v, to debounce", val, assetID)
 		return
 	}
 	config, err := conf.GetConfigForInput(input)
@@ -148,8 +153,10 @@ func setAsset(assetID int32, function string, val int32) {
 		log.Error("broker", "setting value %v for asset %v: %v", val, assetID, err)
 		return
 	}
-	input.LastWritten.Int32 = val
-	input.LastWritten.Valid = true
+	input.LastWrittenValue.Int32 = val
+	input.LastWrittenValue.Valid = true
+	input.LastWrittenTime.Time = time.Now()
+	input.LastWrittenTime.Valid = true
 	if err := conf.UpdateInput(input); err != nil {
 		log.Error("conf", "updating input: %v", err)
 		return

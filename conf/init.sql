@@ -41,14 +41,15 @@ create table if not exists abb_free_at_home.asset
 
 create table if not exists abb_free_at_home.input
 (
-	id           bigserial primary key,
-	asset_id     integer not null references abb_free_at_home.asset(asset_id),
-	system_id    text not null,
-	device_id    text not null,
-	channel_id   text not null,
-	datapoint    text not null,
-	function     text not null,
-	last_written integer
+	id                 bigserial primary key,
+	asset_id           integer not null references abb_free_at_home.asset(asset_id),
+	system_id          text not null,
+	device_id          text not null,
+	channel_id         text not null,
+	datapoint          text not null,
+	function           text not null,
+	last_written_value integer,
+	last_written_time  timestamp with time zone
 );
 
 -- Makes the new objects available for all other init steps

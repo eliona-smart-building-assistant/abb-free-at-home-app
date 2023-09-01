@@ -223,10 +223,11 @@ func GetSystems(config apiserver.Configuration) ([]System, error) {
 					c = Dimmer{
 						AssetBase:   assetBase,
 						SwitchState: int8(switchState),
-						Switch:      int8(switchInput),
+						Switch:      int8(switchState),
 						DimmerState: int8(dimmerState),
-						Dimmer:      int8(dimmerInput),
+						Dimmer:      int8(dimmerState),
 					}
+					_, _ = dimmerInput, switchInput
 				default:
 					c = Channel{
 						AssetBase: assetBase,

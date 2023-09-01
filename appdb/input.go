@@ -24,79 +24,110 @@ import (
 
 // Input is an object representing the database table.
 type Input struct {
-	ID          int64      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	AssetID     int32      `boil:"asset_id" json:"asset_id" toml:"asset_id" yaml:"asset_id"`
-	SystemID    string     `boil:"system_id" json:"system_id" toml:"system_id" yaml:"system_id"`
-	DeviceID    string     `boil:"device_id" json:"device_id" toml:"device_id" yaml:"device_id"`
-	ChannelID   string     `boil:"channel_id" json:"channel_id" toml:"channel_id" yaml:"channel_id"`
-	Datapoint   string     `boil:"datapoint" json:"datapoint" toml:"datapoint" yaml:"datapoint"`
-	Function    string     `boil:"function" json:"function" toml:"function" yaml:"function"`
-	LastWritten null.Int32 `boil:"last_written" json:"last_written,omitempty" toml:"last_written" yaml:"last_written,omitempty"`
+	ID               int64      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	AssetID          int32      `boil:"asset_id" json:"asset_id" toml:"asset_id" yaml:"asset_id"`
+	SystemID         string     `boil:"system_id" json:"system_id" toml:"system_id" yaml:"system_id"`
+	DeviceID         string     `boil:"device_id" json:"device_id" toml:"device_id" yaml:"device_id"`
+	ChannelID        string     `boil:"channel_id" json:"channel_id" toml:"channel_id" yaml:"channel_id"`
+	Datapoint        string     `boil:"datapoint" json:"datapoint" toml:"datapoint" yaml:"datapoint"`
+	Function         string     `boil:"function" json:"function" toml:"function" yaml:"function"`
+	LastWrittenValue null.Int32 `boil:"last_written_value" json:"last_written_value,omitempty" toml:"last_written_value" yaml:"last_written_value,omitempty"`
+	LastWrittenTime  null.Time  `boil:"last_written_time" json:"last_written_time,omitempty" toml:"last_written_time" yaml:"last_written_time,omitempty"`
 
 	R *inputR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L inputL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var InputColumns = struct {
-	ID          string
-	AssetID     string
-	SystemID    string
-	DeviceID    string
-	ChannelID   string
-	Datapoint   string
-	Function    string
-	LastWritten string
+	ID               string
+	AssetID          string
+	SystemID         string
+	DeviceID         string
+	ChannelID        string
+	Datapoint        string
+	Function         string
+	LastWrittenValue string
+	LastWrittenTime  string
 }{
-	ID:          "id",
-	AssetID:     "asset_id",
-	SystemID:    "system_id",
-	DeviceID:    "device_id",
-	ChannelID:   "channel_id",
-	Datapoint:   "datapoint",
-	Function:    "function",
-	LastWritten: "last_written",
+	ID:               "id",
+	AssetID:          "asset_id",
+	SystemID:         "system_id",
+	DeviceID:         "device_id",
+	ChannelID:        "channel_id",
+	Datapoint:        "datapoint",
+	Function:         "function",
+	LastWrittenValue: "last_written_value",
+	LastWrittenTime:  "last_written_time",
 }
 
 var InputTableColumns = struct {
-	ID          string
-	AssetID     string
-	SystemID    string
-	DeviceID    string
-	ChannelID   string
-	Datapoint   string
-	Function    string
-	LastWritten string
+	ID               string
+	AssetID          string
+	SystemID         string
+	DeviceID         string
+	ChannelID        string
+	Datapoint        string
+	Function         string
+	LastWrittenValue string
+	LastWrittenTime  string
 }{
-	ID:          "input.id",
-	AssetID:     "input.asset_id",
-	SystemID:    "input.system_id",
-	DeviceID:    "input.device_id",
-	ChannelID:   "input.channel_id",
-	Datapoint:   "input.datapoint",
-	Function:    "input.function",
-	LastWritten: "input.last_written",
+	ID:               "input.id",
+	AssetID:          "input.asset_id",
+	SystemID:         "input.system_id",
+	DeviceID:         "input.device_id",
+	ChannelID:        "input.channel_id",
+	Datapoint:        "input.datapoint",
+	Function:         "input.function",
+	LastWrittenValue: "input.last_written_value",
+	LastWrittenTime:  "input.last_written_time",
 }
 
 // Generated where
 
+type whereHelpernull_Time struct{ field string }
+
+func (w whereHelpernull_Time) EQ(x null.Time) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Time) NEQ(x null.Time) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Time) LT(x null.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Time) LTE(x null.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Time) GT(x null.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Time) GTE(x null.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
+func (w whereHelpernull_Time) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Time) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+
 var InputWhere = struct {
-	ID          whereHelperint64
-	AssetID     whereHelperint32
-	SystemID    whereHelperstring
-	DeviceID    whereHelperstring
-	ChannelID   whereHelperstring
-	Datapoint   whereHelperstring
-	Function    whereHelperstring
-	LastWritten whereHelpernull_Int32
+	ID               whereHelperint64
+	AssetID          whereHelperint32
+	SystemID         whereHelperstring
+	DeviceID         whereHelperstring
+	ChannelID        whereHelperstring
+	Datapoint        whereHelperstring
+	Function         whereHelperstring
+	LastWrittenValue whereHelpernull_Int32
+	LastWrittenTime  whereHelpernull_Time
 }{
-	ID:          whereHelperint64{field: "\"abb_free_at_home\".\"input\".\"id\""},
-	AssetID:     whereHelperint32{field: "\"abb_free_at_home\".\"input\".\"asset_id\""},
-	SystemID:    whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"system_id\""},
-	DeviceID:    whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"device_id\""},
-	ChannelID:   whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"channel_id\""},
-	Datapoint:   whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"datapoint\""},
-	Function:    whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"function\""},
-	LastWritten: whereHelpernull_Int32{field: "\"abb_free_at_home\".\"input\".\"last_written\""},
+	ID:               whereHelperint64{field: "\"abb_free_at_home\".\"input\".\"id\""},
+	AssetID:          whereHelperint32{field: "\"abb_free_at_home\".\"input\".\"asset_id\""},
+	SystemID:         whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"system_id\""},
+	DeviceID:         whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"device_id\""},
+	ChannelID:        whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"channel_id\""},
+	Datapoint:        whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"datapoint\""},
+	Function:         whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"function\""},
+	LastWrittenValue: whereHelpernull_Int32{field: "\"abb_free_at_home\".\"input\".\"last_written_value\""},
+	LastWrittenTime:  whereHelpernull_Time{field: "\"abb_free_at_home\".\"input\".\"last_written_time\""},
 }
 
 // InputRels is where relationship names are stored.
@@ -127,9 +158,9 @@ func (r *inputR) GetAsset() *Asset {
 type inputL struct{}
 
 var (
-	inputAllColumns            = []string{"id", "asset_id", "system_id", "device_id", "channel_id", "datapoint", "function", "last_written"}
+	inputAllColumns            = []string{"id", "asset_id", "system_id", "device_id", "channel_id", "datapoint", "function", "last_written_value", "last_written_time"}
 	inputColumnsWithoutDefault = []string{"asset_id", "system_id", "device_id", "channel_id", "datapoint", "function"}
-	inputColumnsWithDefault    = []string{"id", "last_written"}
+	inputColumnsWithDefault    = []string{"id", "last_written_value", "last_written_time"}
 	inputPrimaryKeyColumns     = []string{"id"}
 	inputGeneratedColumns      = []string{}
 )
