@@ -15,6 +15,9 @@ type Configuration struct {
 	// Internal identifier for the configured API (created automatically).
 	Id *int64 `json:"id,omitempty"`
 
+	// Set if this API is in myBuildings cloud or a local installation.
+	IsCloud bool `json:"isCloud,omitempty"`
+
 	// URL of the ABB API (local or cloud).
 	ApiUrl string `json:"apiUrl,omitempty"`
 

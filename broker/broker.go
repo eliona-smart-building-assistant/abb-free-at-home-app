@@ -122,7 +122,12 @@ func (c Dimmer) GAI() string {
 }
 
 func GetSystems(config apiserver.Configuration) ([]System, error) {
-	api := abb.NewLocalApi(config.ApiUsername, config.ApiPassword, config.ApiUrl, int(*config.RequestTimeout))
+	var api *abb.Api
+	if config.IsCloud {
+		// todo
+	} else {
+		api = abb.NewLocalApi(config.ApiUsername, config.ApiPassword, config.ApiUrl, int(*config.RequestTimeout))
+	}
 	abbConfiguration, err := api.GetConfiguration()
 	if err != nil {
 		return nil, fmt.Errorf("getting configuration: %v", err)
@@ -310,6 +315,11 @@ func apiFilterToCommonFilter(input [][]apiserver.FilterRule) [][]common.FilterRu
 }
 
 func SetInput(config apiserver.Configuration, output appdb.Input, value any) error {
-	api := abb.NewLocalApi(config.ApiUsername, config.ApiPassword, config.ApiUrl, int(*config.RequestTimeout))
+	var api *abb.Api
+	if config.IsCloud {
+		// todo
+	} else {
+		api = abb.NewLocalApi(config.ApiUsername, config.ApiPassword, config.ApiUrl, int(*config.RequestTimeout))
+	}
 	return api.WriteDatapoint(output.SystemID, output.DeviceID, output.ChannelID, output.Datapoint, value)
 }

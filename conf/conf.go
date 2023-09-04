@@ -75,6 +75,7 @@ func DeleteConfig(ctx context.Context, configID int64) error {
 }
 
 func dbConfigFromApiConfig(apiConfig apiserver.Configuration) (dbConfig appdb.Configuration, err error) {
+	dbConfig.IsCloud = apiConfig.IsCloud
 	dbConfig.APIURL = apiConfig.ApiUrl
 	dbConfig.APIUsername = apiConfig.ApiUsername
 	dbConfig.APIPassword = apiConfig.ApiPassword
@@ -99,6 +100,7 @@ func dbConfigFromApiConfig(apiConfig apiserver.Configuration) (dbConfig appdb.Co
 }
 
 func apiConfigFromDbConfig(dbConfig *appdb.Configuration) (apiConfig apiserver.Configuration, err error) {
+	apiConfig.IsCloud = dbConfig.IsCloud
 	apiConfig.ApiUrl = dbConfig.APIURL
 	apiConfig.ApiUsername = dbConfig.APIUsername
 	apiConfig.ApiPassword = dbConfig.APIPassword

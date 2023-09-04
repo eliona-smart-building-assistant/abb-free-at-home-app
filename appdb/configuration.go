@@ -26,6 +26,7 @@ import (
 // Configuration is an object representing the database table.
 type Configuration struct {
 	ID              int64             `boil:"id" json:"id" toml:"id" yaml:"id"`
+	IsCloud         bool              `boil:"is_cloud" json:"is_cloud" toml:"is_cloud" yaml:"is_cloud"`
 	APIURL          string            `boil:"api_url" json:"api_url" toml:"api_url" yaml:"api_url"`
 	APIUsername     string            `boil:"api_username" json:"api_username" toml:"api_username" yaml:"api_username"`
 	APIPassword     string            `boil:"api_password" json:"api_password" toml:"api_password" yaml:"api_password"`
@@ -42,6 +43,7 @@ type Configuration struct {
 
 var ConfigurationColumns = struct {
 	ID              string
+	IsCloud         string
 	APIURL          string
 	APIUsername     string
 	APIPassword     string
@@ -53,6 +55,7 @@ var ConfigurationColumns = struct {
 	ProjectIds      string
 }{
 	ID:              "id",
+	IsCloud:         "is_cloud",
 	APIURL:          "api_url",
 	APIUsername:     "api_username",
 	APIPassword:     "api_password",
@@ -66,6 +69,7 @@ var ConfigurationColumns = struct {
 
 var ConfigurationTableColumns = struct {
 	ID              string
+	IsCloud         string
 	APIURL          string
 	APIUsername     string
 	APIPassword     string
@@ -77,6 +81,7 @@ var ConfigurationTableColumns = struct {
 	ProjectIds      string
 }{
 	ID:              "configuration.id",
+	IsCloud:         "configuration.is_cloud",
 	APIURL:          "configuration.api_url",
 	APIUsername:     "configuration.api_username",
 	APIPassword:     "configuration.api_password",
@@ -89,6 +94,15 @@ var ConfigurationTableColumns = struct {
 }
 
 // Generated where
+
+type whereHelperbool struct{ field string }
+
+func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
 
 type whereHelperint32 struct{ field string }
 
@@ -189,6 +203,7 @@ func (w whereHelpertypes_StringArray) IsNotNull() qm.QueryMod {
 
 var ConfigurationWhere = struct {
 	ID              whereHelperint64
+	IsCloud         whereHelperbool
 	APIURL          whereHelperstring
 	APIUsername     whereHelperstring
 	APIPassword     whereHelperstring
@@ -200,6 +215,7 @@ var ConfigurationWhere = struct {
 	ProjectIds      whereHelpertypes_StringArray
 }{
 	ID:              whereHelperint64{field: "\"abb_free_at_home\".\"configuration\".\"id\""},
+	IsCloud:         whereHelperbool{field: "\"abb_free_at_home\".\"configuration\".\"is_cloud\""},
 	APIURL:          whereHelperstring{field: "\"abb_free_at_home\".\"configuration\".\"api_url\""},
 	APIUsername:     whereHelperstring{field: "\"abb_free_at_home\".\"configuration\".\"api_username\""},
 	APIPassword:     whereHelperstring{field: "\"abb_free_at_home\".\"configuration\".\"api_password\""},
@@ -239,9 +255,9 @@ func (r *configurationR) GetAssets() AssetSlice {
 type configurationL struct{}
 
 var (
-	configurationAllColumns            = []string{"id", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
+	configurationAllColumns            = []string{"id", "is_cloud", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
 	configurationColumnsWithoutDefault = []string{"api_url", "api_username", "api_password"}
-	configurationColumnsWithDefault    = []string{"id", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
+	configurationColumnsWithDefault    = []string{"id", "is_cloud", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
 	configurationPrimaryKeyColumns     = []string{"id"}
 	configurationGeneratedColumns      = []string{}
 )

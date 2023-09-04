@@ -218,6 +218,10 @@ components:
           description: Internal identifier for the configured API (created automatically).
           readOnly: true
           nullable: true
+        isCloud:
+          type: boolean
+          description: Set if this API is in myBuildings cloud or a local installation.
+          default: false
         apiUrl:
           type: string
           format: string

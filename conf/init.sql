@@ -19,6 +19,7 @@ create schema if not exists abb_free_at_home;
 create table if not exists abb_free_at_home.configuration
 (
 	id               bigserial primary key,
+	is_cloud         boolean not null default false,
 	api_url          text not null,
 	api_username     text not null,
 	api_password     text not null,
