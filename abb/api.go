@@ -50,11 +50,6 @@ type Credentials struct {
 	OcpApimSubscriptionKey string
 }
 
-type OauthReturn struct {
-	Code  string `json:"code"`
-	State string `json:"state"`
-}
-
 type Api struct {
 	Credentials Credentials
 	Auth        ABBAuth
@@ -67,34 +62,9 @@ type Api struct {
 	WebsocketUp bool
 	Timeout     int
 
-	oauthReturn <-chan OauthReturn
-	token       *oauth2.Token
+	token *oauth2.Token
 
 	tokenCheckTicker *time.Ticker
-}
-
-// Deprecated: Use NewGraphQLApi instead
-func NewCloudApi(clientId string, clientSecret string,
-	baseUrl string, oauth2RedirectURL string, ocpApimSubscriptionKey string,
-	timeout int, oauthReturn <-chan OauthReturn) *Api {
-
-	api := Api{
-		Credentials: Credentials{
-			BasicAuth:              false,
-			OcpApimSubscriptionKey: ocpApimSubscriptionKey,
-		},
-		Auth:        *NewABBAuthorization(clientId, clientSecret, oauth2RedirectURL),
-		BaseUrl:     baseUrl,
-		Req:         abbconnection.NewHttpClient(true, true, timeout),
-		WebsocketUp: false,
-		Timeout:     timeout,
-		oauthReturn: oauthReturn,
-	}
-
-	api.Req.AddHeader("Content-Type", "application/json")
-	api.Req.AddHeader("Ocp-Apim-Subscription-Key", api.Credentials.OcpApimSubscriptionKey)
-
-	return &api
 }
 
 func NewGraphQLApi(config apiserver.Configuration, baseUrl string, oauth2RedirectURL string) *Api {

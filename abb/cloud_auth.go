@@ -20,8 +20,6 @@ package abb
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -88,17 +86,6 @@ func NewABBAuthorization(clientId string, clientSecret string, redirectURL strin
 	}
 
 	return &abbAuth
-}
-
-func randomHex(length int) (string, error) {
-	bytes := make([]byte, length)
-	_, err := rand.Read(bytes)
-
-	if err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(bytes), nil
 }
 
 type AuthResponse struct {
