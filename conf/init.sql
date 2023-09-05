@@ -20,9 +20,18 @@ create table if not exists abb_free_at_home.configuration
 (
 	id               bigserial primary key,
 	is_cloud         boolean not null default false,
-	api_url          text not null,
-	api_username     text not null,
-	api_password     text not null,
+
+	client_id        text,
+	client_secret    text,
+
+	access_token     text,
+	refresh_token    text,
+	expiry           timestamp,
+
+	api_url          text,
+	api_username     text,
+	api_password     text,
+
 	refresh_interval integer not null default 60,
 	request_timeout  integer not null default 120,
 	asset_filter     json,

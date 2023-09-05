@@ -19,6 +19,7 @@ import (
 	"abb-free-at-home/abb"
 	"abb-free-at-home/apiserver"
 	"abb-free-at-home/appdb"
+	"abb-free-at-home/conf"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -121,12 +122,32 @@ func (c Dimmer) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.gai)
 }
 
-func GetSystems(config apiserver.Configuration) ([]System, error) {
+func getAPI(config apiserver.Configuration) (*abb.Api, error) {
 	var api *abb.Api
 	if config.IsCloud {
-		// todo
+		if config.ClientID == nil || config.ClientSecret == nil || config.RequestTimeout == nil {
+			return nil, fmt.Errorf("one or more required config fields (ClientID, ClientSecret, RequestTimeout) are nil")
+		}
+		api = abb.NewGraphQLApi(config, "https://api.eu.mybuildings.abb.com", "https://api.eu.mybuildings.abb.com/external/oauth2helper/code/set/cd1a7768-680d-4040-ab76-b6a6f9c4bf9d")
 	} else {
-		api = abb.NewLocalApi(config.ApiUsername, config.ApiPassword, config.ApiUrl, int(*config.RequestTimeout))
+		if config.ApiUsername == nil || config.ApiPassword == nil || config.ApiUrl == nil || config.RequestTimeout == nil {
+			return nil, fmt.Errorf("one or more required config fields (ApiUsername, ApiPassword, ApiUrl, RequestTimeout) are nil")
+		}
+		api = abb.NewLocalApi(*config.ApiUsername, *config.ApiPassword, *config.ApiUrl, int(*config.RequestTimeout))
+	}
+	if err := api.Authorize(); err != nil {
+		return nil, fmt.Errorf("authorizing: %v", err)
+	}
+	if _, err := conf.PersistAuthorization(config, *api.Auth.OauthToken); err != nil {
+		return nil, fmt.Errorf("persisting authorization: %v", err)
+	}
+	return api, nil
+}
+
+func GetSystems(config apiserver.Configuration) ([]System, error) {
+	api, err := getAPI(config)
+	if err != nil {
+		return nil, fmt.Errorf("getting API instance: %v", err)
 	}
 	abbConfiguration, err := api.GetConfiguration()
 	if err != nil {
@@ -315,11 +336,9 @@ func apiFilterToCommonFilter(input [][]apiserver.FilterRule) [][]common.FilterRu
 }
 
 func SetInput(config apiserver.Configuration, output appdb.Input, value any) error {
-	var api *abb.Api
-	if config.IsCloud {
-		// todo
-	} else {
-		api = abb.NewLocalApi(config.ApiUsername, config.ApiPassword, config.ApiUrl, int(*config.RequestTimeout))
+	api, err := getAPI(config)
+	if err != nil {
+		return fmt.Errorf("getting API instance: %v", err)
 	}
 	return api.WriteDatapoint(output.SystemID, output.DeviceID, output.ChannelID, output.Datapoint, value)
 }

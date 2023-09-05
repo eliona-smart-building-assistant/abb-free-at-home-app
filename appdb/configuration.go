@@ -27,9 +27,14 @@ import (
 type Configuration struct {
 	ID              int64             `boil:"id" json:"id" toml:"id" yaml:"id"`
 	IsCloud         bool              `boil:"is_cloud" json:"is_cloud" toml:"is_cloud" yaml:"is_cloud"`
-	APIURL          string            `boil:"api_url" json:"api_url" toml:"api_url" yaml:"api_url"`
-	APIUsername     string            `boil:"api_username" json:"api_username" toml:"api_username" yaml:"api_username"`
-	APIPassword     string            `boil:"api_password" json:"api_password" toml:"api_password" yaml:"api_password"`
+	ClientID        null.String       `boil:"client_id" json:"client_id,omitempty" toml:"client_id" yaml:"client_id,omitempty"`
+	ClientSecret    null.String       `boil:"client_secret" json:"client_secret,omitempty" toml:"client_secret" yaml:"client_secret,omitempty"`
+	AccessToken     null.String       `boil:"access_token" json:"access_token,omitempty" toml:"access_token" yaml:"access_token,omitempty"`
+	RefreshToken    null.String       `boil:"refresh_token" json:"refresh_token,omitempty" toml:"refresh_token" yaml:"refresh_token,omitempty"`
+	Expiry          null.Time         `boil:"expiry" json:"expiry,omitempty" toml:"expiry" yaml:"expiry,omitempty"`
+	APIURL          null.String       `boil:"api_url" json:"api_url,omitempty" toml:"api_url" yaml:"api_url,omitempty"`
+	APIUsername     null.String       `boil:"api_username" json:"api_username,omitempty" toml:"api_username" yaml:"api_username,omitempty"`
+	APIPassword     null.String       `boil:"api_password" json:"api_password,omitempty" toml:"api_password" yaml:"api_password,omitempty"`
 	RefreshInterval int32             `boil:"refresh_interval" json:"refresh_interval" toml:"refresh_interval" yaml:"refresh_interval"`
 	RequestTimeout  int32             `boil:"request_timeout" json:"request_timeout" toml:"request_timeout" yaml:"request_timeout"`
 	AssetFilter     null.JSON         `boil:"asset_filter" json:"asset_filter,omitempty" toml:"asset_filter" yaml:"asset_filter,omitempty"`
@@ -44,6 +49,11 @@ type Configuration struct {
 var ConfigurationColumns = struct {
 	ID              string
 	IsCloud         string
+	ClientID        string
+	ClientSecret    string
+	AccessToken     string
+	RefreshToken    string
+	Expiry          string
 	APIURL          string
 	APIUsername     string
 	APIPassword     string
@@ -56,6 +66,11 @@ var ConfigurationColumns = struct {
 }{
 	ID:              "id",
 	IsCloud:         "is_cloud",
+	ClientID:        "client_id",
+	ClientSecret:    "client_secret",
+	AccessToken:     "access_token",
+	RefreshToken:    "refresh_token",
+	Expiry:          "expiry",
 	APIURL:          "api_url",
 	APIUsername:     "api_username",
 	APIPassword:     "api_password",
@@ -70,6 +85,11 @@ var ConfigurationColumns = struct {
 var ConfigurationTableColumns = struct {
 	ID              string
 	IsCloud         string
+	ClientID        string
+	ClientSecret    string
+	AccessToken     string
+	RefreshToken    string
+	Expiry          string
 	APIURL          string
 	APIUsername     string
 	APIPassword     string
@@ -82,6 +102,11 @@ var ConfigurationTableColumns = struct {
 }{
 	ID:              "configuration.id",
 	IsCloud:         "configuration.is_cloud",
+	ClientID:        "configuration.client_id",
+	ClientSecret:    "configuration.client_secret",
+	AccessToken:     "configuration.access_token",
+	RefreshToken:    "configuration.refresh_token",
+	Expiry:          "configuration.expiry",
 	APIURL:          "configuration.api_url",
 	APIUsername:     "configuration.api_username",
 	APIPassword:     "configuration.api_password",
@@ -103,6 +128,80 @@ func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field
 func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
 func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
 func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+
+type whereHelpernull_String struct{ field string }
+
+func (w whereHelpernull_String) EQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_String) NEQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_String) LT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_String) LTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_String) GT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+func (w whereHelpernull_String) LIKE(x null.String) qm.QueryMod {
+	return qm.Where(w.field+" LIKE ?", x)
+}
+func (w whereHelpernull_String) NLIKE(x null.String) qm.QueryMod {
+	return qm.Where(w.field+" NOT LIKE ?", x)
+}
+func (w whereHelpernull_String) ILIKE(x null.String) qm.QueryMod {
+	return qm.Where(w.field+" ILIKE ?", x)
+}
+func (w whereHelpernull_String) NILIKE(x null.String) qm.QueryMod {
+	return qm.Where(w.field+" NOT ILIKE ?", x)
+}
+func (w whereHelpernull_String) IN(slice []string) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelpernull_String) NIN(slice []string) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
+
+func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+
+type whereHelpernull_Time struct{ field string }
+
+func (w whereHelpernull_Time) EQ(x null.Time) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Time) NEQ(x null.Time) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Time) LT(x null.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Time) LTE(x null.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Time) GT(x null.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Time) GTE(x null.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
+func (w whereHelpernull_Time) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Time) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
 type whereHelperint32 struct{ field string }
 
@@ -204,9 +303,14 @@ func (w whereHelpertypes_StringArray) IsNotNull() qm.QueryMod {
 var ConfigurationWhere = struct {
 	ID              whereHelperint64
 	IsCloud         whereHelperbool
-	APIURL          whereHelperstring
-	APIUsername     whereHelperstring
-	APIPassword     whereHelperstring
+	ClientID        whereHelpernull_String
+	ClientSecret    whereHelpernull_String
+	AccessToken     whereHelpernull_String
+	RefreshToken    whereHelpernull_String
+	Expiry          whereHelpernull_Time
+	APIURL          whereHelpernull_String
+	APIUsername     whereHelpernull_String
+	APIPassword     whereHelpernull_String
 	RefreshInterval whereHelperint32
 	RequestTimeout  whereHelperint32
 	AssetFilter     whereHelpernull_JSON
@@ -216,9 +320,14 @@ var ConfigurationWhere = struct {
 }{
 	ID:              whereHelperint64{field: "\"abb_free_at_home\".\"configuration\".\"id\""},
 	IsCloud:         whereHelperbool{field: "\"abb_free_at_home\".\"configuration\".\"is_cloud\""},
-	APIURL:          whereHelperstring{field: "\"abb_free_at_home\".\"configuration\".\"api_url\""},
-	APIUsername:     whereHelperstring{field: "\"abb_free_at_home\".\"configuration\".\"api_username\""},
-	APIPassword:     whereHelperstring{field: "\"abb_free_at_home\".\"configuration\".\"api_password\""},
+	ClientID:        whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"client_id\""},
+	ClientSecret:    whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"client_secret\""},
+	AccessToken:     whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"access_token\""},
+	RefreshToken:    whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"refresh_token\""},
+	Expiry:          whereHelpernull_Time{field: "\"abb_free_at_home\".\"configuration\".\"expiry\""},
+	APIURL:          whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"api_url\""},
+	APIUsername:     whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"api_username\""},
+	APIPassword:     whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"api_password\""},
 	RefreshInterval: whereHelperint32{field: "\"abb_free_at_home\".\"configuration\".\"refresh_interval\""},
 	RequestTimeout:  whereHelperint32{field: "\"abb_free_at_home\".\"configuration\".\"request_timeout\""},
 	AssetFilter:     whereHelpernull_JSON{field: "\"abb_free_at_home\".\"configuration\".\"asset_filter\""},
@@ -255,9 +364,9 @@ func (r *configurationR) GetAssets() AssetSlice {
 type configurationL struct{}
 
 var (
-	configurationAllColumns            = []string{"id", "is_cloud", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
-	configurationColumnsWithoutDefault = []string{"api_url", "api_username", "api_password"}
-	configurationColumnsWithDefault    = []string{"id", "is_cloud", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
+	configurationAllColumns            = []string{"id", "is_cloud", "client_id", "client_secret", "access_token", "refresh_token", "expiry", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
+	configurationColumnsWithoutDefault = []string{}
+	configurationColumnsWithDefault    = []string{"id", "is_cloud", "client_id", "client_secret", "access_token", "refresh_token", "expiry", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
 	configurationPrimaryKeyColumns     = []string{"id"}
 	configurationGeneratedColumns      = []string{}
 )

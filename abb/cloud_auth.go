@@ -18,11 +18,16 @@ package abb
 // Original author: Christian Stauffer <christian.stauffer@leicom.ch>
 
 import (
+	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"golang.org/x/oauth2"
 )
@@ -63,7 +68,7 @@ type ABBAuth struct {
 	oauthConf        *oauth2.Config
 	oauth2Code       string
 	authorizedClient *http.Client
-	oauthToken       *oauth2.Token
+	OauthToken       *oauth2.Token
 	oauthTokenSrc    oauth2.TokenSource
 }
 
@@ -96,72 +101,119 @@ func randomHex(length int) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-func (auth *ABBAuth) Authorize(oauthReturn <-chan OauthReturn) (*string, error) {
+type AuthResponse struct {
+	AuthorizeURL          string `json:"authorize_url"`
+	CodeURL               string `json:"code_url"`
+	AccessTokenRequestURL string `json:"accesstoken_request_url"`
+}
 
-	// generate random string for state
-	state, err := randomHex(60)
-	if err != nil {
-		log.Println("couldn't gen random string for oauth state")
+func (auth *ABBAuth) Authorize(originalToken *oauth2.Token) (*string, error) {
+	auth.OauthToken = originalToken
+	if originalToken == nil {
+		resp, err := http.Post("https://api.eu.mybuildings.abb.com/external/oauth2helper/config/"+auth.oauthConf.ClientID, "application/json", bytes.NewBuffer([]byte{}))
+		if err != nil {
+			return nil, fmt.Errorf("failed to initiate OAuth2 authentication: %v", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("received non-200 response: %s", resp.Status)
+		}
+
+		var authResp AuthResponse
+		if err := json.NewDecoder(resp.Body).Decode(&authResp); err != nil {
+			return nil, fmt.Errorf("failed to decode JSON response: %v", err)
+		}
+
+		fmt.Printf("\r\n ***********\r\nLogin ONCE with your webbrowser: %v\r\n", authResp.AuthorizeURL)
+
+		// wait until user called the auth redirect page
+		code, err := pollForCode(authResp.CodeURL)
+		if err != nil {
+			return nil, fmt.Errorf("polling for code: %v", err)
+		}
+
+		auth.oauth2Code = code
+
+		auth.OauthToken, err = auth.oauthConf.Exchange(context.Background(), auth.oauth2Code, oauth2.AccessTypeOffline)
+		if err != nil {
+			return nil, fmt.Errorf("getting token from code: %v", err)
+		}
 	}
-
-	// generate auth url for user to login to abb
-	// offline for auto refresh token
-	url := auth.oauthConf.AuthCodeURL(state, oauth2.AccessTypeOffline)
-	fmt.Printf("\r\n ***********\r\nLogin ONCE with your webbrowser: %v\r\n", url)
-
-	// wait until user called the auth redirect page
-
-	param := <-oauthReturn
-	for param.State != state {
-		// wrong state
-		param = <-oauthReturn
-	}
-
-	auth.oauth2Code = param.Code
-	log.Println("oauth2 code: ", auth.oauth2Code)
-
-	// get token
-	auth.oauthToken, err = auth.oauthConf.Exchange(oauth2.NoContext, auth.oauth2Code, oauth2.AccessTypeOffline)
-	if err != nil {
-		log.Println("couldn't get token.")
-		return nil, err
-	}
-
-	log.Println("oauth2 access token: ", auth.oauthToken.AccessToken)
 
 	// http client with token autorefresh ?> auto refresh doesn't work..
 	// auth.authorizedClient = auth.oauthConf.Client(oauth2.NoContext, auth.oauthToken)
 
-	auth.oauthTokenSrc = auth.oauthConf.TokenSource(oauth2.NoContext, auth.oauthToken)
-	auth.oauthToken, err = auth.oauthTokenSrc.Token()
-
+	auth.oauthTokenSrc = auth.oauthConf.TokenSource(context.Background(), auth.OauthToken)
+	var err error
+	auth.OauthToken, err = auth.oauthTokenSrc.Token()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting token from source: %v", err)
 	}
 
-	return &auth.oauthToken.AccessToken, err
+	return &auth.OauthToken.AccessToken, err
+}
+
+type CodeResponse struct {
+	Code string `json:"code"`
+}
+
+func pollForCode(codeURL string) (string, error) {
+	maxRetries := 120
+	interval := time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		code, err := requestForCode(codeURL)
+		if err == nil {
+			return code, nil
+		}
+
+		time.Sleep(interval)
+	}
+
+	return "", errors.New("max retries reached without obtaining code")
+}
+
+func requestForCode(codeURL string) (string, error) {
+	resp, err := http.Get(codeURL)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		var codeResp CodeResponse
+		if err := json.NewDecoder(resp.Body).Decode(&codeResp); err != nil {
+			return "", err
+		}
+		return codeResp.Code, nil
+	} else if resp.StatusCode == http.StatusNotFound {
+		return "", errors.New("code not ready yet")
+	} else {
+		return "", fmt.Errorf("unexpected HTTP status: %s", resp.Status)
+	}
 }
 
 func (auth *ABBAuth) Refresh() (*string, error) {
 	var err error
 
-	auth.oauthToken, err = auth.oauthTokenSrc.Token()
+	auth.OauthToken, err = auth.oauthTokenSrc.Token()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &auth.oauthToken.AccessToken, err
+	return &auth.OauthToken.AccessToken, err
 }
 
 func (auth *ABBAuth) GetCurrentAccessToken() string {
-	return auth.oauthToken.AccessToken
+	return auth.OauthToken.AccessToken
 }
 
 func (auth *ABBAuth) SetCurrentAccessToken(accessToken string) {
-	if auth.oauthToken == nil {
+	if auth.OauthToken == nil {
 		log.Println("WARNING: no token set now. create it.")
-		auth.oauthToken = &oauth2.Token{}
+		auth.OauthToken = &oauth2.Token{}
 	}
-	auth.oauthToken.AccessToken = accessToken
+	auth.OauthToken.AccessToken = accessToken
 }

@@ -26,6 +26,7 @@ import (
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"golang.org/x/oauth2"
 )
 
 var ErrBadRequest = errors.New("bad request")
@@ -76,9 +77,38 @@ func DeleteConfig(ctx context.Context, configID int64) error {
 
 func dbConfigFromApiConfig(apiConfig apiserver.Configuration) (dbConfig appdb.Configuration, err error) {
 	dbConfig.IsCloud = apiConfig.IsCloud
-	dbConfig.APIURL = apiConfig.ApiUrl
-	dbConfig.APIUsername = apiConfig.ApiUsername
-	dbConfig.APIPassword = apiConfig.ApiPassword
+	if apiConfig.ClientID != nil {
+		dbConfig.ClientID.String = *apiConfig.ClientID
+		dbConfig.ClientID.Valid = true
+	}
+	if apiConfig.ClientSecret != nil {
+		dbConfig.ClientSecret.String = *apiConfig.ClientSecret
+		dbConfig.ClientSecret.Valid = true
+	}
+	if apiConfig.AccessToken != nil {
+		dbConfig.AccessToken.String = *apiConfig.AccessToken
+		dbConfig.AccessToken.Valid = true
+	}
+	if apiConfig.RefreshToken != nil {
+		dbConfig.RefreshToken.String = *apiConfig.RefreshToken
+		dbConfig.RefreshToken.Valid = true
+	}
+	if apiConfig.Expiry != nil {
+		dbConfig.Expiry.Time = *apiConfig.Expiry
+		dbConfig.Expiry.Valid = true
+	}
+	if apiConfig.ApiUrl != nil {
+		dbConfig.APIURL.String = *apiConfig.ApiUrl
+		dbConfig.APIURL.Valid = true
+	}
+	if apiConfig.ApiUsername != nil {
+		dbConfig.APIUsername.String = *apiConfig.ApiUsername
+		dbConfig.APIUsername.Valid = true
+	}
+	if apiConfig.ApiPassword != nil {
+		dbConfig.APIPassword.String = *apiConfig.ApiPassword
+		dbConfig.APIPassword.Valid = true
+	}
 
 	dbConfig.ID = null.Int64FromPtr(apiConfig.Id).Int64
 	dbConfig.Enable = null.BoolFromPtr(apiConfig.Enable)
@@ -101,9 +131,16 @@ func dbConfigFromApiConfig(apiConfig apiserver.Configuration) (dbConfig appdb.Co
 
 func apiConfigFromDbConfig(dbConfig *appdb.Configuration) (apiConfig apiserver.Configuration, err error) {
 	apiConfig.IsCloud = dbConfig.IsCloud
-	apiConfig.ApiUrl = dbConfig.APIURL
-	apiConfig.ApiUsername = dbConfig.APIUsername
-	apiConfig.ApiPassword = dbConfig.APIPassword
+	apiConfig.ClientID = dbConfig.ClientID.Ptr()
+	apiConfig.ClientSecret = dbConfig.ClientSecret.Ptr()
+	apiConfig.AccessToken = dbConfig.AccessToken.Ptr()
+	apiConfig.RefreshToken = dbConfig.RefreshToken.Ptr()
+	if dbConfig.Expiry.Valid {
+		apiConfig.Expiry = &dbConfig.Expiry.Time
+	}
+	apiConfig.ApiUrl = dbConfig.APIURL.Ptr()
+	apiConfig.ApiUsername = dbConfig.APIUsername.Ptr()
+	apiConfig.ApiPassword = dbConfig.APIPassword.Ptr()
 
 	apiConfig.Id = &dbConfig.ID
 	apiConfig.Enable = dbConfig.Enable.Ptr()
@@ -163,6 +200,16 @@ func IsConfigEnabled(config apiserver.Configuration) bool {
 func SetAllConfigsInactive(ctx context.Context) (int64, error) {
 	return appdb.Configurations().UpdateAllG(ctx, appdb.M{
 		appdb.ConfigurationColumns.Active: false,
+	})
+}
+
+func PersistAuthorization(config apiserver.Configuration, auth oauth2.Token) (int64, error) {
+	return appdb.Configurations(
+		appdb.ConfigurationWhere.ID.EQ(*config.Id),
+	).UpdateAllG(context.Background(), appdb.M{
+		appdb.ConfigurationColumns.AccessToken:  auth.AccessToken,
+		appdb.ConfigurationColumns.RefreshToken: auth.RefreshToken,
+		appdb.ConfigurationColumns.Expiry:       auth.Expiry,
 	})
 }
 

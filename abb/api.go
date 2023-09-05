@@ -29,6 +29,9 @@ import (
 	"time"
 
 	"abb-free-at-home/abbconnection"
+	"abb-free-at-home/apiserver"
+
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -42,6 +45,8 @@ type Credentials struct {
 	BasicAuth              bool
 	User                   string
 	Password               string
+	ClientID               string
+	ClientSecret           string
 	OcpApimSubscriptionKey string
 }
 
@@ -63,10 +68,12 @@ type Api struct {
 	Timeout     int
 
 	oauthReturn <-chan OauthReturn
+	token       *oauth2.Token
 
 	tokenCheckTicker *time.Ticker
 }
 
+// Deprecated: Use NewGraphQLApi instead
 func NewCloudApi(clientId string, clientSecret string,
 	baseUrl string, oauth2RedirectURL string, ocpApimSubscriptionKey string,
 	timeout int, oauthReturn <-chan OauthReturn) *Api {
@@ -86,6 +93,36 @@ func NewCloudApi(clientId string, clientSecret string,
 
 	api.Req.AddHeader("Content-Type", "application/json")
 	api.Req.AddHeader("Ocp-Apim-Subscription-Key", api.Credentials.OcpApimSubscriptionKey)
+
+	return &api
+}
+
+func NewGraphQLApi(config apiserver.Configuration, baseUrl string, oauth2RedirectURL string) *Api {
+	timeout := int(*config.RequestTimeout)
+	var token *oauth2.Token
+	if config.AccessToken != nil {
+		token = &oauth2.Token{
+			TokenType:    "bearer",
+			AccessToken:  *config.AccessToken,
+			RefreshToken: *config.RefreshToken,
+			Expiry:       *config.Expiry,
+		}
+	}
+	api := Api{
+		Credentials: Credentials{
+			BasicAuth:    false,
+			ClientID:     *config.ClientID,
+			ClientSecret: *config.ClientSecret,
+		},
+		Auth:        *NewABBAuthorization(*config.ClientID, *config.ClientSecret, oauth2RedirectURL),
+		BaseUrl:     baseUrl,
+		Req:         abbconnection.NewHttpClient(true, true, timeout),
+		WebsocketUp: false,
+		Timeout:     timeout,
+		token:       token,
+	}
+
+	api.Req.AddHeader("Content-Type", "application/json")
 
 	return &api
 }
@@ -110,29 +147,29 @@ func NewLocalApi(user string, password string,
 }
 
 func (api *Api) Authorize() error {
-	var err error
-
 	if !api.Credentials.BasicAuth {
-		var accessToken *string
 		// cloud instance with oauth2
-		accessToken, err = api.Auth.Authorize(api.oauthReturn)
-
+		accessToken, err := api.Auth.Authorize(api.token)
 		if err != nil {
-			return err
+			return fmt.Errorf("obtaining access token: %v", err)
 		}
 		if accessToken == nil {
 			return errors.New("couldn't get authorized client")
 		}
 
-		err = api.setAuthHeaders(accessToken)
+		if err := api.setAuthHeaders(accessToken); err != nil {
+			return fmt.Errorf("setting auth headers: %v", err)
+		}
 
 		go api.tokenChecker()
 	} else {
 		// local instaces uses
-		api.setAuthHeaders(nil)
+		if err := api.setAuthHeaders(nil); err != nil {
+			return fmt.Errorf("setting auth headers: %v", err)
+		}
 	}
 
-	return err
+	return nil
 }
 
 func (api *Api) tokenChecker() {
@@ -142,7 +179,7 @@ func (api *Api) tokenChecker() {
 		select {
 		case _, ok := <-api.tokenCheckTicker.C:
 			if ok {
-				if !api.Auth.oauthToken.Valid() {
+				if !api.Auth.OauthToken.Valid() {
 					// make something to autorenew token
 					fmt.Println("request new token")
 					wssUrl, err := api.GetWebsocketUrl()
@@ -348,7 +385,7 @@ func (api *Api) request(method string, path string, payload *[]byte) ([]byte, in
 	var err error
 	var accessToken *string
 
-	if !api.Credentials.BasicAuth && !api.Auth.oauthToken.Valid() {
+	if !api.Credentials.BasicAuth && !api.Auth.OauthToken.Valid() {
 		log.Println("access token expired. renewing")
 		accessToken, err = api.Auth.Refresh()
 		if err != nil {

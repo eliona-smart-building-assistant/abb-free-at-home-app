@@ -9,6 +9,10 @@
 
 package apiserver
 
+import (
+	"time"
+)
+
 // Configuration - Each configuration defines access to provider's API.
 type Configuration struct {
 
@@ -18,14 +22,29 @@ type Configuration struct {
 	// Set if this API is in myBuildings cloud or a local installation.
 	IsCloud bool `json:"isCloud,omitempty"`
 
-	// URL of the ABB API (local or cloud).
-	ApiUrl string `json:"apiUrl,omitempty"`
+	// ABB Cloud API OAuth client ID.
+	ClientID *string `json:"clientID,omitempty"`
 
-	// ABB API username.
-	ApiUsername string `json:"apiUsername,omitempty"`
+	// ABB Cloud API OAuth client secret.
+	ClientSecret *string `json:"clientSecret,omitempty"`
 
-	// ABB API password.
-	ApiPassword string `json:"apiPassword,omitempty"`
+	// ABB Cloud API OAuth current access token. Should not be needed to change.
+	AccessToken *string `json:"accessToken,omitempty"`
+
+	// ABB Cloud API OAuth client refresh token. Should not be needed to change.
+	RefreshToken *string `json:"refreshToken,omitempty"`
+
+	// ABB Cloud API OAuth client expiry time. Should not be needed to change.
+	Expiry *time.Time `json:"expiry,omitempty"`
+
+	// URL of the local ABB API.
+	ApiUrl *string `json:"apiUrl,omitempty"`
+
+	// ABB local API username.
+	ApiUsername *string `json:"apiUsername,omitempty"`
+
+	// ABB local API password.
+	ApiPassword *string `json:"apiPassword,omitempty"`
 
 	// Flag to enable or disable fetching from this API
 	Enable *bool `json:"enable,omitempty"`

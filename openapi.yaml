@@ -222,21 +222,47 @@ components:
           type: boolean
           description: Set if this API is in myBuildings cloud or a local installation.
           default: false
+        clientID:
+          type: string
+          format: string
+          description: ABB Cloud API OAuth client ID.
+          nullable: true
+          example: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        clientSecret:
+          type: string
+          format: string
+          description: ABB Cloud API OAuth client secret.
+          nullable: true
+        accessToken:
+          type: string
+          format: string
+          description: ABB Cloud API OAuth current access token. Should not be needed to change.
+          nullable: true
+        refreshToken:
+          type: string
+          format: string
+          description: ABB Cloud API OAuth client refresh token. Should not be needed to change.
+          nullable: true
+        expiry:
+          type: string
+          format: date-time
+          description: ABB Cloud API OAuth client expiry time. Should not be needed to change.
+          nullable: true
         apiUrl:
           type: string
           format: string
-          description: URL of the ABB API (local or cloud).
-          example: 10.10.10.101
+          description: URL of the local ABB API.
+          nullable: true
         apiUsername:
           type: string
           format: string
-          description: ABB API username.
-          example: 10.10.10.101
+          description: ABB local API username.
+          nullable: true
         apiPassword:
           type: string
           format: string
-          description: ABB API password.
-          example: 10.10.10.101
+          description: ABB local API password.
+          nullable: true
         enable:
           type: boolean
           description: Flag to enable or disable fetching from this API
