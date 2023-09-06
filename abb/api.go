@@ -24,11 +24,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"abb-free-at-home/abbconnection"
+	"abb-free-at-home/abbgraphql"
 	"abb-free-at-home/apiserver"
 
 	"golang.org/x/oauth2"
@@ -313,6 +315,62 @@ func (api *Api) GetWebsocketUrl() (string, error) {
 }
 
 func (api *Api) GetConfiguration() (DataFormat, error) {
+	if api.Auth.AuthorizedClient == nil {
+		return api.getConfigurationLegacy()
+	}
+	return api.getConfigurationGraphQL()
+}
+
+func (api *Api) getConfigurationGraphQL() (DataFormat, error) {
+	systemsQueryResult, err := abbgraphql.GetSystems(api.Auth.AuthorizedClient)
+	if err != nil {
+		return DataFormat{}, fmt.Errorf("getting systems from graphQL: %v", err)
+	}
+	d := convertToDataFormat(systemsQueryResult)
+	return d, nil
+}
+
+func convertToDataFormat(query abbgraphql.SystemsQuery) DataFormat {
+	var dataFormat DataFormat
+	dataFormat.Systems = make(map[string]System)
+
+	for _, systemQuery := range query.Systems {
+		var system System
+		system.SysApName = string(systemQuery.DtId)
+		system.Devices = make(map[string]Device)
+
+		for _, asset := range systemQuery.Assets {
+			var device Device
+			device.DisplayName = string(asset.Name.En)
+			device.Channels = make(map[string]Channel)
+
+			for _, ch := range asset.Channels {
+				var channel Channel
+				channel.DisplayName = string(ch.Name.En)
+				channel.FunctionId = string(ch.FunctionId)
+				channel.Inputs = make(map[string]Input)
+
+				for _, input := range ch.Inputs {
+					var inp Input
+					pairingId, err := strconv.ParseInt(string(input.Value.PairingId), 16, 32)
+					if err != nil {
+						log.Printf("Error converting pairingId from hex: %v", err)
+					}
+					inp.PairingId = int(pairingId)
+					inp.Value = string(input.Value.Value)
+					channel.Inputs[string(input.Key)] = inp
+				}
+				device.Channels[strconv.Itoa(int(ch.ChannelNumber))] = channel
+			}
+			system.Devices[string(asset.SerialNumber)] = device
+		}
+		dataFormat.Systems[string(systemQuery.DtId)] = system
+	}
+
+	return dataFormat
+}
+
+func (api *Api) getConfigurationLegacy() (DataFormat, error) {
 	config := DataFormat{}
 	systems := make(map[string]System)
 

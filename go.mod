@@ -8,6 +8,7 @@ require (
 	github.com/eliona-smart-building-assistant/go-utils v1.0.34
 	github.com/friendsofgo/errors v0.9.2
 	github.com/gorilla/mux v1.8.0
+	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466
 	github.com/volatiletech/null/v8 v8.1.2
 	github.com/volatiletech/sqlboiler/v4 v4.15.0
 	github.com/volatiletech/strmangle v0.0.5

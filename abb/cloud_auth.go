@@ -65,7 +65,7 @@ var scopes = []string{
 type ABBAuth struct {
 	oauthConf        *oauth2.Config
 	oauth2Code       string
-	authorizedClient *http.Client
+	AuthorizedClient *http.Client
 	OauthToken       *oauth2.Token
 	oauthTokenSrc    oauth2.TokenSource
 }
@@ -128,9 +128,6 @@ func (auth *ABBAuth) Authorize(originalToken *oauth2.Token) (*string, error) {
 		}
 	}
 
-	// http client with token autorefresh ?> auto refresh doesn't work..
-	// auth.authorizedClient = auth.oauthConf.Client(oauth2.NoContext, auth.oauthToken)
-
 	auth.oauthTokenSrc = auth.oauthConf.TokenSource(context.Background(), auth.OauthToken)
 	var err error
 	auth.OauthToken, err = auth.oauthTokenSrc.Token()
@@ -138,7 +135,10 @@ func (auth *ABBAuth) Authorize(originalToken *oauth2.Token) (*string, error) {
 		return nil, fmt.Errorf("getting token from source: %v", err)
 	}
 
-	return &auth.OauthToken.AccessToken, err
+	// original comment: http client with token autorefresh ?> auto refresh doesn't work..
+	auth.AuthorizedClient = auth.oauthConf.Client(context.Background(), auth.OauthToken)
+
+	return &auth.OauthToken.AccessToken, nil
 }
 
 type CodeResponse struct {
