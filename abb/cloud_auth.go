@@ -94,6 +94,16 @@ type AuthResponse struct {
 	AccessTokenRequestURL string `json:"accesstoken_request_url"`
 }
 
+type oauthTransport struct {
+	Token     string
+	Transport http.RoundTripper
+}
+
+func (t *oauthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Add("Authorization", "Bearer "+t.Token)
+	return t.Transport.RoundTrip(req)
+}
+
 func (auth *ABBAuth) Authorize(originalToken *oauth2.Token) (*string, error) {
 	auth.OauthToken = originalToken
 	if originalToken == nil {
@@ -135,9 +145,15 @@ func (auth *ABBAuth) Authorize(originalToken *oauth2.Token) (*string, error) {
 		return nil, fmt.Errorf("getting token from source: %v", err)
 	}
 
-	// original comment: http client with token autorefresh ?> auto refresh doesn't work..
-	auth.AuthorizedClient = auth.oauthConf.Client(context.Background(), auth.OauthToken)
+	auth.AuthorizedClient = &http.Client{
+		Transport: &oauthTransport{
+			Token:     auth.OauthToken.AccessToken,
+			Transport: http.DefaultTransport,
+		},
+	}
 
+	// original comment: http client with token autorefresh ?> auto refresh doesn't work..
+	// auth.AuthorizedClient = auth.oauthConf.Client(context.Background(), auth.OauthToken)
 	return &auth.OauthToken.AccessToken, nil
 }
 

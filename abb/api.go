@@ -33,6 +33,7 @@ import (
 	"abb-free-at-home/abbgraphql"
 	"abb-free-at-home/apiserver"
 
+	utilslog "github.com/eliona-smart-building-assistant/go-utils/log"
 	"golang.org/x/oauth2"
 )
 
@@ -118,6 +119,8 @@ func NewLocalApi(user string, password string,
 	return &api
 }
 
+var tokenCheckerOnce sync.Once
+
 func (api *Api) Authorize() error {
 	if !api.Credentials.BasicAuth {
 		// cloud instance with oauth2
@@ -132,8 +135,9 @@ func (api *Api) Authorize() error {
 		if err := api.setAuthHeaders(accessToken); err != nil {
 			return fmt.Errorf("setting auth headers: %v", err)
 		}
-
-		go api.tokenChecker()
+		go func() {
+			tokenCheckerOnce.Do(api.tokenChecker)
+		}()
 	} else {
 		// local instaces uses
 		if err := api.setAuthHeaders(nil); err != nil {
@@ -152,15 +156,11 @@ func (api *Api) tokenChecker() {
 		case _, ok := <-api.tokenCheckTicker.C:
 			if ok {
 				if !api.Auth.OauthToken.Valid() {
-					// make something to autorenew token
-					fmt.Println("request new token")
-					wssUrl, err := api.GetWebsocketUrl()
-
-					if err != nil {
-						log.Println("error while getting websocket address: ", err)
-						wssUrl = "wss://fhapi.my.busch-jaeger.de/api/ws"
+					fmt.Println("reauthorizing token")
+					// todo: make something to autorenew token
+					if err := api.Authorize(); err != nil {
+						utilslog.Error("abb", "reauthorizing token: %v", err)
 					}
-					api.wssUrl = wssUrl
 				}
 			} else {
 				log.Println("ticker exited")
