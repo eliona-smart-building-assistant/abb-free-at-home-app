@@ -388,6 +388,13 @@ func (api *Api) getConfigurationLegacy() (DataFormat, error) {
 }
 
 func (api *Api) WriteDatapoint(system string, deviceId string, channel string, datapoint string, value interface{}) error {
+	if api.Auth.AuthorizedClient == nil {
+		return api.writeDatapointLegacy(system, deviceId, channel, datapoint, value)
+	}
+	return nil // todo
+}
+
+func (api *Api) writeDatapointLegacy(system string, deviceId string, channel string, datapoint string, value interface{}) error {
 	dpPath := system + "/" + deviceId + "." + channel + "." + datapoint
 	reqBody := []byte(fmt.Sprint(value))
 
