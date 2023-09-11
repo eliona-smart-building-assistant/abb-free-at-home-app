@@ -348,17 +348,17 @@ func convertToDataFormat(query abbgraphql.SystemsQuery) DataFormat {
 				var channel Channel
 				channel.DisplayName = string(ch.Name.En)
 				channel.FunctionId = string(ch.FunctionId)
-				channel.Inputs = make(map[string]Input)
+				channel.Outputs = make(map[string]Output)
 
-				for _, input := range ch.Inputs {
-					var inp Input
-					pairingId, err := strconv.ParseInt(string(input.Value.PairingId), 16, 32)
+				for _, output := range ch.Outputs {
+					var out Output
+					pairingId, err := strconv.ParseInt(string(output.Value.PairingId), 16, 32)
 					if err != nil {
 						log.Printf("Error converting pairingId from hex: %v", err)
 					}
-					inp.PairingId = int(pairingId)
-					inp.Value = string(input.Value.Value)
-					channel.Inputs[string(input.Key)] = inp
+					out.PairingId = int(pairingId)
+					out.Value = string(output.Value.DataPointService.RequestDataPointValue.Value)
+					channel.Outputs[string(output.Key)] = out
 				}
 				device.Channels[strconv.Itoa(int(ch.ChannelNumber))] = channel
 			}

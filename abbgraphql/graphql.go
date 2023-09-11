@@ -8,6 +8,9 @@ import (
 )
 
 type SystemsQuery struct {
+	Refresh struct {
+		Refreshed graphql.Boolean `graphql:"refreshed"`
+	} `graphql:"Refresh"`
 	Systems []struct {
 		DtId   graphql.String `graphql:"dtId"`
 		Assets []struct {
@@ -21,17 +24,22 @@ type SystemsQuery struct {
 				Name          struct {
 					En graphql.String `graphql:"en"`
 				} `graphql:"Name"`
-				Inputs []struct {
+				Outputs []struct {
 					Key   graphql.String `graphql:"key"`
 					Value struct {
 						PairingId graphql.String `graphql:"pairingId"`
 						Name      struct {
 							En graphql.String `graphql:"en"`
 						} `graphql:"Name"`
-						Value graphql.String `graphql:"value"`
-						Dpt   graphql.String `graphql:"dpt"`
+						Dpt              graphql.String `graphql:"dpt"`
+						DataPointService struct {
+							RequestDataPointValue struct {
+								Value graphql.String `graphql:"value"`
+								Time  graphql.String `graphql:"time"`
+							} `graphql:"RequestDataPointValue"`
+						} `graphql:"DataPointService"`
 					} `graphql:"value"`
-				} `graphql:"inputs"`
+				} `graphql:"outputs"`
 			} `graphql:"Channels"`
 		} `graphql:"Assets"`
 	} `graphql:"ISystemFH"`
