@@ -8,7 +8,7 @@ require (
 	github.com/eliona-smart-building-assistant/go-utils v1.0.34
 	github.com/friendsofgo/errors v0.9.2
 	github.com/gorilla/mux v1.8.0
-	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466
+	github.com/hasura/go-graphql-client v0.10.0
 	github.com/volatiletech/null/v8 v8.1.2
 	github.com/volatiletech/sqlboiler/v4 v4.15.0
 	github.com/volatiletech/strmangle v0.0.5
@@ -17,9 +17,12 @@ require (
 
 require (
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/google/uuid v1.3.1 // indirect
+	github.com/klauspost/compress v1.16.7 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
+	nhooyr.io/websocket v1.8.7 // indirect
 )
 
 // Bugfix see: https://github.com/volatiletech/sqlboiler/blob/91c4f335dd886d95b03857aceaf17507c46f9ec5/README.md
