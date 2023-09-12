@@ -136,6 +136,9 @@ func getAPI(config apiserver.Configuration) (*abb.Api, error) {
 		api = abb.NewLocalApi(*config.ApiUsername, *config.ApiPassword, *config.ApiUrl, int(*config.RequestTimeout))
 	}
 	if err := api.Authorize(); err != nil {
+		if _, err := conf.InvalidateAuthorization(config); err != nil {
+			return nil, fmt.Errorf("invalidating authorization: %v", err)
+		}
 		return nil, fmt.Errorf("authorizing: %v", err)
 	}
 	if _, err := conf.PersistAuthorization(config, *api.Auth.OauthToken); err != nil {

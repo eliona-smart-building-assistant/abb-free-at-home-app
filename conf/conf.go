@@ -213,6 +213,16 @@ func PersistAuthorization(config apiserver.Configuration, auth oauth2.Token) (in
 	})
 }
 
+func InvalidateAuthorization(config apiserver.Configuration) (int64, error) {
+	return appdb.Configurations(
+		appdb.ConfigurationWhere.ID.EQ(*config.Id),
+	).UpdateAllG(context.Background(), appdb.M{
+		appdb.ConfigurationColumns.AccessToken:  nil,
+		appdb.ConfigurationColumns.RefreshToken: nil,
+		appdb.ConfigurationColumns.Expiry:       nil,
+	})
+}
+
 func InsertAsset(ctx context.Context, config apiserver.Configuration, projId string, globalAssetID string, assetId int32) error {
 	var dbAsset appdb.Asset
 	dbAsset.ConfigurationID = null.Int64FromPtr(config.Id).Int64
