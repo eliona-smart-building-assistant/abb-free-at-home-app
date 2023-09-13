@@ -17,8 +17,8 @@ package eliona
 
 import (
 	"abb-free-at-home/apiserver"
-	"abb-free-at-home/broker"
 	"abb-free-at-home/conf"
+	"abb-free-at-home/model"
 	"context"
 	"fmt"
 
@@ -33,7 +33,7 @@ type Asset interface {
 	Id() string
 }
 
-func CreateAssetsIfNecessary(config apiserver.Configuration, systems []broker.System) error {
+func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.System) error {
 	for _, projectId := range conf.ProjIds(config) {
 		rootAssetID, err := upsertRootAsset(config, projectId)
 		if err != nil {

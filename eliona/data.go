@@ -2,8 +2,8 @@ package eliona
 
 import (
 	"abb-free-at-home/apiserver"
-	"abb-free-at-home/broker"
 	"abb-free-at-home/conf"
+	"abb-free-at-home/model"
 	"context"
 	"fmt"
 
@@ -11,7 +11,7 @@ import (
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
-func UpsertSystemsData(config apiserver.Configuration, systems []broker.System) error {
+func UpsertSystemsData(config apiserver.Configuration, systems []model.System) error {
 	for _, projectId := range *config.ProjectIDs {
 		for _, system := range systems {
 			for _, device := range system.Devices {
