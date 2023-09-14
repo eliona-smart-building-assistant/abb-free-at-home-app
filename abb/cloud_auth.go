@@ -106,6 +106,9 @@ func (t *oauthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 func (auth *ABBAuth) Authorize(originalToken *oauth2.Token) (*string, error) {
 	auth.OauthToken = originalToken
+	if auth.oauthTokenSrc == nil {
+		auth.oauthTokenSrc = auth.oauthConf.TokenSource(context.Background(), auth.OauthToken)
+	}
 	if originalToken == nil {
 		resp, err := http.Post("https://api.eu.mybuildings.abb.com/external/oauth2helper/config/"+auth.oauthConf.ClientID, "application/json", bytes.NewBuffer([]byte{}))
 		if err != nil {
@@ -136,9 +139,9 @@ func (auth *ABBAuth) Authorize(originalToken *oauth2.Token) (*string, error) {
 		if err != nil {
 			return nil, fmt.Errorf("getting token from code: %v", err)
 		}
+		auth.oauthTokenSrc = auth.oauthConf.TokenSource(context.Background(), auth.OauthToken)
 	}
 
-	auth.oauthTokenSrc = auth.oauthConf.TokenSource(context.Background(), auth.OauthToken)
 	var err error
 	auth.OauthToken, err = auth.oauthTokenSrc.Token()
 	if err != nil {

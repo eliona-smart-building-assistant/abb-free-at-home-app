@@ -57,7 +57,7 @@ func getAPI(config apiserver.Configuration) (*abb.Api, error) {
 		}
 		return nil, fmt.Errorf("authorizing: %v", err)
 	}
-	if _, err := conf.PersistAuthorization(config, *api.Auth.OauthToken); err != nil {
+	if _, err := conf.PersistAuthorization(&config, *api.Auth.OauthToken); err != nil {
 		return nil, fmt.Errorf("persisting authorization: %v", err)
 	}
 	return api, nil

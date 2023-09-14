@@ -203,7 +203,10 @@ func SetAllConfigsInactive(ctx context.Context) (int64, error) {
 	})
 }
 
-func PersistAuthorization(config apiserver.Configuration, auth oauth2.Token) (int64, error) {
+func PersistAuthorization(config *apiserver.Configuration, auth oauth2.Token) (int64, error) {
+	config.AccessToken = &auth.AccessToken
+	config.RefreshToken = &auth.RefreshToken
+	config.Expiry = &auth.Expiry
 	return appdb.Configurations(
 		appdb.ConfigurationWhere.ID.EQ(*config.Id),
 	).UpdateAllG(context.Background(), appdb.M{
