@@ -89,6 +89,12 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 								return fmt.Errorf("inserting input: %v", err)
 							}
 						}
+						for function, datapoint := range channel.Outputs() {
+							err := conf.InsertOutput(channelAssetID, system.ID, device.ID, channel.Id(), datapoint, function)
+							if err != nil {
+								return fmt.Errorf("inserting output: %v", err)
+							}
+						}
 					}
 				}
 			}

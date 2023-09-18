@@ -49,7 +49,7 @@ create table if not exists abb_free_at_home.asset
 	asset_id         integer   unique
 );
 
-create table if not exists abb_free_at_home.input
+create table if not exists abb_free_at_home.datapoint
 (
 	id                 bigserial primary key,
 	asset_id           integer not null references abb_free_at_home.asset(asset_id),
@@ -58,6 +58,7 @@ create table if not exists abb_free_at_home.input
 	channel_id         text not null,
 	datapoint          text not null,
 	function           text not null,
+	is_input           boolean not null,
 	last_written_value integer,
 	last_written_time  timestamp with time zone
 );

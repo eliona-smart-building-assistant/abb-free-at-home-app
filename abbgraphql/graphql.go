@@ -1,11 +1,13 @@
 package abbgraphql
 
 import (
+	"abb-free-at-home/appdb"
 	"context"
 	"fmt"
 	"net/http"
 
 	graphql "github.com/hasura/go-graphql-client"
+	"github.com/hasura/go-graphql-client/pkg/jsonutil"
 )
 
 type SystemsQuery struct {
@@ -117,6 +119,76 @@ func SetDataPointValue(httpClient *http.Client, serialNumber string, channel int
 			}
 		}
 	}
+	return nil
+}
+
+type DataPoint struct {
+	Value         graphql.String `graphql:"value"`
+	SerialNumber  graphql.String `graphql:"serialNumber"`
+	ChannelNumber graphql.String `graphql:"channelNumber"`
+	DatapointId   graphql.String `graphql:"datapointId"`
+}
+
+type DataPointsSubscription struct {
+	DataPointsSubscription DataPoint `graphql:"DataPointsSubscription(datapointList: $datapointList)"`
+}
+
+func SubscribeDataPointValue(authToken string, datapoints []appdb.Datapoint) error {
+	client := graphql.NewSubscriptionClient("wss://apps.eu.mybuildings.abb.com/adtg-ws/graphql").
+		WithConnectionParams(map[string]interface{}{
+			"authorization": "Bearer " + authToken,
+		}).
+		WithProtocol(graphql.GraphQLWS).
+		OnError(func(sc *graphql.SubscriptionClient, err error) error {
+			// Cancels the subscription if returns non-nil error.
+			return fmt.Errorf("subscription client error: %v", err)
+		})
+	defer client.Close()
+
+	type DataPointSubscriptionArgs map[string]string
+	datapointsList := []DataPointSubscriptionArgs{}
+	for _, dp := range datapoints {
+		datapointsList = append(datapointsList, map[string]string{
+			"dtId":          dp.SystemID,
+			"serialNumber":  dp.DeviceID,
+			"channelNumber": dp.ChannelID,
+			"datapointId":   dp.Datapoint,
+		})
+	}
+
+	var sub DataPointsSubscription
+
+	variables := map[string]interface{}{
+		"datapointList": datapointsList,
+	}
+
+	// Useful for debugging
+	// jsonVars, err := json.MarshalIndent(variables, "", "    ")
+	// if err != nil {
+	// 	fmt.Println("Error encoding to JSON:", err)
+	// }
+	// s1, s2, err := graphql.ConstructSubscription(sub, variables)
+	// fmt.Printf("%v\n%v\n%v\n%v\n", s1, s2, err, string(jsonVars))
+	// return nil
+
+	if _, err := client.Subscribe(&sub, variables, func(message []byte, err error) error {
+		if err != nil {
+			return fmt.Errorf("subscribe: %v", err)
+		}
+		data := DataPointsSubscription{}
+		if err := jsonutil.UnmarshalGraphQL(message, &data); err != nil {
+			return fmt.Errorf("unmarshalling subscription response: %v", err)
+		}
+		fmt.Println(data)
+		return nil
+	}, nil); err != nil {
+		return fmt.Errorf("establishing subscription: %v", err)
+	}
+
+	if err := client.Run(); err != nil {
+		return fmt.Errorf("running client: %v", err)
+	}
+	fmt.Println("client run")
 	return nil
 }
 

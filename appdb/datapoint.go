@@ -22,8 +22,8 @@ import (
 	"github.com/volatiletech/strmangle"
 )
 
-// Input is an object representing the database table.
-type Input struct {
+// Datapoint is an object representing the database table.
+type Datapoint struct {
 	ID               int64      `boil:"id" json:"id" toml:"id" yaml:"id"`
 	AssetID          int32      `boil:"asset_id" json:"asset_id" toml:"asset_id" yaml:"asset_id"`
 	SystemID         string     `boil:"system_id" json:"system_id" toml:"system_id" yaml:"system_id"`
@@ -31,14 +31,15 @@ type Input struct {
 	ChannelID        string     `boil:"channel_id" json:"channel_id" toml:"channel_id" yaml:"channel_id"`
 	Datapoint        string     `boil:"datapoint" json:"datapoint" toml:"datapoint" yaml:"datapoint"`
 	Function         string     `boil:"function" json:"function" toml:"function" yaml:"function"`
+	IsInput          bool       `boil:"is_input" json:"is_input" toml:"is_input" yaml:"is_input"`
 	LastWrittenValue null.Int32 `boil:"last_written_value" json:"last_written_value,omitempty" toml:"last_written_value" yaml:"last_written_value,omitempty"`
 	LastWrittenTime  null.Time  `boil:"last_written_time" json:"last_written_time,omitempty" toml:"last_written_time" yaml:"last_written_time,omitempty"`
 
-	R *inputR `boil:"-" json:"-" toml:"-" yaml:"-"`
-	L inputL  `boil:"-" json:"-" toml:"-" yaml:"-"`
+	R *datapointR `boil:"-" json:"-" toml:"-" yaml:"-"`
+	L datapointL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
-var InputColumns = struct {
+var DatapointColumns = struct {
 	ID               string
 	AssetID          string
 	SystemID         string
@@ -46,6 +47,7 @@ var InputColumns = struct {
 	ChannelID        string
 	Datapoint        string
 	Function         string
+	IsInput          string
 	LastWrittenValue string
 	LastWrittenTime  string
 }{
@@ -56,11 +58,12 @@ var InputColumns = struct {
 	ChannelID:        "channel_id",
 	Datapoint:        "datapoint",
 	Function:         "function",
+	IsInput:          "is_input",
 	LastWrittenValue: "last_written_value",
 	LastWrittenTime:  "last_written_time",
 }
 
-var InputTableColumns = struct {
+var DatapointTableColumns = struct {
 	ID               string
 	AssetID          string
 	SystemID         string
@@ -68,23 +71,25 @@ var InputTableColumns = struct {
 	ChannelID        string
 	Datapoint        string
 	Function         string
+	IsInput          string
 	LastWrittenValue string
 	LastWrittenTime  string
 }{
-	ID:               "input.id",
-	AssetID:          "input.asset_id",
-	SystemID:         "input.system_id",
-	DeviceID:         "input.device_id",
-	ChannelID:        "input.channel_id",
-	Datapoint:        "input.datapoint",
-	Function:         "input.function",
-	LastWrittenValue: "input.last_written_value",
-	LastWrittenTime:  "input.last_written_time",
+	ID:               "datapoint.id",
+	AssetID:          "datapoint.asset_id",
+	SystemID:         "datapoint.system_id",
+	DeviceID:         "datapoint.device_id",
+	ChannelID:        "datapoint.channel_id",
+	Datapoint:        "datapoint.datapoint",
+	Function:         "datapoint.function",
+	IsInput:          "datapoint.is_input",
+	LastWrittenValue: "datapoint.last_written_value",
+	LastWrittenTime:  "datapoint.last_written_time",
 }
 
 // Generated where
 
-var InputWhere = struct {
+var DatapointWhere = struct {
 	ID               whereHelperint64
 	AssetID          whereHelperint32
 	SystemID         whereHelperstring
@@ -92,78 +97,80 @@ var InputWhere = struct {
 	ChannelID        whereHelperstring
 	Datapoint        whereHelperstring
 	Function         whereHelperstring
+	IsInput          whereHelperbool
 	LastWrittenValue whereHelpernull_Int32
 	LastWrittenTime  whereHelpernull_Time
 }{
-	ID:               whereHelperint64{field: "\"abb_free_at_home\".\"input\".\"id\""},
-	AssetID:          whereHelperint32{field: "\"abb_free_at_home\".\"input\".\"asset_id\""},
-	SystemID:         whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"system_id\""},
-	DeviceID:         whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"device_id\""},
-	ChannelID:        whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"channel_id\""},
-	Datapoint:        whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"datapoint\""},
-	Function:         whereHelperstring{field: "\"abb_free_at_home\".\"input\".\"function\""},
-	LastWrittenValue: whereHelpernull_Int32{field: "\"abb_free_at_home\".\"input\".\"last_written_value\""},
-	LastWrittenTime:  whereHelpernull_Time{field: "\"abb_free_at_home\".\"input\".\"last_written_time\""},
+	ID:               whereHelperint64{field: "\"abb_free_at_home\".\"datapoint\".\"id\""},
+	AssetID:          whereHelperint32{field: "\"abb_free_at_home\".\"datapoint\".\"asset_id\""},
+	SystemID:         whereHelperstring{field: "\"abb_free_at_home\".\"datapoint\".\"system_id\""},
+	DeviceID:         whereHelperstring{field: "\"abb_free_at_home\".\"datapoint\".\"device_id\""},
+	ChannelID:        whereHelperstring{field: "\"abb_free_at_home\".\"datapoint\".\"channel_id\""},
+	Datapoint:        whereHelperstring{field: "\"abb_free_at_home\".\"datapoint\".\"datapoint\""},
+	Function:         whereHelperstring{field: "\"abb_free_at_home\".\"datapoint\".\"function\""},
+	IsInput:          whereHelperbool{field: "\"abb_free_at_home\".\"datapoint\".\"is_input\""},
+	LastWrittenValue: whereHelpernull_Int32{field: "\"abb_free_at_home\".\"datapoint\".\"last_written_value\""},
+	LastWrittenTime:  whereHelpernull_Time{field: "\"abb_free_at_home\".\"datapoint\".\"last_written_time\""},
 }
 
-// InputRels is where relationship names are stored.
-var InputRels = struct {
+// DatapointRels is where relationship names are stored.
+var DatapointRels = struct {
 	Asset string
 }{
 	Asset: "Asset",
 }
 
-// inputR is where relationships are stored.
-type inputR struct {
+// datapointR is where relationships are stored.
+type datapointR struct {
 	Asset *Asset `boil:"Asset" json:"Asset" toml:"Asset" yaml:"Asset"`
 }
 
 // NewStruct creates a new relationship struct
-func (*inputR) NewStruct() *inputR {
-	return &inputR{}
+func (*datapointR) NewStruct() *datapointR {
+	return &datapointR{}
 }
 
-func (r *inputR) GetAsset() *Asset {
+func (r *datapointR) GetAsset() *Asset {
 	if r == nil {
 		return nil
 	}
 	return r.Asset
 }
 
-// inputL is where Load methods for each relationship are stored.
-type inputL struct{}
+// datapointL is where Load methods for each relationship are stored.
+type datapointL struct{}
 
 var (
-	inputAllColumns            = []string{"id", "asset_id", "system_id", "device_id", "channel_id", "datapoint", "function", "last_written_value", "last_written_time"}
-	inputColumnsWithoutDefault = []string{"asset_id", "system_id", "device_id", "channel_id", "datapoint", "function"}
-	inputColumnsWithDefault    = []string{"id", "last_written_value", "last_written_time"}
-	inputPrimaryKeyColumns     = []string{"id"}
-	inputGeneratedColumns      = []string{}
+	datapointAllColumns            = []string{"id", "asset_id", "system_id", "device_id", "channel_id", "datapoint", "function", "is_input", "last_written_value", "last_written_time"}
+	datapointColumnsWithoutDefault = []string{"asset_id", "system_id", "device_id", "channel_id", "datapoint", "function", "is_input"}
+	datapointColumnsWithDefault    = []string{"id", "last_written_value", "last_written_time"}
+	datapointPrimaryKeyColumns     = []string{"id"}
+	datapointGeneratedColumns      = []string{}
 )
 
 type (
-	// InputSlice is an alias for a slice of pointers to Input.
-	// This should almost always be used instead of []Input.
-	InputSlice []*Input
-	// InputHook is the signature for custom Input hook methods
-	InputHook func(context.Context, boil.ContextExecutor, *Input) error
+	// DatapointSlice is an alias for a slice of pointers to Datapoint.
+	// This should almost always be used instead of []Datapoint.
+	DatapointSlice []*Datapoint
+	// DatapointHook is the signature for custom Datapoint hook methods
+	DatapointHook func(context.Context, boil.ContextExecutor, *Datapoint) error
 
-	inputQuery struct {
+	datapointQuery struct {
 		*queries.Query
 	}
 )
 
 // Cache for insert, update and upsert
 var (
-	inputType                 = reflect.TypeOf(&Input{})
-	inputMapping              = queries.MakeStructMapping(inputType)
-	inputPrimaryKeyMapping, _ = queries.BindMapping(inputType, inputMapping, inputPrimaryKeyColumns)
-	inputInsertCacheMut       sync.RWMutex
-	inputInsertCache          = make(map[string]insertCache)
-	inputUpdateCacheMut       sync.RWMutex
-	inputUpdateCache          = make(map[string]updateCache)
-	inputUpsertCacheMut       sync.RWMutex
-	inputUpsertCache          = make(map[string]insertCache)
+	datapointType                 = reflect.TypeOf(&Datapoint{})
+	datapointMapping              = queries.MakeStructMapping(datapointType)
+	datapointPrimaryKeyMapping, _ = queries.BindMapping(datapointType, datapointMapping, datapointPrimaryKeyColumns)
+	datapointInsertCacheMut       sync.RWMutex
+	datapointInsertCache          = make(map[string]insertCache)
+	datapointUpdateCacheMut       sync.RWMutex
+	datapointUpdateCache          = make(map[string]updateCache)
+	datapointUpsertCacheMut       sync.RWMutex
+	datapointUpsertCache          = make(map[string]insertCache)
 )
 
 var (
@@ -174,27 +181,27 @@ var (
 	_ = qmhelper.Where
 )
 
-var inputAfterSelectHooks []InputHook
+var datapointAfterSelectHooks []DatapointHook
 
-var inputBeforeInsertHooks []InputHook
-var inputAfterInsertHooks []InputHook
+var datapointBeforeInsertHooks []DatapointHook
+var datapointAfterInsertHooks []DatapointHook
 
-var inputBeforeUpdateHooks []InputHook
-var inputAfterUpdateHooks []InputHook
+var datapointBeforeUpdateHooks []DatapointHook
+var datapointAfterUpdateHooks []DatapointHook
 
-var inputBeforeDeleteHooks []InputHook
-var inputAfterDeleteHooks []InputHook
+var datapointBeforeDeleteHooks []DatapointHook
+var datapointAfterDeleteHooks []DatapointHook
 
-var inputBeforeUpsertHooks []InputHook
-var inputAfterUpsertHooks []InputHook
+var datapointBeforeUpsertHooks []DatapointHook
+var datapointAfterUpsertHooks []DatapointHook
 
 // doAfterSelectHooks executes all "after Select" hooks.
-func (o *Input) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *Datapoint) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range inputAfterSelectHooks {
+	for _, hook := range datapointAfterSelectHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -204,12 +211,12 @@ func (o *Input) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecuto
 }
 
 // doBeforeInsertHooks executes all "before insert" hooks.
-func (o *Input) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *Datapoint) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range inputBeforeInsertHooks {
+	for _, hook := range datapointBeforeInsertHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -219,12 +226,12 @@ func (o *Input) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecut
 }
 
 // doAfterInsertHooks executes all "after Insert" hooks.
-func (o *Input) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *Datapoint) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range inputAfterInsertHooks {
+	for _, hook := range datapointAfterInsertHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -234,12 +241,12 @@ func (o *Input) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecuto
 }
 
 // doBeforeUpdateHooks executes all "before Update" hooks.
-func (o *Input) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *Datapoint) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range inputBeforeUpdateHooks {
+	for _, hook := range datapointBeforeUpdateHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -249,12 +256,12 @@ func (o *Input) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecut
 }
 
 // doAfterUpdateHooks executes all "after Update" hooks.
-func (o *Input) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *Datapoint) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range inputAfterUpdateHooks {
+	for _, hook := range datapointAfterUpdateHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -264,12 +271,12 @@ func (o *Input) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecuto
 }
 
 // doBeforeDeleteHooks executes all "before Delete" hooks.
-func (o *Input) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *Datapoint) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range inputBeforeDeleteHooks {
+	for _, hook := range datapointBeforeDeleteHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -279,12 +286,12 @@ func (o *Input) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecut
 }
 
 // doAfterDeleteHooks executes all "after Delete" hooks.
-func (o *Input) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *Datapoint) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range inputAfterDeleteHooks {
+	for _, hook := range datapointAfterDeleteHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -294,12 +301,12 @@ func (o *Input) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecuto
 }
 
 // doBeforeUpsertHooks executes all "before Upsert" hooks.
-func (o *Input) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *Datapoint) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range inputBeforeUpsertHooks {
+	for _, hook := range datapointBeforeUpsertHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -309,12 +316,12 @@ func (o *Input) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecut
 }
 
 // doAfterUpsertHooks executes all "after Upsert" hooks.
-func (o *Input) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *Datapoint) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range inputAfterUpsertHooks {
+	for _, hook := range datapointAfterUpsertHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -323,38 +330,38 @@ func (o *Input) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecuto
 	return nil
 }
 
-// AddInputHook registers your hook function for all future operations.
-func AddInputHook(hookPoint boil.HookPoint, inputHook InputHook) {
+// AddDatapointHook registers your hook function for all future operations.
+func AddDatapointHook(hookPoint boil.HookPoint, datapointHook DatapointHook) {
 	switch hookPoint {
 	case boil.AfterSelectHook:
-		inputAfterSelectHooks = append(inputAfterSelectHooks, inputHook)
+		datapointAfterSelectHooks = append(datapointAfterSelectHooks, datapointHook)
 	case boil.BeforeInsertHook:
-		inputBeforeInsertHooks = append(inputBeforeInsertHooks, inputHook)
+		datapointBeforeInsertHooks = append(datapointBeforeInsertHooks, datapointHook)
 	case boil.AfterInsertHook:
-		inputAfterInsertHooks = append(inputAfterInsertHooks, inputHook)
+		datapointAfterInsertHooks = append(datapointAfterInsertHooks, datapointHook)
 	case boil.BeforeUpdateHook:
-		inputBeforeUpdateHooks = append(inputBeforeUpdateHooks, inputHook)
+		datapointBeforeUpdateHooks = append(datapointBeforeUpdateHooks, datapointHook)
 	case boil.AfterUpdateHook:
-		inputAfterUpdateHooks = append(inputAfterUpdateHooks, inputHook)
+		datapointAfterUpdateHooks = append(datapointAfterUpdateHooks, datapointHook)
 	case boil.BeforeDeleteHook:
-		inputBeforeDeleteHooks = append(inputBeforeDeleteHooks, inputHook)
+		datapointBeforeDeleteHooks = append(datapointBeforeDeleteHooks, datapointHook)
 	case boil.AfterDeleteHook:
-		inputAfterDeleteHooks = append(inputAfterDeleteHooks, inputHook)
+		datapointAfterDeleteHooks = append(datapointAfterDeleteHooks, datapointHook)
 	case boil.BeforeUpsertHook:
-		inputBeforeUpsertHooks = append(inputBeforeUpsertHooks, inputHook)
+		datapointBeforeUpsertHooks = append(datapointBeforeUpsertHooks, datapointHook)
 	case boil.AfterUpsertHook:
-		inputAfterUpsertHooks = append(inputAfterUpsertHooks, inputHook)
+		datapointAfterUpsertHooks = append(datapointAfterUpsertHooks, datapointHook)
 	}
 }
 
-// OneG returns a single input record from the query using the global executor.
-func (q inputQuery) OneG(ctx context.Context) (*Input, error) {
+// OneG returns a single datapoint record from the query using the global executor.
+func (q datapointQuery) OneG(ctx context.Context) (*Datapoint, error) {
 	return q.One(ctx, boil.GetContextDB())
 }
 
-// One returns a single input record from the query.
-func (q inputQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Input, error) {
-	o := &Input{}
+// One returns a single datapoint record from the query.
+func (q datapointQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Datapoint, error) {
+	o := &Datapoint{}
 
 	queries.SetLimit(q.Query, 1)
 
@@ -363,7 +370,7 @@ func (q inputQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Input,
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, sql.ErrNoRows
 		}
-		return nil, errors.Wrap(err, "appdb: failed to execute a one query for input")
+		return nil, errors.Wrap(err, "appdb: failed to execute a one query for datapoint")
 	}
 
 	if err := o.doAfterSelectHooks(ctx, exec); err != nil {
@@ -373,21 +380,21 @@ func (q inputQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Input,
 	return o, nil
 }
 
-// AllG returns all Input records from the query using the global executor.
-func (q inputQuery) AllG(ctx context.Context) (InputSlice, error) {
+// AllG returns all Datapoint records from the query using the global executor.
+func (q datapointQuery) AllG(ctx context.Context) (DatapointSlice, error) {
 	return q.All(ctx, boil.GetContextDB())
 }
 
-// All returns all Input records from the query.
-func (q inputQuery) All(ctx context.Context, exec boil.ContextExecutor) (InputSlice, error) {
-	var o []*Input
+// All returns all Datapoint records from the query.
+func (q datapointQuery) All(ctx context.Context, exec boil.ContextExecutor) (DatapointSlice, error) {
+	var o []*Datapoint
 
 	err := q.Bind(ctx, exec, &o)
 	if err != nil {
-		return nil, errors.Wrap(err, "appdb: failed to assign all query results to Input slice")
+		return nil, errors.Wrap(err, "appdb: failed to assign all query results to Datapoint slice")
 	}
 
-	if len(inputAfterSelectHooks) != 0 {
+	if len(datapointAfterSelectHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterSelectHooks(ctx, exec); err != nil {
 				return o, err
@@ -398,13 +405,13 @@ func (q inputQuery) All(ctx context.Context, exec boil.ContextExecutor) (InputSl
 	return o, nil
 }
 
-// CountG returns the count of all Input records in the query using the global executor
-func (q inputQuery) CountG(ctx context.Context) (int64, error) {
+// CountG returns the count of all Datapoint records in the query using the global executor
+func (q datapointQuery) CountG(ctx context.Context) (int64, error) {
 	return q.Count(ctx, boil.GetContextDB())
 }
 
-// Count returns the count of all Input records in the query.
-func (q inputQuery) Count(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+// Count returns the count of all Datapoint records in the query.
+func (q datapointQuery) Count(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
@@ -412,19 +419,19 @@ func (q inputQuery) Count(ctx context.Context, exec boil.ContextExecutor) (int64
 
 	err := q.Query.QueryRowContext(ctx, exec).Scan(&count)
 	if err != nil {
-		return 0, errors.Wrap(err, "appdb: failed to count input rows")
+		return 0, errors.Wrap(err, "appdb: failed to count datapoint rows")
 	}
 
 	return count, nil
 }
 
 // ExistsG checks if the row exists in the table using the global executor.
-func (q inputQuery) ExistsG(ctx context.Context) (bool, error) {
+func (q datapointQuery) ExistsG(ctx context.Context) (bool, error) {
 	return q.Exists(ctx, boil.GetContextDB())
 }
 
 // Exists checks if the row exists in the table.
-func (q inputQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
+func (q datapointQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
@@ -433,14 +440,14 @@ func (q inputQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool
 
 	err := q.Query.QueryRowContext(ctx, exec).Scan(&count)
 	if err != nil {
-		return false, errors.Wrap(err, "appdb: failed to check if input exists")
+		return false, errors.Wrap(err, "appdb: failed to check if datapoint exists")
 	}
 
 	return count > 0, nil
 }
 
 // Asset pointed to by the foreign key.
-func (o *Input) Asset(mods ...qm.QueryMod) assetQuery {
+func (o *Datapoint) Asset(mods ...qm.QueryMod) assetQuery {
 	queryMods := []qm.QueryMod{
 		qm.Where("\"asset_id\" = ?", o.AssetID),
 	}
@@ -452,28 +459,28 @@ func (o *Input) Asset(mods ...qm.QueryMod) assetQuery {
 
 // LoadAsset allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
-func (inputL) LoadAsset(ctx context.Context, e boil.ContextExecutor, singular bool, maybeInput interface{}, mods queries.Applicator) error {
-	var slice []*Input
-	var object *Input
+func (datapointL) LoadAsset(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDatapoint interface{}, mods queries.Applicator) error {
+	var slice []*Datapoint
+	var object *Datapoint
 
 	if singular {
 		var ok bool
-		object, ok = maybeInput.(*Input)
+		object, ok = maybeDatapoint.(*Datapoint)
 		if !ok {
-			object = new(Input)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybeInput)
+			object = new(Datapoint)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeDatapoint)
 			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeInput))
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeDatapoint))
 			}
 		}
 	} else {
-		s, ok := maybeInput.(*[]*Input)
+		s, ok := maybeDatapoint.(*[]*Datapoint)
 		if ok {
 			slice = *s
 		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybeInput)
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeDatapoint)
 			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeInput))
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeDatapoint))
 			}
 		}
 	}
@@ -481,7 +488,7 @@ func (inputL) LoadAsset(ctx context.Context, e boil.ContextExecutor, singular bo
 	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
-			object.R = &inputR{}
+			object.R = &datapointR{}
 		}
 		if !queries.IsNil(object.AssetID) {
 			args = append(args, object.AssetID)
@@ -491,7 +498,7 @@ func (inputL) LoadAsset(ctx context.Context, e boil.ContextExecutor, singular bo
 	Outer:
 		for _, obj := range slice {
 			if obj.R == nil {
-				obj.R = &inputR{}
+				obj.R = &datapointR{}
 			}
 
 			for _, a := range args {
@@ -554,7 +561,7 @@ func (inputL) LoadAsset(ctx context.Context, e boil.ContextExecutor, singular bo
 		if foreign.R == nil {
 			foreign.R = &assetR{}
 		}
-		foreign.R.Inputs = append(foreign.R.Inputs, object)
+		foreign.R.Datapoints = append(foreign.R.Datapoints, object)
 		return nil
 	}
 
@@ -565,7 +572,7 @@ func (inputL) LoadAsset(ctx context.Context, e boil.ContextExecutor, singular bo
 				if foreign.R == nil {
 					foreign.R = &assetR{}
 				}
-				foreign.R.Inputs = append(foreign.R.Inputs, local)
+				foreign.R.Datapoints = append(foreign.R.Datapoints, local)
 				break
 			}
 		}
@@ -574,18 +581,18 @@ func (inputL) LoadAsset(ctx context.Context, e boil.ContextExecutor, singular bo
 	return nil
 }
 
-// SetAssetG of the input to the related item.
+// SetAssetG of the datapoint to the related item.
 // Sets o.R.Asset to related.
-// Adds o to related.R.Inputs.
+// Adds o to related.R.Datapoints.
 // Uses the global database handle.
-func (o *Input) SetAssetG(ctx context.Context, insert bool, related *Asset) error {
+func (o *Datapoint) SetAssetG(ctx context.Context, insert bool, related *Asset) error {
 	return o.SetAsset(ctx, boil.GetContextDB(), insert, related)
 }
 
-// SetAsset of the input to the related item.
+// SetAsset of the datapoint to the related item.
 // Sets o.R.Asset to related.
-// Adds o to related.R.Inputs.
-func (o *Input) SetAsset(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Asset) error {
+// Adds o to related.R.Datapoints.
+func (o *Datapoint) SetAsset(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Asset) error {
 	var err error
 	if insert {
 		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
@@ -594,9 +601,9 @@ func (o *Input) SetAsset(ctx context.Context, exec boil.ContextExecutor, insert 
 	}
 
 	updateQuery := fmt.Sprintf(
-		"UPDATE \"abb_free_at_home\".\"input\" SET %s WHERE %s",
+		"UPDATE \"abb_free_at_home\".\"datapoint\" SET %s WHERE %s",
 		strmangle.SetParamNames("\"", "\"", 1, []string{"asset_id"}),
-		strmangle.WhereClause("\"", "\"", 2, inputPrimaryKeyColumns),
+		strmangle.WhereClause("\"", "\"", 2, datapointPrimaryKeyColumns),
 	)
 	values := []interface{}{related.AssetID, o.ID}
 
@@ -611,7 +618,7 @@ func (o *Input) SetAsset(ctx context.Context, exec boil.ContextExecutor, insert 
 
 	queries.Assign(&o.AssetID, related.AssetID)
 	if o.R == nil {
-		o.R = &inputR{
+		o.R = &datapointR{
 			Asset: related,
 		}
 	} else {
@@ -620,71 +627,71 @@ func (o *Input) SetAsset(ctx context.Context, exec boil.ContextExecutor, insert 
 
 	if related.R == nil {
 		related.R = &assetR{
-			Inputs: InputSlice{o},
+			Datapoints: DatapointSlice{o},
 		}
 	} else {
-		related.R.Inputs = append(related.R.Inputs, o)
+		related.R.Datapoints = append(related.R.Datapoints, o)
 	}
 
 	return nil
 }
 
-// Inputs retrieves all the records using an executor.
-func Inputs(mods ...qm.QueryMod) inputQuery {
-	mods = append(mods, qm.From("\"abb_free_at_home\".\"input\""))
+// Datapoints retrieves all the records using an executor.
+func Datapoints(mods ...qm.QueryMod) datapointQuery {
+	mods = append(mods, qm.From("\"abb_free_at_home\".\"datapoint\""))
 	q := NewQuery(mods...)
 	if len(queries.GetSelect(q)) == 0 {
-		queries.SetSelect(q, []string{"\"abb_free_at_home\".\"input\".*"})
+		queries.SetSelect(q, []string{"\"abb_free_at_home\".\"datapoint\".*"})
 	}
 
-	return inputQuery{q}
+	return datapointQuery{q}
 }
 
-// FindInputG retrieves a single record by ID.
-func FindInputG(ctx context.Context, iD int64, selectCols ...string) (*Input, error) {
-	return FindInput(ctx, boil.GetContextDB(), iD, selectCols...)
+// FindDatapointG retrieves a single record by ID.
+func FindDatapointG(ctx context.Context, iD int64, selectCols ...string) (*Datapoint, error) {
+	return FindDatapoint(ctx, boil.GetContextDB(), iD, selectCols...)
 }
 
-// FindInput retrieves a single record by ID with an executor.
+// FindDatapoint retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindInput(ctx context.Context, exec boil.ContextExecutor, iD int64, selectCols ...string) (*Input, error) {
-	inputObj := &Input{}
+func FindDatapoint(ctx context.Context, exec boil.ContextExecutor, iD int64, selectCols ...string) (*Datapoint, error) {
+	datapointObj := &Datapoint{}
 
 	sel := "*"
 	if len(selectCols) > 0 {
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"abb_free_at_home\".\"input\" where \"id\"=$1", sel,
+		"select %s from \"abb_free_at_home\".\"datapoint\" where \"id\"=$1", sel,
 	)
 
 	q := queries.Raw(query, iD)
 
-	err := q.Bind(ctx, exec, inputObj)
+	err := q.Bind(ctx, exec, datapointObj)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, sql.ErrNoRows
 		}
-		return nil, errors.Wrap(err, "appdb: unable to select from input")
+		return nil, errors.Wrap(err, "appdb: unable to select from datapoint")
 	}
 
-	if err = inputObj.doAfterSelectHooks(ctx, exec); err != nil {
-		return inputObj, err
+	if err = datapointObj.doAfterSelectHooks(ctx, exec); err != nil {
+		return datapointObj, err
 	}
 
-	return inputObj, nil
+	return datapointObj, nil
 }
 
 // InsertG a single record. See Insert for whitelist behavior description.
-func (o *Input) InsertG(ctx context.Context, columns boil.Columns) error {
+func (o *Datapoint) InsertG(ctx context.Context, columns boil.Columns) error {
 	return o.Insert(ctx, boil.GetContextDB(), columns)
 }
 
 // Insert a single record using an executor.
 // See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
-func (o *Input) Insert(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
+func (o *Datapoint) Insert(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
 	if o == nil {
-		return errors.New("appdb: no input provided for insertion")
+		return errors.New("appdb: no datapoint provided for insertion")
 	}
 
 	var err error
@@ -693,33 +700,33 @@ func (o *Input) Insert(ctx context.Context, exec boil.ContextExecutor, columns b
 		return err
 	}
 
-	nzDefaults := queries.NonZeroDefaultSet(inputColumnsWithDefault, o)
+	nzDefaults := queries.NonZeroDefaultSet(datapointColumnsWithDefault, o)
 
 	key := makeCacheKey(columns, nzDefaults)
-	inputInsertCacheMut.RLock()
-	cache, cached := inputInsertCache[key]
-	inputInsertCacheMut.RUnlock()
+	datapointInsertCacheMut.RLock()
+	cache, cached := datapointInsertCache[key]
+	datapointInsertCacheMut.RUnlock()
 
 	if !cached {
 		wl, returnColumns := columns.InsertColumnSet(
-			inputAllColumns,
-			inputColumnsWithDefault,
-			inputColumnsWithoutDefault,
+			datapointAllColumns,
+			datapointColumnsWithDefault,
+			datapointColumnsWithoutDefault,
 			nzDefaults,
 		)
 
-		cache.valueMapping, err = queries.BindMapping(inputType, inputMapping, wl)
+		cache.valueMapping, err = queries.BindMapping(datapointType, datapointMapping, wl)
 		if err != nil {
 			return err
 		}
-		cache.retMapping, err = queries.BindMapping(inputType, inputMapping, returnColumns)
+		cache.retMapping, err = queries.BindMapping(datapointType, datapointMapping, returnColumns)
 		if err != nil {
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"abb_free_at_home\".\"input\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"abb_free_at_home\".\"datapoint\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"abb_free_at_home\".\"input\" %sDEFAULT VALUES%s"
+			cache.query = "INSERT INTO \"abb_free_at_home\".\"datapoint\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -747,55 +754,55 @@ func (o *Input) Insert(ctx context.Context, exec boil.ContextExecutor, columns b
 	}
 
 	if err != nil {
-		return errors.Wrap(err, "appdb: unable to insert into input")
+		return errors.Wrap(err, "appdb: unable to insert into datapoint")
 	}
 
 	if !cached {
-		inputInsertCacheMut.Lock()
-		inputInsertCache[key] = cache
-		inputInsertCacheMut.Unlock()
+		datapointInsertCacheMut.Lock()
+		datapointInsertCache[key] = cache
+		datapointInsertCacheMut.Unlock()
 	}
 
 	return o.doAfterInsertHooks(ctx, exec)
 }
 
-// UpdateG a single Input record using the global executor.
+// UpdateG a single Datapoint record using the global executor.
 // See Update for more documentation.
-func (o *Input) UpdateG(ctx context.Context, columns boil.Columns) (int64, error) {
+func (o *Datapoint) UpdateG(ctx context.Context, columns boil.Columns) (int64, error) {
 	return o.Update(ctx, boil.GetContextDB(), columns)
 }
 
-// Update uses an executor to update the Input.
+// Update uses an executor to update the Datapoint.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
-func (o *Input) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+func (o *Datapoint) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
 	var err error
 	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
 		return 0, err
 	}
 	key := makeCacheKey(columns, nil)
-	inputUpdateCacheMut.RLock()
-	cache, cached := inputUpdateCache[key]
-	inputUpdateCacheMut.RUnlock()
+	datapointUpdateCacheMut.RLock()
+	cache, cached := datapointUpdateCache[key]
+	datapointUpdateCacheMut.RUnlock()
 
 	if !cached {
 		wl := columns.UpdateColumnSet(
-			inputAllColumns,
-			inputPrimaryKeyColumns,
+			datapointAllColumns,
+			datapointPrimaryKeyColumns,
 		)
 
 		if !columns.IsWhitelist() {
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return 0, errors.New("appdb: unable to update input, could not build whitelist")
+			return 0, errors.New("appdb: unable to update datapoint, could not build whitelist")
 		}
 
-		cache.query = fmt.Sprintf("UPDATE \"abb_free_at_home\".\"input\" SET %s WHERE %s",
+		cache.query = fmt.Sprintf("UPDATE \"abb_free_at_home\".\"datapoint\" SET %s WHERE %s",
 			strmangle.SetParamNames("\"", "\"", 1, wl),
-			strmangle.WhereClause("\"", "\"", len(wl)+1, inputPrimaryKeyColumns),
+			strmangle.WhereClause("\"", "\"", len(wl)+1, datapointPrimaryKeyColumns),
 		)
-		cache.valueMapping, err = queries.BindMapping(inputType, inputMapping, append(wl, inputPrimaryKeyColumns...))
+		cache.valueMapping, err = queries.BindMapping(datapointType, datapointMapping, append(wl, datapointPrimaryKeyColumns...))
 		if err != nil {
 			return 0, err
 		}
@@ -811,52 +818,52 @@ func (o *Input) Update(ctx context.Context, exec boil.ContextExecutor, columns b
 	var result sql.Result
 	result, err = exec.ExecContext(ctx, cache.query, values...)
 	if err != nil {
-		return 0, errors.Wrap(err, "appdb: unable to update input row")
+		return 0, errors.Wrap(err, "appdb: unable to update datapoint row")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "appdb: failed to get rows affected by update for input")
+		return 0, errors.Wrap(err, "appdb: failed to get rows affected by update for datapoint")
 	}
 
 	if !cached {
-		inputUpdateCacheMut.Lock()
-		inputUpdateCache[key] = cache
-		inputUpdateCacheMut.Unlock()
+		datapointUpdateCacheMut.Lock()
+		datapointUpdateCache[key] = cache
+		datapointUpdateCacheMut.Unlock()
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(ctx, exec)
 }
 
 // UpdateAllG updates all rows with the specified column values.
-func (q inputQuery) UpdateAllG(ctx context.Context, cols M) (int64, error) {
+func (q datapointQuery) UpdateAllG(ctx context.Context, cols M) (int64, error) {
 	return q.UpdateAll(ctx, boil.GetContextDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q inputQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (q datapointQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
 	result, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "appdb: unable to update all for input")
+		return 0, errors.Wrap(err, "appdb: unable to update all for datapoint")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "appdb: unable to retrieve rows affected for input")
+		return 0, errors.Wrap(err, "appdb: unable to retrieve rows affected for datapoint")
 	}
 
 	return rowsAff, nil
 }
 
 // UpdateAllG updates all rows with the specified column values.
-func (o InputSlice) UpdateAllG(ctx context.Context, cols M) (int64, error) {
+func (o DatapointSlice) UpdateAllG(ctx context.Context, cols M) (int64, error) {
 	return o.UpdateAll(ctx, boil.GetContextDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o InputSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (o DatapointSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
 		return 0, nil
@@ -878,13 +885,13 @@ func (o InputSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, co
 
 	// Append all of the primary key values for each column
 	for _, obj := range o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), inputPrimaryKeyMapping)
+		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), datapointPrimaryKeyMapping)
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := fmt.Sprintf("UPDATE \"abb_free_at_home\".\"input\" SET %s WHERE %s",
+	sql := fmt.Sprintf("UPDATE \"abb_free_at_home\".\"datapoint\" SET %s WHERE %s",
 		strmangle.SetParamNames("\"", "\"", 1, colNames),
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), len(colNames)+1, inputPrimaryKeyColumns, len(o)))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), len(colNames)+1, datapointPrimaryKeyColumns, len(o)))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -893,33 +900,33 @@ func (o InputSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, co
 	}
 	result, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "appdb: unable to update all in input slice")
+		return 0, errors.Wrap(err, "appdb: unable to update all in datapoint slice")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "appdb: unable to retrieve rows affected all in update all input")
+		return 0, errors.Wrap(err, "appdb: unable to retrieve rows affected all in update all datapoint")
 	}
 	return rowsAff, nil
 }
 
 // UpsertG attempts an insert, and does an update or ignore on conflict.
-func (o *Input) UpsertG(ctx context.Context, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
+func (o *Datapoint) UpsertG(ctx context.Context, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	return o.Upsert(ctx, boil.GetContextDB(), updateOnConflict, conflictColumns, updateColumns, insertColumns)
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
 // See boil.Columns documentation for how to properly use updateColumns and insertColumns.
-func (o *Input) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
+func (o *Datapoint) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
-		return errors.New("appdb: no input provided for upsert")
+		return errors.New("appdb: no datapoint provided for upsert")
 	}
 
 	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {
 		return err
 	}
 
-	nzDefaults := queries.NonZeroDefaultSet(inputColumnsWithDefault, o)
+	nzDefaults := queries.NonZeroDefaultSet(datapointColumnsWithDefault, o)
 
 	// Build cache key in-line uglily - mysql vs psql problems
 	buf := strmangle.GetBuffer()
@@ -949,42 +956,42 @@ func (o *Input) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnC
 	key := buf.String()
 	strmangle.PutBuffer(buf)
 
-	inputUpsertCacheMut.RLock()
-	cache, cached := inputUpsertCache[key]
-	inputUpsertCacheMut.RUnlock()
+	datapointUpsertCacheMut.RLock()
+	cache, cached := datapointUpsertCache[key]
+	datapointUpsertCacheMut.RUnlock()
 
 	var err error
 
 	if !cached {
 		insert, ret := insertColumns.InsertColumnSet(
-			inputAllColumns,
-			inputColumnsWithDefault,
-			inputColumnsWithoutDefault,
+			datapointAllColumns,
+			datapointColumnsWithDefault,
+			datapointColumnsWithoutDefault,
 			nzDefaults,
 		)
 
 		update := updateColumns.UpdateColumnSet(
-			inputAllColumns,
-			inputPrimaryKeyColumns,
+			datapointAllColumns,
+			datapointPrimaryKeyColumns,
 		)
 
 		if updateOnConflict && len(update) == 0 {
-			return errors.New("appdb: unable to upsert input, could not build update column list")
+			return errors.New("appdb: unable to upsert datapoint, could not build update column list")
 		}
 
 		conflict := conflictColumns
 		if len(conflict) == 0 {
-			conflict = make([]string, len(inputPrimaryKeyColumns))
-			copy(conflict, inputPrimaryKeyColumns)
+			conflict = make([]string, len(datapointPrimaryKeyColumns))
+			copy(conflict, datapointPrimaryKeyColumns)
 		}
-		cache.query = buildUpsertQueryPostgres(dialect, "\"abb_free_at_home\".\"input\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"abb_free_at_home\".\"datapoint\"", updateOnConflict, ret, update, conflict, insert)
 
-		cache.valueMapping, err = queries.BindMapping(inputType, inputMapping, insert)
+		cache.valueMapping, err = queries.BindMapping(datapointType, datapointMapping, insert)
 		if err != nil {
 			return err
 		}
 		if len(ret) != 0 {
-			cache.retMapping, err = queries.BindMapping(inputType, inputMapping, ret)
+			cache.retMapping, err = queries.BindMapping(datapointType, datapointMapping, ret)
 			if err != nil {
 				return err
 			}
@@ -1012,37 +1019,37 @@ func (o *Input) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnC
 		_, err = exec.ExecContext(ctx, cache.query, vals...)
 	}
 	if err != nil {
-		return errors.Wrap(err, "appdb: unable to upsert input")
+		return errors.Wrap(err, "appdb: unable to upsert datapoint")
 	}
 
 	if !cached {
-		inputUpsertCacheMut.Lock()
-		inputUpsertCache[key] = cache
-		inputUpsertCacheMut.Unlock()
+		datapointUpsertCacheMut.Lock()
+		datapointUpsertCache[key] = cache
+		datapointUpsertCacheMut.Unlock()
 	}
 
 	return o.doAfterUpsertHooks(ctx, exec)
 }
 
-// DeleteG deletes a single Input record.
+// DeleteG deletes a single Datapoint record.
 // DeleteG will match against the primary key column to find the record to delete.
-func (o *Input) DeleteG(ctx context.Context) (int64, error) {
+func (o *Datapoint) DeleteG(ctx context.Context) (int64, error) {
 	return o.Delete(ctx, boil.GetContextDB())
 }
 
-// Delete deletes a single Input record with an executor.
+// Delete deletes a single Datapoint record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *Input) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o *Datapoint) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
 	if o == nil {
-		return 0, errors.New("appdb: no Input provided for delete")
+		return 0, errors.New("appdb: no Datapoint provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(ctx, exec); err != nil {
 		return 0, err
 	}
 
-	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), inputPrimaryKeyMapping)
-	sql := "DELETE FROM \"abb_free_at_home\".\"input\" WHERE \"id\"=$1"
+	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), datapointPrimaryKeyMapping)
+	sql := "DELETE FROM \"abb_free_at_home\".\"datapoint\" WHERE \"id\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1051,12 +1058,12 @@ func (o *Input) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, e
 	}
 	result, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "appdb: unable to delete from input")
+		return 0, errors.Wrap(err, "appdb: unable to delete from datapoint")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "appdb: failed to get rows affected by delete for input")
+		return 0, errors.Wrap(err, "appdb: failed to get rows affected by delete for datapoint")
 	}
 
 	if err := o.doAfterDeleteHooks(ctx, exec); err != nil {
@@ -1066,43 +1073,43 @@ func (o *Input) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, e
 	return rowsAff, nil
 }
 
-func (q inputQuery) DeleteAllG(ctx context.Context) (int64, error) {
+func (q datapointQuery) DeleteAllG(ctx context.Context) (int64, error) {
 	return q.DeleteAll(ctx, boil.GetContextDB())
 }
 
 // DeleteAll deletes all matching rows.
-func (q inputQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (q datapointQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
 	if q.Query == nil {
-		return 0, errors.New("appdb: no inputQuery provided for delete all")
+		return 0, errors.New("appdb: no datapointQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
 	result, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "appdb: unable to delete all from input")
+		return 0, errors.Wrap(err, "appdb: unable to delete all from datapoint")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "appdb: failed to get rows affected by deleteall for input")
+		return 0, errors.Wrap(err, "appdb: failed to get rows affected by deleteall for datapoint")
 	}
 
 	return rowsAff, nil
 }
 
 // DeleteAllG deletes all rows in the slice.
-func (o InputSlice) DeleteAllG(ctx context.Context) (int64, error) {
+func (o DatapointSlice) DeleteAllG(ctx context.Context) (int64, error) {
 	return o.DeleteAll(ctx, boil.GetContextDB())
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o InputSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o DatapointSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
 	if len(o) == 0 {
 		return 0, nil
 	}
 
-	if len(inputBeforeDeleteHooks) != 0 {
+	if len(datapointBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(ctx, exec); err != nil {
 				return 0, err
@@ -1112,12 +1119,12 @@ func (o InputSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (i
 
 	var args []interface{}
 	for _, obj := range o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), inputPrimaryKeyMapping)
+		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), datapointPrimaryKeyMapping)
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "DELETE FROM \"abb_free_at_home\".\"input\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, inputPrimaryKeyColumns, len(o))
+	sql := "DELETE FROM \"abb_free_at_home\".\"datapoint\" WHERE " +
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, datapointPrimaryKeyColumns, len(o))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1126,15 +1133,15 @@ func (o InputSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (i
 	}
 	result, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "appdb: unable to delete all from input slice")
+		return 0, errors.Wrap(err, "appdb: unable to delete all from datapoint slice")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "appdb: failed to get rows affected by deleteall for input")
+		return 0, errors.Wrap(err, "appdb: failed to get rows affected by deleteall for datapoint")
 	}
 
-	if len(inputAfterDeleteHooks) != 0 {
+	if len(datapointAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(ctx, exec); err != nil {
 				return 0, err
@@ -1146,9 +1153,9 @@ func (o InputSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (i
 }
 
 // ReloadG refetches the object from the database using the primary keys.
-func (o *Input) ReloadG(ctx context.Context) error {
+func (o *Datapoint) ReloadG(ctx context.Context) error {
 	if o == nil {
-		return errors.New("appdb: no Input provided for reload")
+		return errors.New("appdb: no Datapoint provided for reload")
 	}
 
 	return o.Reload(ctx, boil.GetContextDB())
@@ -1156,8 +1163,8 @@ func (o *Input) ReloadG(ctx context.Context) error {
 
 // Reload refetches the object from the database
 // using the primary keys with an executor.
-func (o *Input) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindInput(ctx, exec, o.ID)
+func (o *Datapoint) Reload(ctx context.Context, exec boil.ContextExecutor) error {
+	ret, err := FindDatapoint(ctx, exec, o.ID)
 	if err != nil {
 		return err
 	}
@@ -1168,9 +1175,9 @@ func (o *Input) Reload(ctx context.Context, exec boil.ContextExecutor) error {
 
 // ReloadAllG refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
-func (o *InputSlice) ReloadAllG(ctx context.Context) error {
+func (o *DatapointSlice) ReloadAllG(ctx context.Context) error {
 	if o == nil {
-		return errors.New("appdb: empty InputSlice provided for reload all")
+		return errors.New("appdb: empty DatapointSlice provided for reload all")
 	}
 
 	return o.ReloadAll(ctx, boil.GetContextDB())
@@ -1178,26 +1185,26 @@ func (o *InputSlice) ReloadAllG(ctx context.Context) error {
 
 // ReloadAll refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
-func (o *InputSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) error {
+func (o *DatapointSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if o == nil || len(*o) == 0 {
 		return nil
 	}
 
-	slice := InputSlice{}
+	slice := DatapointSlice{}
 	var args []interface{}
 	for _, obj := range *o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), inputPrimaryKeyMapping)
+		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), datapointPrimaryKeyMapping)
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "SELECT \"abb_free_at_home\".\"input\".* FROM \"abb_free_at_home\".\"input\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, inputPrimaryKeyColumns, len(*o))
+	sql := "SELECT \"abb_free_at_home\".\"datapoint\".* FROM \"abb_free_at_home\".\"datapoint\" WHERE " +
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, datapointPrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
 
 	err := q.Bind(ctx, exec, &slice)
 	if err != nil {
-		return errors.Wrap(err, "appdb: unable to reload all in InputSlice")
+		return errors.Wrap(err, "appdb: unable to reload all in DatapointSlice")
 	}
 
 	*o = slice
@@ -1205,15 +1212,15 @@ func (o *InputSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) e
 	return nil
 }
 
-// InputExistsG checks if the Input row exists.
-func InputExistsG(ctx context.Context, iD int64) (bool, error) {
-	return InputExists(ctx, boil.GetContextDB(), iD)
+// DatapointExistsG checks if the Datapoint row exists.
+func DatapointExistsG(ctx context.Context, iD int64) (bool, error) {
+	return DatapointExists(ctx, boil.GetContextDB(), iD)
 }
 
-// InputExists checks if the Input row exists.
-func InputExists(ctx context.Context, exec boil.ContextExecutor, iD int64) (bool, error) {
+// DatapointExists checks if the Datapoint row exists.
+func DatapointExists(ctx context.Context, exec boil.ContextExecutor, iD int64) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"abb_free_at_home\".\"input\" where \"id\"=$1 limit 1)"
+	sql := "select exists(select 1 from \"abb_free_at_home\".\"datapoint\" where \"id\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1224,13 +1231,13 @@ func InputExists(ctx context.Context, exec boil.ContextExecutor, iD int64) (bool
 
 	err := row.Scan(&exists)
 	if err != nil {
-		return false, errors.Wrap(err, "appdb: unable to check if input exists")
+		return false, errors.Wrap(err, "appdb: unable to check if datapoint exists")
 	}
 
 	return exists, nil
 }
 
-// Exists checks if the Input row exists.
-func (o *Input) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
-	return InputExists(ctx, exec, o.ID)
+// Exists checks if the Datapoint row exists.
+func (o *Datapoint) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
+	return DatapointExists(ctx, exec, o.ID)
 }

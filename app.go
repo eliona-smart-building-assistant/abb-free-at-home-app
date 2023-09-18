@@ -94,7 +94,22 @@ func collectResources(config apiserver.Configuration) error {
 		log.Error("eliona", "inserting data into Eliona: %v", err)
 		return err
 	}
+
+	subscribeToDataChanges(config)
 	return nil
+}
+
+func subscribeToDataChanges(config apiserver.Configuration) {
+	datapoints, err := conf.FetchAllDatapoints()
+	if err != nil {
+		log.Error("conf", "fetching all datapoints: %v", err)
+		return
+	}
+
+	if err := broker.ListenForDataChanges(config, datapoints); err != nil {
+		log.Error("broker", "listen for data changes: %v", err)
+		return
+	}
 }
 
 // listenApi starts the API server and listen for requests
@@ -122,7 +137,6 @@ func listenForOutputChanges() {
 			}
 			value := int32(val.(float64))
 			setAsset(output.AssetId, function, value)
-			fmt.Printf("updated %v to %v\n", function, value)
 		}
 	}
 }
@@ -130,7 +144,7 @@ func listenForOutputChanges() {
 func setAsset(assetID int32, function string, val int32) {
 	input, err := conf.FetchInput(assetID, function)
 	if err != nil {
-		log.Fatal("conf", "fetching input for assetID %v: %v", assetID, err)
+		log.Fatal("conf", "fetching input for assetID %v function %v: %v", assetID, function, err)
 		return
 	}
 	if input.LastWrittenValue.Valid && input.LastWrittenValue.Int32 == val {
@@ -142,7 +156,7 @@ func setAsset(assetID int32, function string, val int32) {
 		log.Debug("broker", "skipped setting value %v for asset %v, to debounce", val, assetID)
 		return
 	}
-	config, err := conf.GetConfigForInput(input)
+	config, err := conf.GetConfigForDatapoint(input)
 	if err != nil {
 		log.Error("conf", "getting config for input %v: %v", input.ID, err)
 		return
@@ -156,7 +170,7 @@ func setAsset(assetID int32, function string, val int32) {
 	input.LastWrittenValue.Valid = true
 	input.LastWrittenTime.Time = time.Now()
 	input.LastWrittenTime.Valid = true
-	if err := conf.UpdateInput(input); err != nil {
+	if err := conf.UpdateDatapoint(input); err != nil {
 		log.Error("conf", "updating input: %v", err)
 		return
 	}

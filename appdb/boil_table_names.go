@@ -6,9 +6,9 @@ package appdb
 var TableNames = struct {
 	Asset         string
 	Configuration string
-	Input         string
+	Datapoint     string
 }{
 	Asset:         "asset",
 	Configuration: "configuration",
-	Input:         "input",
+	Datapoint:     "datapoint",
 }

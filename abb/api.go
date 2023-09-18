@@ -32,6 +32,7 @@ import (
 	"abb-free-at-home/abbconnection"
 	"abb-free-at-home/abbgraphql"
 	"abb-free-at-home/apiserver"
+	"abb-free-at-home/appdb"
 
 	utilslog "github.com/eliona-smart-building-assistant/go-utils/log"
 	"golang.org/x/oauth2"
@@ -195,6 +196,10 @@ func (api *Api) UpdateBearerManually(jwt string) {
 
 	api.Req.AddHeader("Ocp-Apim-Subscription-Key", api.Credentials.OcpApimSubscriptionKey)
 	api.Req.AddHeader("Authorization", "Bearer "+api.Auth.GetCurrentAccessToken())
+}
+
+func (api *Api) ListenGraphQLSubscriptions(datapoints []appdb.Datapoint) error {
+	return abbgraphql.SubscribeDataPointValue(api.token.AccessToken, datapoints)
 }
 
 // ToDo: for local instances available?

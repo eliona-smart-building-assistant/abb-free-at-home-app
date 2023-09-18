@@ -247,36 +247,65 @@ func GetAssetId(ctx context.Context, config apiserver.Configuration, projId stri
 	return common.Ptr(dbAsset[0].AssetID.Int32), nil
 }
 
-func InsertInput(assetId int32, systemId, deviceId, channelId, datapoint, function string) error {
-	input := appdb.Input{
+func InsertOutput(assetId int32, systemId, deviceId, channelId, datapoint, function string) error {
+	output := appdb.Datapoint{
 		AssetID:   assetId,
 		SystemID:  systemId,
 		DeviceID:  deviceId,
 		ChannelID: channelId,
 		Datapoint: datapoint,
 		Function:  function,
+		IsInput:   false,
+	}
+	return output.InsertG(context.Background(), boil.Infer())
+}
+
+func InsertInput(assetId int32, systemId, deviceId, channelId, datapoint, function string) error {
+	input := appdb.Datapoint{
+		AssetID:   assetId,
+		SystemID:  systemId,
+		DeviceID:  deviceId,
+		ChannelID: channelId,
+		Datapoint: datapoint,
+		Function:  function,
+		IsInput:   true,
 	}
 	return input.InsertG(context.Background(), boil.Infer())
 }
 
-func FetchInput(assetId int32, function string) (appdb.Input, error) {
-	input, err := appdb.Inputs(
-		appdb.InputWhere.AssetID.EQ(assetId),
-		appdb.InputWhere.Function.EQ(function),
+func FetchInput(assetId int32, function string) (appdb.Datapoint, error) {
+	input, err := appdb.Datapoints(
+		appdb.DatapointWhere.IsInput.EQ(true),
+		appdb.DatapointWhere.AssetID.EQ(assetId),
+		appdb.DatapointWhere.Function.EQ(function),
 	).OneG(context.Background())
 	if err != nil {
-		return appdb.Input{}, err
+		return appdb.Datapoint{}, err
 	}
 	return *input, nil
 }
 
-func UpdateInput(input appdb.Input) error {
-	_, err := input.UpdateG(context.Background(), boil.Infer())
+func FetchAllDatapoints() ([]appdb.Datapoint, error) {
+	datapoints, err := appdb.Datapoints().AllG(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	// Get rid of pointers
+	valueSlice := make([]appdb.Datapoint, len(datapoints))
+	for i, dp := range datapoints {
+		valueSlice[i] = *dp
+	}
+	return valueSlice, nil
+}
+
+func UpdateDatapoint(datapoint appdb.Datapoint) error {
+	_, err := datapoint.UpdateG(context.Background(), boil.Infer())
 	return err
 }
 
-func GetConfigForInput(input appdb.Input) (config apiserver.Configuration, err error) {
-	asset, err := input.Asset().OneG(context.Background())
+func GetConfigForDatapoint(datapoint appdb.Datapoint) (config apiserver.Configuration, err error) {
+	asset, err := datapoint.Asset().OneG(context.Background())
 	if err != nil {
 		err = fmt.Errorf("fetching asset: %v", err)
 		return

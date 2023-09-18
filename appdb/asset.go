@@ -169,16 +169,16 @@ var AssetWhere = struct {
 // AssetRels is where relationship names are stored.
 var AssetRels = struct {
 	Configuration string
-	Inputs        string
+	Datapoints    string
 }{
 	Configuration: "Configuration",
-	Inputs:        "Inputs",
+	Datapoints:    "Datapoints",
 }
 
 // assetR is where relationships are stored.
 type assetR struct {
 	Configuration *Configuration `boil:"Configuration" json:"Configuration" toml:"Configuration" yaml:"Configuration"`
-	Inputs        InputSlice     `boil:"Inputs" json:"Inputs" toml:"Inputs" yaml:"Inputs"`
+	Datapoints    DatapointSlice `boil:"Datapoints" json:"Datapoints" toml:"Datapoints" yaml:"Datapoints"`
 }
 
 // NewStruct creates a new relationship struct
@@ -193,11 +193,11 @@ func (r *assetR) GetConfiguration() *Configuration {
 	return r.Configuration
 }
 
-func (r *assetR) GetInputs() InputSlice {
+func (r *assetR) GetDatapoints() DatapointSlice {
 	if r == nil {
 		return nil
 	}
-	return r.Inputs
+	return r.Datapoints
 }
 
 // assetL is where Load methods for each relationship are stored.
@@ -520,18 +520,18 @@ func (o *Asset) Configuration(mods ...qm.QueryMod) configurationQuery {
 	return Configurations(queryMods...)
 }
 
-// Inputs retrieves all the input's Inputs with an executor.
-func (o *Asset) Inputs(mods ...qm.QueryMod) inputQuery {
+// Datapoints retrieves all the datapoint's Datapoints with an executor.
+func (o *Asset) Datapoints(mods ...qm.QueryMod) datapointQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
 	}
 
 	queryMods = append(queryMods,
-		qm.Where("\"abb_free_at_home\".\"input\".\"asset_id\"=?", o.AssetID),
+		qm.Where("\"abb_free_at_home\".\"datapoint\".\"asset_id\"=?", o.AssetID),
 	)
 
-	return Inputs(queryMods...)
+	return Datapoints(queryMods...)
 }
 
 // LoadConfiguration allows an eager lookup of values, cached into the
@@ -654,9 +654,9 @@ func (assetL) LoadConfiguration(ctx context.Context, e boil.ContextExecutor, sin
 	return nil
 }
 
-// LoadInputs allows an eager lookup of values, cached into the
+// LoadDatapoints allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (assetL) LoadInputs(ctx context.Context, e boil.ContextExecutor, singular bool, maybeAsset interface{}, mods queries.Applicator) error {
+func (assetL) LoadDatapoints(ctx context.Context, e boil.ContextExecutor, singular bool, maybeAsset interface{}, mods queries.Applicator) error {
 	var slice []*Asset
 	var object *Asset
 
@@ -710,8 +710,8 @@ func (assetL) LoadInputs(ctx context.Context, e boil.ContextExecutor, singular b
 	}
 
 	query := NewQuery(
-		qm.From(`abb_free_at_home.input`),
-		qm.WhereIn(`abb_free_at_home.input.asset_id in ?`, args...),
+		qm.From(`abb_free_at_home.datapoint`),
+		qm.WhereIn(`abb_free_at_home.datapoint.asset_id in ?`, args...),
 	)
 	if mods != nil {
 		mods.Apply(query)
@@ -719,22 +719,22 @@ func (assetL) LoadInputs(ctx context.Context, e boil.ContextExecutor, singular b
 
 	results, err := query.QueryContext(ctx, e)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load input")
+		return errors.Wrap(err, "failed to eager load datapoint")
 	}
 
-	var resultSlice []*Input
+	var resultSlice []*Datapoint
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice input")
+		return errors.Wrap(err, "failed to bind eager loaded slice datapoint")
 	}
 
 	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on input")
+		return errors.Wrap(err, "failed to close results in eager load on datapoint")
 	}
 	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for input")
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for datapoint")
 	}
 
-	if len(inputAfterSelectHooks) != 0 {
+	if len(datapointAfterSelectHooks) != 0 {
 		for _, obj := range resultSlice {
 			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
 				return err
@@ -742,10 +742,10 @@ func (assetL) LoadInputs(ctx context.Context, e boil.ContextExecutor, singular b
 		}
 	}
 	if singular {
-		object.R.Inputs = resultSlice
+		object.R.Datapoints = resultSlice
 		for _, foreign := range resultSlice {
 			if foreign.R == nil {
-				foreign.R = &inputR{}
+				foreign.R = &datapointR{}
 			}
 			foreign.R.Asset = object
 		}
@@ -755,9 +755,9 @@ func (assetL) LoadInputs(ctx context.Context, e boil.ContextExecutor, singular b
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
 			if queries.Equal(local.AssetID, foreign.AssetID) {
-				local.R.Inputs = append(local.R.Inputs, foreign)
+				local.R.Datapoints = append(local.R.Datapoints, foreign)
 				if foreign.R == nil {
-					foreign.R = &inputR{}
+					foreign.R = &datapointR{}
 				}
 				foreign.R.Asset = local
 				break
@@ -823,20 +823,20 @@ func (o *Asset) SetConfiguration(ctx context.Context, exec boil.ContextExecutor,
 	return nil
 }
 
-// AddInputsG adds the given related objects to the existing relationships
+// AddDatapointsG adds the given related objects to the existing relationships
 // of the asset, optionally inserting them as new records.
-// Appends related to o.R.Inputs.
+// Appends related to o.R.Datapoints.
 // Sets related.R.Asset appropriately.
 // Uses the global database handle.
-func (o *Asset) AddInputsG(ctx context.Context, insert bool, related ...*Input) error {
-	return o.AddInputs(ctx, boil.GetContextDB(), insert, related...)
+func (o *Asset) AddDatapointsG(ctx context.Context, insert bool, related ...*Datapoint) error {
+	return o.AddDatapoints(ctx, boil.GetContextDB(), insert, related...)
 }
 
-// AddInputs adds the given related objects to the existing relationships
+// AddDatapoints adds the given related objects to the existing relationships
 // of the asset, optionally inserting them as new records.
-// Appends related to o.R.Inputs.
+// Appends related to o.R.Datapoints.
 // Sets related.R.Asset appropriately.
-func (o *Asset) AddInputs(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Input) error {
+func (o *Asset) AddDatapoints(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Datapoint) error {
 	var err error
 	for _, rel := range related {
 		if insert {
@@ -846,9 +846,9 @@ func (o *Asset) AddInputs(ctx context.Context, exec boil.ContextExecutor, insert
 			}
 		} else {
 			updateQuery := fmt.Sprintf(
-				"UPDATE \"abb_free_at_home\".\"input\" SET %s WHERE %s",
+				"UPDATE \"abb_free_at_home\".\"datapoint\" SET %s WHERE %s",
 				strmangle.SetParamNames("\"", "\"", 1, []string{"asset_id"}),
-				strmangle.WhereClause("\"", "\"", 2, inputPrimaryKeyColumns),
+				strmangle.WhereClause("\"", "\"", 2, datapointPrimaryKeyColumns),
 			)
 			values := []interface{}{o.AssetID, rel.ID}
 
@@ -867,15 +867,15 @@ func (o *Asset) AddInputs(ctx context.Context, exec boil.ContextExecutor, insert
 
 	if o.R == nil {
 		o.R = &assetR{
-			Inputs: related,
+			Datapoints: related,
 		}
 	} else {
-		o.R.Inputs = append(o.R.Inputs, related...)
+		o.R.Datapoints = append(o.R.Datapoints, related...)
 	}
 
 	for _, rel := range related {
 		if rel.R == nil {
-			rel.R = &inputR{
+			rel.R = &datapointR{
 				Asset: o,
 			}
 		} else {

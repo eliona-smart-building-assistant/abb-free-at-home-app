@@ -193,6 +193,7 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 						}
 					}
 					assetBase.InputsBase = inputs
+
 					c = model.Dimmer{
 						AssetBase:   assetBase,
 						SwitchState: int8(switchState),
@@ -288,10 +289,32 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 	return systems, nil
 }
 
-func SetInput(config apiserver.Configuration, output appdb.Input, value any) error {
+// func ListenForDataChangesSystem(config apiserver.Configuration, systems []model.System) error {
+// 	api, err := getAPI(config)
+// 	if err != nil {
+// 		return fmt.Errorf("getting API instance: %v", err)
+// 	}
+// 	if err := api.ListenGraphQLSubscriptions(systems); err != nil {
+// 		return fmt.Errorf("listen for graphQL subscriptions: %v", err)
+// 	}
+// 	return nil
+// }
+
+func ListenForDataChanges(config apiserver.Configuration, datapoints []appdb.Datapoint) error {
 	api, err := getAPI(config)
 	if err != nil {
 		return fmt.Errorf("getting API instance: %v", err)
 	}
-	return api.WriteDatapoint(output.SystemID, output.DeviceID, output.ChannelID, output.Datapoint, value)
+	if err := api.ListenGraphQLSubscriptions(datapoints); err != nil {
+		return fmt.Errorf("listen for graphQL subscriptions: %v", err)
+	}
+	return nil
+}
+
+func SetInput(config apiserver.Configuration, input appdb.Datapoint, value any) error {
+	api, err := getAPI(config)
+	if err != nil {
+		return fmt.Errorf("getting API instance: %v", err)
+	}
+	return api.WriteDatapoint(input.SystemID, input.DeviceID, input.ChannelID, input.Datapoint, value)
 }
