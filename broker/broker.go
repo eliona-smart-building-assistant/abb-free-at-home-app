@@ -123,6 +123,14 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 					if err != nil {
 						log.Error("broker", "parsing input value '%s': %v", switchInputStr, err)
 					}
+
+					outputs := make(map[string]string)
+					for datapoint, input := range channel.Outputs {
+						if input.PairingId == abb.PID_ON_OFF_INFO_GET {
+							outputs[function_switch] = datapoint
+						}
+					}
+					assetBase.OutputsBase = outputs
 					inputs := make(map[string]string)
 					for datapoint, input := range channel.Inputs {
 						if input.PairingId == abb.PID_SWITCH_ON_OFF_SET {
@@ -130,6 +138,7 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 						}
 					}
 					assetBase.InputsBase = inputs
+
 					c = model.Switch{
 						AssetBase:   assetBase,
 						SwitchState: int8(switchState),
@@ -156,6 +165,18 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 					if err != nil {
 						log.Error("broker", "parsing input value '%s': %v", dimmerInputStr, err)
 					}
+
+					outputs := make(map[string]string)
+					for datapoint, output := range channel.Outputs {
+						switch output.PairingId {
+						case abb.PID_ON_OFF_INFO_GET:
+							outputs[function_switch] = datapoint
+						case abb.PID_ACTUAL_DIM_VALUE_0_100_GET:
+							outputs[function_dimmer] = datapoint
+						}
+					}
+					assetBase.OutputsBase = outputs
+
 					inputs := make(map[string]string)
 					for datapoint, input := range channel.Inputs {
 						switch input.PairingId {

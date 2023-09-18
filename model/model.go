@@ -27,14 +27,16 @@ type Asset interface {
 	GAI() string
 	Name() string
 	Id() string
-	Inputs() map[string]string // map[function]datapoint
+	Inputs() map[string]string  // map[function]datapoint
+	Outputs() map[string]string // map[function]datapoint
 }
 
 type AssetBase struct {
-	IDBase     string `eliona:"channel_id,filterable"`
-	GAIBase    string
-	NameBase   string `eliona:"channel_name,filterable"`
-	InputsBase map[string]string
+	IDBase      string `eliona:"channel_id,filterable"`
+	GAIBase     string
+	NameBase    string `eliona:"channel_name,filterable"`
+	InputsBase  map[string]string
+	OutputsBase map[string]string
 }
 
 func (a AssetBase) Name() string {
@@ -47,6 +49,10 @@ func (a AssetBase) Id() string {
 
 func (a AssetBase) Inputs() map[string]string {
 	return a.InputsBase
+}
+
+func (a AssetBase) Outputs() map[string]string {
+	return a.OutputsBase
 }
 
 type Channel struct {

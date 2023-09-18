@@ -41,6 +41,22 @@ type SystemsQuery struct {
 						} `graphql:"DataPointService"`
 					} `graphql:"value"`
 				} `graphql:"outputs"`
+				Inputs []struct {
+					Key   graphql.String `graphql:"key"`
+					Value struct {
+						PairingId graphql.String `graphql:"pairingId"`
+						Name      struct {
+							En graphql.String `graphql:"en"`
+						} `graphql:"Name"`
+						Dpt              graphql.String `graphql:"dpt"`
+						DataPointService struct {
+							RequestDataPointValue struct {
+								Value graphql.String `graphql:"value"`
+								Time  graphql.String `graphql:"time"`
+							} `graphql:"RequestDataPointValue"`
+						} `graphql:"DataPointService"`
+					} `graphql:"value"`
+				} `graphql:"inputs"`
 			} `graphql:"Channels"`
 		} `graphql:"Assets"`
 	} `graphql:"ISystemFH"`
