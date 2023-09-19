@@ -97,6 +97,27 @@ func (c Dimmer) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
 }
 
+type RTC struct {
+	AssetBase
+
+	SwitchState  int8  `eliona:"switch_state" subtype:"input"`
+	CurrentTemp  float32 `eliona:"current_temperature" subtype:"input"`
+	SetTempState float32 `eliona:"set_temperature_state" subtype:"input"`
+	EcoModeState int8  `eliona:"eco_mode_state" subtype:"input"`
+
+	Switch  int8  `eliona:"switch" subtype:"output"`
+	SetTemp float32 `eliona:"set_temperature" subtype:"output"`
+	EcoMode int8  `eliona:"eco_mode" subtype:"output"`
+}
+
+func (rtc RTC) AssetType() string {
+	return "abb_free_at_home_room_temperature_controller"
+}
+
+func (rtc RTC) GAI() string {
+	return fmt.Sprintf("%s_%s", rtc.AssetType(), rtc.GAIBase)
+}
+
 func (tag *System) AdheresToFilter(filter [][]apiserver.FilterRule) (bool, error) {
 	f := apiFilterToCommonFilter(filter)
 	fp, err := structToMap(tag)

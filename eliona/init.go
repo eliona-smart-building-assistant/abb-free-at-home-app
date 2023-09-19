@@ -41,5 +41,8 @@ func InitEliona(connection db.Connection) error {
 	if err := asset.InitAssetTypeFile("eliona/asset-type-dimmer-sensor.json")(connection); err != nil {
 		return fmt.Errorf("init dimmer asset type: %v", err)
 	}
+	if err := asset.InitAssetTypeFile("eliona/asset-type-room-temperature-controller.json")(connection); err != nil {
+		return fmt.Errorf("init rtc asset type: %v", err)
+	}
 	return nil
 }

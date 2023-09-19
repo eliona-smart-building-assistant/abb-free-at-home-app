@@ -1,0 +1,106 @@
+{
+	"attributes": [
+		{
+			"enable": true,
+			"name": "switch_state",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Schalterzustand",
+				"en": "Switch state"
+			}
+		},
+		{
+			"enable": true,
+			"name": "current_temperature",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"unit": "˚C",
+			"translation": {
+				"de": "Aktuelle Temperatur",
+				"en": "Current temperature"
+			}
+		},
+		{
+			"enable": true,
+			"name": "set_temperature_state",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"unit": "˚C",
+			"translation": {
+				"de": "Eingestellte Temperatur",
+				"en": "Set temperature"
+			}
+		},
+		{
+			"enable": true,
+			"name": "eco_mode_state",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Ökomodus",
+				"en": "ECO mode"
+			}
+		},
+		{
+			"enable": true,
+			"name": "switch",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Schalter",
+				"en": "Switch"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
+		},
+		{
+			"enable": true,
+			"name": "set_temperature",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"unit": "˚C",
+			"translation": {
+				"de": "Gewünschte Temperatur",
+				"en": "Desired temperature"
+			}
+		},
+		{
+			"enable": true,
+			"name": "eco_mode",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Ökomodus",
+				"en": "ECO mode"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
+		}
+	],
+	"custom": false,
+	"icon": null,
+	"name": "abb_free_at_home_room_temperature_controller",
+	"translation": {
+		"de": "ABB-free@home Raumtemperaturregler",
+		"en": "ABB-free@home Room temperature controller"
+	},
+	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
+	"vendor": "ABB"
+}

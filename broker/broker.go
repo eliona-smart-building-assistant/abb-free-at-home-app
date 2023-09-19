@@ -28,14 +28,20 @@ import (
 )
 
 const (
-	function_switch = "switch"
-	function_dimmer = "dimmer"
+	function_switch               = "switch"
+	function_dimmer               = "dimmer"
+	function_measured_temperature = "measured_temperature"
+	function_set_temperature      = "set_temperature"
+	function_eco_mode             = "eco_mode"
 )
 
 var Functions = []string{
 	// Note: Depends on order.
 	function_dimmer,
 	function_switch,
+	function_measured_temperature,
+	function_set_temperature,
+	function_eco_mode,
 }
 
 func getAPI(config apiserver.Configuration) (*abb.Api, error) {
@@ -195,6 +201,66 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 						Dimmer:      int8(dimmerState),
 					}
 					_, _ = dimmerInput, switchInput
+				case abb.FID_ROOM_TEMPERATURE_CONTROLLER_MASTER_WITH_FAN, abb.FID_ROOM_TEMPERATURE_CONTROLLER_MASTER_WITHOUT_FAN, abb.FID_ROOM_TEMPERATURE_CONTROLLER_SLAVE:
+					switchStateStr := channel.FindOutputValueByPairingID(abb.PID_CONTROLLER_ON_OFF_PROTECTED_GET)
+					switchState, err := strconv.ParseInt(switchStateStr, 10, 8)
+					if err != nil {
+						log.Error("broker", "parsing output value '%s': %v", switchStateStr, err)
+					}
+					currentTempStr := channel.FindOutputValueByPairingID(abb.PID_MEASURED_TEMPERATURE)
+					currentTemp, err := strconv.ParseFloat(currentTempStr, 16)
+					if err != nil {
+						log.Error("broker", "parsing output value '%s': %v", currentTempStr, err)
+					}
+					setTempStr := channel.FindOutputValueByPairingID(abb.PID_SETPOINT_TEMPERATURE_GET)
+					setTemp, err := strconv.ParseFloat(setTempStr, 16)
+					if err != nil {
+						log.Error("broker", "parsing output value '%s': %v", setTempStr, err)
+					}
+					ecoModeStr := channel.FindOutputValueByPairingID(abb.PID_CONTROLLER_ECOMODE_SET)
+					ecoMode, err := strconv.ParseInt(ecoModeStr, 10, 8)
+					if err != nil {
+						log.Error("broker", "parsing output value '%s': %v", ecoModeStr, err)
+					}
+
+					outputs := make(map[string]string)
+					for datapoint, output := range channel.Outputs {
+						switch output.PairingId {
+						case abb.PID_CONTROLLER_ON_OFF_PROTECTED_GET:
+							outputs[function_switch] = datapoint
+						case abb.PID_MEASURED_TEMPERATURE:
+							outputs[function_measured_temperature] = datapoint
+						case abb.PID_SETPOINT_TEMPERATURE_GET:
+							outputs[function_set_temperature] = datapoint
+						case abb.PID_CONTROLLER_ECOMODE_SET:
+							outputs[function_eco_mode] = datapoint
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					inputs := make(map[string]string)
+					for datapoint, input := range channel.Inputs {
+						switch input.PairingId {
+						case abb.PID_CONTROLLER_REQ_ON_OFF_SET:
+							inputs[function_switch] = datapoint
+						case abb.PID_ABS_TEMPERATURE_SET:
+							inputs[function_set_temperature] = datapoint
+						case abb.PID_CONTROLLER_ECOMODE_SET:
+							inputs[function_eco_mode] = datapoint
+						}
+					}
+					assetBase.InputsBase = inputs
+
+					c = model.RTC{
+						AssetBase:    assetBase,
+						SwitchState:  int8(switchState),
+						Switch:       int8(switchState),
+						CurrentTemp:  float32(currentTemp),
+						SetTemp:      float32(setTemp),
+						SetTempState: float32(setTemp),
+						EcoMode:      int8(ecoMode),
+						EcoModeState: int8(ecoMode),
+					}
 				default:
 					c = model.Channel{
 						AssetBase: assetBase,

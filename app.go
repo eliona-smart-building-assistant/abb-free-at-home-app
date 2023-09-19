@@ -115,7 +115,6 @@ func listenForOutputChanges() {
 		return
 	}
 	for output := range outputs {
-		fmt.Println(output)
 		for _, function := range broker.Functions {
 			val, ok := output.Data[function]
 			if !ok {
@@ -123,7 +122,7 @@ func listenForOutputChanges() {
 			}
 			value := int32(val.(float64))
 			setAsset(output.AssetId, function, value)
-			fmt.Println(function)
+			fmt.Printf("updated %v to %v\n", function, value)
 		}
 	}
 }
