@@ -183,7 +183,7 @@ func setAsset(assetID int32, function string, val int32) {
 		return
 	}
 	if input.LastWrittenTime.Valid && time.Since(input.LastWrittenTime.Time).Seconds() < 10 {
-		fmt.Println(time.Since(input.LastWrittenTime.Time).Seconds())
+		//fmt.Println(time.Since(input.LastWrittenTime.Time).Seconds())
 		log.Debug("broker", "skipped setting value %v for asset %v, to debounce", val, assetID)
 		return
 	}

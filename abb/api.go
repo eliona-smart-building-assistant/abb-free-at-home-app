@@ -156,12 +156,13 @@ func (api *Api) tokenChecker() {
 		select {
 		case _, ok := <-api.tokenCheckTicker.C:
 			if ok {
-				if !api.Auth.OauthToken.Valid() {
+				// TODO: There is some mishandling of timezones.
+				if !api.Auth.OauthToken.Valid() { //|| api.Auth.OauthToken.Expiry.Before(time.Now().Add(2*time.Hour))
 					fmt.Println("reauthorizing token")
-					// todo: make something to autorenew token
 					if err := api.Authorize(); err != nil {
 						utilslog.Error("abb", "reauthorizing token: %v", err)
 					}
+					fmt.Println("token reauthorized")
 				}
 			} else {
 				log.Println("ticker exited")
