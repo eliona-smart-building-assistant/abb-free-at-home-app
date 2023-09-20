@@ -23,7 +23,6 @@ import (
 	"abb-free-at-home/conf"
 	"abb-free-at-home/eliona"
 	"context"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -182,7 +181,7 @@ func setAsset(assetID int32, function string, val int32) {
 		log.Debug("broker", "skipped setting value %v for asset %v, same as last written", val, assetID)
 		return
 	}
-	if input.LastWrittenTime.Valid && time.Since(input.LastWrittenTime.Time).Seconds() < 10 {
+	if input.LastWrittenTime.Valid && time.Since(input.LastWrittenTime.Time).Milliseconds() < 500 {
 		//fmt.Println(time.Since(input.LastWrittenTime.Time).Seconds())
 		log.Debug("broker", "skipped setting value %v for asset %v, to debounce", val, assetID)
 		return
