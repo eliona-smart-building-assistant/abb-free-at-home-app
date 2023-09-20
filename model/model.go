@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
+	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 )
 
@@ -27,8 +28,8 @@ type Asset interface {
 	GAI() string
 	Name() string
 	Id() string
-	Inputs() map[string]string  // map[function]datapoint
-	Outputs() map[string]string // map[function]datapoint
+	Inputs() map[string]string     // map[function]datapoint
+	Outputs() map[string]Datapoint // map[function]datapoint
 }
 
 type AssetBase struct {
@@ -36,7 +37,7 @@ type AssetBase struct {
 	GAIBase     string
 	NameBase    string `eliona:"channel_name,filterable"`
 	InputsBase  map[string]string
-	OutputsBase map[string]string
+	OutputsBase map[string]Datapoint
 }
 
 func (a AssetBase) Name() string {
@@ -51,7 +52,7 @@ func (a AssetBase) Inputs() map[string]string {
 	return a.InputsBase
 }
 
-func (a AssetBase) Outputs() map[string]string {
+func (a AssetBase) Outputs() map[string]Datapoint {
 	return a.OutputsBase
 }
 
@@ -100,14 +101,14 @@ func (c Dimmer) GAI() string {
 type RTC struct {
 	AssetBase
 
-	SwitchState  int8  `eliona:"switch_state" subtype:"input"`
+	SwitchState  int8    `eliona:"switch_state" subtype:"input"`
 	CurrentTemp  float32 `eliona:"current_temperature" subtype:"input"`
 	SetTempState float32 `eliona:"set_temperature_state" subtype:"input"`
-	EcoModeState int8  `eliona:"eco_mode_state" subtype:"input"`
+	EcoModeState int8    `eliona:"eco_mode_state" subtype:"input"`
 
-	Switch  int8  `eliona:"switch" subtype:"output"`
+	Switch  int8    `eliona:"switch" subtype:"output"`
 	SetTemp float32 `eliona:"set_temperature" subtype:"output"`
-	EcoMode int8  `eliona:"eco_mode" subtype:"output"`
+	EcoMode int8    `eliona:"eco_mode" subtype:"output"`
 }
 
 func (rtc RTC) AssetType() string {
@@ -170,4 +171,15 @@ func apiFilterToCommonFilter(input [][]apiserver.FilterRule) [][]common.FilterRu
 		}
 	}
 	return result
+}
+
+type DatapointMap []struct {
+	Subtype       api.DataSubtype
+	AttributeName string
+}
+
+// Datapoint maps ABB datapoint to multiple attributes in Eliona.
+type Datapoint struct {
+	Name string
+	Map  DatapointMap
 }

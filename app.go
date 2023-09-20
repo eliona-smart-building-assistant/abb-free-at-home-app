@@ -16,6 +16,7 @@
 package main
 
 import (
+	"abb-free-at-home/abbgraphql"
 	"abb-free-at-home/apiserver"
 	"abb-free-at-home/apiservices"
 	"abb-free-at-home/broker"
@@ -24,6 +25,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/eliona-smart-building-assistant/go-utils/common"
@@ -106,9 +108,23 @@ func subscribeToDataChanges(config apiserver.Configuration) {
 		return
 	}
 
-	if err := broker.ListenForDataChanges(config, datapoints); err != nil {
-		log.Error("broker", "listen for data changes: %v", err)
-		return
+	dataPointChan := make(chan abbgraphql.DataPoint)
+	go func() {
+		if err := broker.ListenForDataChanges(config, datapoints, dataPointChan); err != nil {
+			log.Error("broker", "listen for data changes: %v", err)
+			return
+		}
+	}()
+	for dp := range dataPointChan {
+		datapoint, err := conf.FindDatapoint(string(dp.SerialNumber), string(dp.ChannelNumber), string(dp.DatapointId))
+		if err != nil {
+			log.Error("conf", "finding datapoint %+v: %v", dp, err)
+			return
+		}
+		if err := eliona.UpsertDatapointData(config, datapoint, dp.Value); err != nil {
+			log.Error("eliona", "upserting datapoint data %+v: %v", dp, err)
+			return
+		}
 	}
 }
 
@@ -135,7 +151,22 @@ func listenForOutputChanges() {
 			if !ok {
 				continue
 			}
-			value := int32(val.(float64))
+			var value int32
+
+			switch v := val.(type) {
+			case float64:
+				value = int32(v)
+			case string:
+				if intValue, err := strconv.Atoi(v); err == nil {
+					value = int32(intValue)
+				} else {
+					log.Error("app", "output: parsing %v: %v", v, err)
+					return
+				}
+			default:
+				log.Error("app", "output: got non-float64 value %v", val)
+				return
+			}
 			setAsset(output.AssetId, function, value)
 		}
 	}

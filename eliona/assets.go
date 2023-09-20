@@ -84,15 +84,20 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 					}
 					if created {
 						for function, datapoint := range channel.Inputs() {
-							err := conf.InsertInput(channelAssetID, system.ID, device.ID, channel.Id(), datapoint, function)
+							_, err := conf.InsertInput(channelAssetID, system.ID, device.ID, channel.Id(), datapoint, function)
 							if err != nil {
 								return fmt.Errorf("inserting input: %v", err)
 							}
 						}
 						for function, datapoint := range channel.Outputs() {
-							err := conf.InsertOutput(channelAssetID, system.ID, device.ID, channel.Id(), datapoint, function)
+							dpId, err := conf.InsertOutput(channelAssetID, system.ID, device.ID, channel.Id(), datapoint.Name, function)
 							if err != nil {
 								return fmt.Errorf("inserting output: %v", err)
+							}
+							for _, attr := range datapoint.Map {
+								if err := conf.LinkDatapointToAttribute(dpId, string(attr.Subtype), attr.AttributeName); err != nil {
+									return fmt.Errorf("inserting datapoint-attribute link: %v", err)
+								}
 							}
 						}
 					}
@@ -155,8 +160,7 @@ func upsertAsset(d assetData) (created bool, assetID int32, err error) {
 		return false, 0, fmt.Errorf("cannot create asset %s", d.name)
 	}
 
-	// Remember the asset id for further usage
-	if err := conf.InsertAsset(context.Background(), d.config, d.projectId, d.identifier, *newID); err != nil {
+	if err := conf.InsertAsset(context.Background(), d.config, d.projectId, d.identifier, d.assetType, *newID); err != nil {
 		return false, 0, fmt.Errorf("inserting asset to config db: %v", err)
 	}
 

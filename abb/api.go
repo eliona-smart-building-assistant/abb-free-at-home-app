@@ -198,8 +198,8 @@ func (api *Api) UpdateBearerManually(jwt string) {
 	api.Req.AddHeader("Authorization", "Bearer "+api.Auth.GetCurrentAccessToken())
 }
 
-func (api *Api) ListenGraphQLSubscriptions(datapoints []appdb.Datapoint) error {
-	return abbgraphql.SubscribeDataPointValue(api.token.AccessToken, datapoints)
+func (api *Api) ListenGraphQLSubscriptions(datapoints []appdb.Datapoint, ch chan<- abbgraphql.DataPoint) error {
+	return abbgraphql.SubscribeDataPointValue(api.token.AccessToken, datapoints, ch)
 }
 
 // ToDo: for local instances available?

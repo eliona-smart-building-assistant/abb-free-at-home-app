@@ -133,7 +133,7 @@ type DataPointsSubscription struct {
 	DataPointsSubscription DataPoint `graphql:"DataPointsSubscription(datapointList: $datapointList)"`
 }
 
-func SubscribeDataPointValue(authToken string, datapoints []appdb.Datapoint) error {
+func SubscribeDataPointValue(authToken string, datapoints []appdb.Datapoint, ch chan<- DataPoint) error {
 	client := graphql.NewSubscriptionClient("wss://apps.eu.mybuildings.abb.com/adtg-ws/graphql").
 		WithConnectionParams(map[string]interface{}{
 			"authorization": "Bearer " + authToken,
@@ -179,7 +179,7 @@ func SubscribeDataPointValue(authToken string, datapoints []appdb.Datapoint) err
 		if err := jsonutil.UnmarshalGraphQL(message, &data); err != nil {
 			return fmt.Errorf("unmarshalling subscription response: %v", err)
 		}
-		fmt.Println(data)
+		ch <- data.DataPointsSubscription
 		return nil
 	}, nil); err != nil {
 		return fmt.Errorf("establishing subscription: %v", err)
@@ -188,7 +188,8 @@ func SubscribeDataPointValue(authToken string, datapoints []appdb.Datapoint) err
 	if err := client.Run(); err != nil {
 		return fmt.Errorf("running client: %v", err)
 	}
-	fmt.Println("client run")
+	close(ch)
+	fmt.Println("client exited")
 	return nil
 }
 

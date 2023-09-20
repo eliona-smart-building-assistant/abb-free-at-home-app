@@ -226,11 +226,12 @@ func InvalidateAuthorization(config apiserver.Configuration) (int64, error) {
 	})
 }
 
-func InsertAsset(ctx context.Context, config apiserver.Configuration, projId string, globalAssetID string, assetId int32) error {
+func InsertAsset(ctx context.Context, config apiserver.Configuration, projId, globalAssetID, assetTypeName string, assetId int32) error {
 	var dbAsset appdb.Asset
 	dbAsset.ConfigurationID = null.Int64FromPtr(config.Id).Int64
 	dbAsset.ProjectID = projId
 	dbAsset.GlobalAssetID = globalAssetID
+	dbAsset.AssetTypeName = assetTypeName
 	dbAsset.AssetID = null.Int32From(assetId)
 	return dbAsset.InsertG(ctx, boil.Infer())
 }
@@ -247,7 +248,7 @@ func GetAssetId(ctx context.Context, config apiserver.Configuration, projId stri
 	return common.Ptr(dbAsset[0].AssetID.Int32), nil
 }
 
-func InsertOutput(assetId int32, systemId, deviceId, channelId, datapoint, function string) error {
+func InsertOutput(assetId int32, systemId, deviceId, channelId, datapoint, function string) (int64, error) {
 	output := appdb.Datapoint{
 		AssetID:   assetId,
 		SystemID:  systemId,
@@ -257,10 +258,11 @@ func InsertOutput(assetId int32, systemId, deviceId, channelId, datapoint, funct
 		Function:  function,
 		IsInput:   false,
 	}
-	return output.InsertG(context.Background(), boil.Infer())
+	err := output.InsertG(context.Background(), boil.Infer())
+	return output.ID, err
 }
 
-func InsertInput(assetId int32, systemId, deviceId, channelId, datapoint, function string) error {
+func InsertInput(assetId int32, systemId, deviceId, channelId, datapoint, function string) (int64, error) {
 	input := appdb.Datapoint{
 		AssetID:   assetId,
 		SystemID:  systemId,
@@ -270,7 +272,8 @@ func InsertInput(assetId int32, systemId, deviceId, channelId, datapoint, functi
 		Function:  function,
 		IsInput:   true,
 	}
-	return input.InsertG(context.Background(), boil.Infer())
+	err := input.InsertG(context.Background(), boil.Infer())
+	return input.ID, err
 }
 
 func FetchInput(assetId int32, function string) (appdb.Datapoint, error) {
@@ -304,6 +307,19 @@ func UpdateDatapoint(datapoint appdb.Datapoint) error {
 	return err
 }
 
+func FindDatapoint(serialNumber, channelNumber, datapointId string) (appdb.Datapoint, error) {
+	datapoint, err := appdb.Datapoints(
+		appdb.DatapointWhere.IsInput.EQ(false),
+		appdb.DatapointWhere.DeviceID.EQ(serialNumber),
+		appdb.DatapointWhere.ChannelID.EQ(channelNumber),
+		appdb.DatapointWhere.Datapoint.EQ(datapointId),
+	).OneG(context.Background())
+	if err != nil {
+		return appdb.Datapoint{}, err
+	}
+	return *datapoint, nil
+}
+
 func GetConfigForDatapoint(datapoint appdb.Datapoint) (config apiserver.Configuration, err error) {
 	asset, err := datapoint.Asset().OneG(context.Background())
 	if err != nil {
@@ -316,4 +332,13 @@ func GetConfigForDatapoint(datapoint appdb.Datapoint) (config apiserver.Configur
 		return
 	}
 	return apiConfigFromDbConfig(c)
+}
+
+func LinkDatapointToAttribute(datapointId int64, subtype, attributeName string) error {
+	attr := appdb.DatapointAttribute{
+		DatapointID:   datapointId,
+		Subtype:       subtype,
+		AttributeName: attributeName,
+	}
+	return attr.InsertG(context.Background(), boil.Infer())
 }

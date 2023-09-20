@@ -4,11 +4,13 @@
 package appdb
 
 var TableNames = struct {
-	Asset         string
-	Configuration string
-	Datapoint     string
+	Asset              string
+	Configuration      string
+	Datapoint          string
+	DatapointAttribute string
 }{
-	Asset:         "asset",
-	Configuration: "configuration",
-	Datapoint:     "datapoint",
+	Asset:              "asset",
+	Configuration:      "configuration",
+	Datapoint:          "datapoint",
+	DatapointAttribute: "datapoint_attribute",
 }

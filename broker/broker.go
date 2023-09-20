@@ -17,6 +17,7 @@ package broker
 
 import (
 	"abb-free-at-home/abb"
+	"abb-free-at-home/abbgraphql"
 	"abb-free-at-home/apiserver"
 	"abb-free-at-home/appdb"
 	"abb-free-at-home/conf"
@@ -24,6 +25,7 @@ import (
 	"fmt"
 	"strconv"
 
+	elionaapi "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
@@ -130,10 +132,22 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 						log.Error("broker", "parsing input value '%s': %v", switchInputStr, err)
 					}
 
-					outputs := make(map[string]string)
+					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {
 						if input.PairingId == abb.PID_ON_OFF_INFO_GET {
-							outputs[function_switch] = datapoint
+							outputs[function_switch] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "switch_state",
+									},
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "switch",
+									},
+								},
+							}
 						}
 					}
 					assetBase.OutputsBase = outputs
@@ -172,13 +186,37 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 						log.Error("broker", "parsing input value '%s': %v", dimmerInputStr, err)
 					}
 
-					outputs := make(map[string]string)
+					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {
 						switch output.PairingId {
 						case abb.PID_ON_OFF_INFO_GET:
-							outputs[function_switch] = datapoint
+							outputs[function_switch] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "switch_state",
+									},
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "switch",
+									},
+								},
+							}
 						case abb.PID_ACTUAL_DIM_VALUE_0_100_GET:
-							outputs[function_dimmer] = datapoint
+							outputs[function_dimmer] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "dimmer_state",
+									},
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "dimmer",
+									},
+								},
+							}
 						}
 					}
 					assetBase.OutputsBase = outputs
@@ -224,17 +262,61 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 						log.Error("broker", "parsing output value '%s': %v", ecoModeStr, err)
 					}
 
-					outputs := make(map[string]string)
+					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {
 						switch output.PairingId {
 						case abb.PID_CONTROLLER_ON_OFF_PROTECTED_GET:
-							outputs[function_switch] = datapoint
+							outputs[function_switch] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "switch_state",
+									},
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "switch",
+									},
+								},
+							}
 						case abb.PID_MEASURED_TEMPERATURE:
-							outputs[function_measured_temperature] = datapoint
+							outputs[function_measured_temperature] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "current_temperature",
+									},
+								},
+							}
 						case abb.PID_SETPOINT_TEMPERATURE_GET:
-							outputs[function_set_temperature] = datapoint
+							outputs[function_set_temperature] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "set_temperature_state",
+									},
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "set_temperature",
+									},
+								},
+							}
 						case abb.PID_CONTROLLER_ECOMODE_SET:
-							outputs[function_eco_mode] = datapoint
+							outputs[function_eco_mode] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "eco_mode_state",
+									},
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "eco_mode",
+									},
+								},
+							}
 						}
 					}
 					assetBase.OutputsBase = outputs
@@ -289,23 +371,12 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 	return systems, nil
 }
 
-// func ListenForDataChangesSystem(config apiserver.Configuration, systems []model.System) error {
-// 	api, err := getAPI(config)
-// 	if err != nil {
-// 		return fmt.Errorf("getting API instance: %v", err)
-// 	}
-// 	if err := api.ListenGraphQLSubscriptions(systems); err != nil {
-// 		return fmt.Errorf("listen for graphQL subscriptions: %v", err)
-// 	}
-// 	return nil
-// }
-
-func ListenForDataChanges(config apiserver.Configuration, datapoints []appdb.Datapoint) error {
+func ListenForDataChanges(config apiserver.Configuration, datapoints []appdb.Datapoint, ch chan<- abbgraphql.DataPoint) error {
 	api, err := getAPI(config)
 	if err != nil {
 		return fmt.Errorf("getting API instance: %v", err)
 	}
-	if err := api.ListenGraphQLSubscriptions(datapoints); err != nil {
+	if err := api.ListenGraphQLSubscriptions(datapoints, ch); err != nil {
 		return fmt.Errorf("listen for graphQL subscriptions: %v", err)
 	}
 	return nil

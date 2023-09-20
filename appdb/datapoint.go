@@ -115,14 +115,17 @@ var DatapointWhere = struct {
 
 // DatapointRels is where relationship names are stored.
 var DatapointRels = struct {
-	Asset string
+	Asset               string
+	DatapointAttributes string
 }{
-	Asset: "Asset",
+	Asset:               "Asset",
+	DatapointAttributes: "DatapointAttributes",
 }
 
 // datapointR is where relationships are stored.
 type datapointR struct {
-	Asset *Asset `boil:"Asset" json:"Asset" toml:"Asset" yaml:"Asset"`
+	Asset               *Asset                  `boil:"Asset" json:"Asset" toml:"Asset" yaml:"Asset"`
+	DatapointAttributes DatapointAttributeSlice `boil:"DatapointAttributes" json:"DatapointAttributes" toml:"DatapointAttributes" yaml:"DatapointAttributes"`
 }
 
 // NewStruct creates a new relationship struct
@@ -135,6 +138,13 @@ func (r *datapointR) GetAsset() *Asset {
 		return nil
 	}
 	return r.Asset
+}
+
+func (r *datapointR) GetDatapointAttributes() DatapointAttributeSlice {
+	if r == nil {
+		return nil
+	}
+	return r.DatapointAttributes
 }
 
 // datapointL is where Load methods for each relationship are stored.
@@ -457,6 +467,20 @@ func (o *Datapoint) Asset(mods ...qm.QueryMod) assetQuery {
 	return Assets(queryMods...)
 }
 
+// DatapointAttributes retrieves all the datapoint_attribute's DatapointAttributes with an executor.
+func (o *Datapoint) DatapointAttributes(mods ...qm.QueryMod) datapointAttributeQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"abb_free_at_home\".\"datapoint_attribute\".\"datapoint_id\"=?", o.ID),
+	)
+
+	return DatapointAttributes(queryMods...)
+}
+
 // LoadAsset allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
 func (datapointL) LoadAsset(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDatapoint interface{}, mods queries.Applicator) error {
@@ -581,6 +605,120 @@ func (datapointL) LoadAsset(ctx context.Context, e boil.ContextExecutor, singula
 	return nil
 }
 
+// LoadDatapointAttributes allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (datapointL) LoadDatapointAttributes(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDatapoint interface{}, mods queries.Applicator) error {
+	var slice []*Datapoint
+	var object *Datapoint
+
+	if singular {
+		var ok bool
+		object, ok = maybeDatapoint.(*Datapoint)
+		if !ok {
+			object = new(Datapoint)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeDatapoint)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeDatapoint))
+			}
+		}
+	} else {
+		s, ok := maybeDatapoint.(*[]*Datapoint)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeDatapoint)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeDatapoint))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &datapointR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &datapointR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`abb_free_at_home.datapoint_attribute`),
+		qm.WhereIn(`abb_free_at_home.datapoint_attribute.datapoint_id in ?`, args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load datapoint_attribute")
+	}
+
+	var resultSlice []*DatapointAttribute
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice datapoint_attribute")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on datapoint_attribute")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for datapoint_attribute")
+	}
+
+	if len(datapointAttributeAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.DatapointAttributes = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &datapointAttributeR{}
+			}
+			foreign.R.Datapoint = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.DatapointID {
+				local.R.DatapointAttributes = append(local.R.DatapointAttributes, foreign)
+				if foreign.R == nil {
+					foreign.R = &datapointAttributeR{}
+				}
+				foreign.R.Datapoint = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // SetAssetG of the datapoint to the related item.
 // Sets o.R.Asset to related.
 // Adds o to related.R.Datapoints.
@@ -633,6 +771,68 @@ func (o *Datapoint) SetAsset(ctx context.Context, exec boil.ContextExecutor, ins
 		related.R.Datapoints = append(related.R.Datapoints, o)
 	}
 
+	return nil
+}
+
+// AddDatapointAttributesG adds the given related objects to the existing relationships
+// of the datapoint, optionally inserting them as new records.
+// Appends related to o.R.DatapointAttributes.
+// Sets related.R.Datapoint appropriately.
+// Uses the global database handle.
+func (o *Datapoint) AddDatapointAttributesG(ctx context.Context, insert bool, related ...*DatapointAttribute) error {
+	return o.AddDatapointAttributes(ctx, boil.GetContextDB(), insert, related...)
+}
+
+// AddDatapointAttributes adds the given related objects to the existing relationships
+// of the datapoint, optionally inserting them as new records.
+// Appends related to o.R.DatapointAttributes.
+// Sets related.R.Datapoint appropriately.
+func (o *Datapoint) AddDatapointAttributes(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*DatapointAttribute) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.DatapointID = o.ID
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"abb_free_at_home\".\"datapoint_attribute\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"datapoint_id"}),
+				strmangle.WhereClause("\"", "\"", 2, datapointAttributePrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.DatapointID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &datapointR{
+			DatapointAttributes: related,
+		}
+	} else {
+		o.R.DatapointAttributes = append(o.R.DatapointAttributes, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &datapointAttributeR{
+				Datapoint: o,
+			}
+		} else {
+			rel.R.Datapoint = o
+		}
+	}
 	return nil
 }
 
