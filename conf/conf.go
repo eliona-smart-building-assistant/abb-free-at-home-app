@@ -22,10 +22,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/oauth2"
 )
 
@@ -286,6 +288,21 @@ func FetchInput(assetId int32, function string) (appdb.Datapoint, error) {
 		return appdb.Datapoint{}, err
 	}
 	return *input, nil
+}
+
+func LastWriteToAsset(assetId int32) (time.Time, error) {
+	input, err := appdb.Datapoints(
+		appdb.DatapointWhere.IsInput.EQ(true),
+		appdb.DatapointWhere.AssetID.EQ(assetId),
+		qm.OrderBy("? DESC", appdb.DatapointColumns.LastWrittenTime),
+	).OneG(context.Background())
+	if err != nil {
+		return time.Time{}, err
+	}
+	if !input.LastWrittenTime.Valid {
+		return time.Time{}, nil
+	}
+	return input.LastWrittenTime.Time, nil
 }
 
 func FetchAllDatapoints() ([]appdb.Datapoint, error) {

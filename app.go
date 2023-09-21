@@ -190,6 +190,14 @@ func setAsset(assetID int32, function string, val int32) {
 		return
 	}
 
+	if lastAssetWrite, err := conf.LastWriteToAsset(assetID); err != nil {
+		log.Error("conf", "fetching last asset write: %v", err)
+		return
+	} else if time.Since(lastAssetWrite).Seconds() < 3 {
+		log.Debug("broker", "skipped setting value %v for asset %v, to avoid overwriting dependent values", val, assetID)
+		return
+	}
+
 	config, err := conf.GetConfigForDatapoint(input)
 	if err != nil {
 		log.Error("conf", "getting config for input %v: %v", input.ID, err)
