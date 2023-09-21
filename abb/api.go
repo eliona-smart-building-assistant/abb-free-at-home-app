@@ -136,9 +136,9 @@ func (api *Api) Authorize() error {
 		if err := api.setAuthHeaders(accessToken); err != nil {
 			return fmt.Errorf("setting auth headers: %v", err)
 		}
-		go func() {
-			tokenCheckerOnce.Do(api.tokenChecker)
-		}()
+		// go func() {
+		// 	tokenCheckerOnce.Do(api.tokenChecker)
+		// }()
 	} else {
 		// local instaces uses
 		if err := api.setAuthHeaders(nil); err != nil {
