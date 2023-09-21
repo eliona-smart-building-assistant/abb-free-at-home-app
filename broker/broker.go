@@ -121,17 +121,6 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 				}
 				switch fid {
 				case abb.FID_SWITCH_ACTUATOR:
-					switchStateStr := channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET)
-					switchState, err := strconv.ParseInt(switchStateStr, 10, 8)
-					if err != nil {
-						log.Error("broker", "parsing switch output value '%s': %v", switchStateStr, err)
-					}
-					switchInputStr := channel.FindInputValueByPairingID(abb.PID_SWITCH_ON_OFF_SET)
-					switchInput, err := strconv.ParseInt(switchInputStr, 10, 8)
-					if err != nil {
-						log.Error("broker", "parsing input value '%s': %v", switchInputStr, err)
-					}
-
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {
 						if input.PairingId == abb.PID_ON_OFF_INFO_GET {
@@ -159,33 +148,14 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.InputsBase = inputs
 
+					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET))
+					switchInput := parseInt8(channel.FindInputValueByPairingID(abb.PID_SWITCH_ON_OFF_SET))
 					c = model.Switch{
 						AssetBase:   assetBase,
-						SwitchState: int8(switchState),
-						Switch:      int8(switchInput),
+						SwitchState: switchState,
+						Switch:      switchInput,
 					}
 				case abb.FID_DIMMING_ACTUATOR:
-					switchStateStr := channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET)
-					switchState, err := strconv.ParseInt(switchStateStr, 10, 8)
-					if err != nil {
-						log.Error("broker", "parsing output value '%s': %v", switchStateStr, err)
-					}
-					switchInputStr := channel.FindInputValueByPairingID(abb.PID_SWITCH_ON_OFF_SET)
-					switchInput, err := strconv.ParseInt(switchInputStr, 10, 8)
-					if err != nil {
-						log.Error("broker", "parsing input value '%s': %v", switchInputStr, err)
-					}
-					dimmerStateStr := channel.FindOutputValueByPairingID(abb.PID_ACTUAL_DIM_VALUE_0_100_GET)
-					dimmerState, err := strconv.ParseInt(dimmerStateStr, 10, 8)
-					if err != nil {
-						log.Error("broker", "parsing output value '%s': %v", dimmerStateStr, err)
-					}
-					dimmerInputStr := channel.FindInputValueByPairingID(abb.PID_ABSOLUTE_VALUE_0_100_SET)
-					dimmerInput, err := strconv.ParseInt(dimmerInputStr, 10, 8)
-					if err != nil {
-						log.Error("broker", "parsing input value '%s': %v", dimmerInputStr, err)
-					}
-
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {
 						switch output.PairingId {
@@ -232,36 +202,19 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.InputsBase = inputs
 
+					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET))
+					switchInput := parseInt8(channel.FindInputValueByPairingID(abb.PID_SWITCH_ON_OFF_SET))
+					dimmerState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ACTUAL_DIM_VALUE_0_100_GET))
+					dimmerInput := parseInt8(channel.FindInputValueByPairingID(abb.PID_ABSOLUTE_VALUE_0_100_SET))
 					c = model.Dimmer{
 						AssetBase:   assetBase,
-						SwitchState: int8(switchState),
-						Switch:      int8(switchState),
-						DimmerState: int8(dimmerState),
-						Dimmer:      int8(dimmerState),
+						SwitchState: switchState,
+						Switch:      switchState,
+						DimmerState: dimmerState,
+						Dimmer:      dimmerState,
 					}
 					_, _ = dimmerInput, switchInput
 				case abb.FID_ROOM_TEMPERATURE_CONTROLLER_MASTER_WITH_FAN, abb.FID_ROOM_TEMPERATURE_CONTROLLER_MASTER_WITHOUT_FAN, abb.FID_ROOM_TEMPERATURE_CONTROLLER_SLAVE:
-					switchStateStr := channel.FindOutputValueByPairingID(abb.PID_CONTROLLER_ON_OFF_PROTECTED_GET)
-					switchState, err := strconv.ParseInt(switchStateStr, 10, 8)
-					if err != nil {
-						log.Error("broker", "parsing output value '%s': %v", switchStateStr, err)
-					}
-					currentTempStr := channel.FindOutputValueByPairingID(abb.PID_MEASURED_TEMPERATURE)
-					currentTemp, err := strconv.ParseFloat(currentTempStr, 16)
-					if err != nil {
-						log.Error("broker", "parsing output value '%s': %v", currentTempStr, err)
-					}
-					setTempStr := channel.FindOutputValueByPairingID(abb.PID_SETPOINT_TEMPERATURE_GET)
-					setTemp, err := strconv.ParseFloat(setTempStr, 16)
-					if err != nil {
-						log.Error("broker", "parsing output value '%s': %v", setTempStr, err)
-					}
-					ecoModeStr := channel.FindOutputValueByPairingID(abb.PID_CONTROLLER_ECOMODE_SET)
-					ecoMode, err := strconv.ParseInt(ecoModeStr, 10, 8)
-					if err != nil {
-						log.Error("broker", "parsing output value '%s': %v", ecoModeStr, err)
-					}
-
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {
 						switch output.PairingId {
@@ -334,15 +287,19 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.InputsBase = inputs
 
+					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_CONTROLLER_ON_OFF_PROTECTED_GET))
+					currentTemp := parseFloat32(channel.FindOutputValueByPairingID(abb.PID_MEASURED_TEMPERATURE))
+					setTemp := parseFloat32(channel.FindOutputValueByPairingID(abb.PID_SETPOINT_TEMPERATURE_GET))
+					ecoMode := parseInt8(channel.FindOutputValueByPairingID(abb.PID_CONTROLLER_ECOMODE_SET))
 					c = model.RTC{
 						AssetBase:    assetBase,
-						SwitchState:  int8(switchState),
-						Switch:       int8(switchState),
+						SwitchState:  switchState,
+						Switch:       switchState,
 						CurrentTemp:  float32(currentTemp),
 						SetTemp:      float32(setTemp),
 						SetTempState: float32(setTemp),
-						EcoMode:      int8(ecoMode),
-						EcoModeState: int8(ecoMode),
+						EcoMode:      ecoMode,
+						EcoModeState: ecoMode,
 					}
 				default:
 					c = model.Channel{
@@ -369,6 +326,28 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 		systems = append(systems, s)
 	}
 	return systems, nil
+}
+
+func parseInt8(str string) int8 {
+	if str == "" {
+		return int8(0)
+	}
+	i, err := strconv.ParseInt(str, 10, 8)
+	if err != nil {
+		log.Error("broker", "parsing value '%s': %v", str, err)
+	}
+	return int8(i)
+}
+
+func parseFloat32(str string) float32 {
+	if str == "" {
+		return float32(0)
+	}
+	f, err := strconv.ParseFloat(str, 16)
+	if err != nil {
+		log.Error("broker", "parsing value '%s': %v", str, err)
+	}
+	return float32(f)
 }
 
 func ListenForDataChanges(config apiserver.Configuration, datapoints []appdb.Datapoint, ch chan<- abbgraphql.DataPoint) error {
