@@ -154,28 +154,26 @@ func listenForOutputChanges() {
 			if !ok {
 				continue
 			}
-			var value int32
+			var value float64
 
 			switch v := val.(type) {
 			case float64:
-				value = int32(v)
+				value = v
 			case string:
-				if intValue, err := strconv.Atoi(v); err == nil {
-					value = int32(intValue)
-				} else {
+				if value, err = strconv.ParseFloat(v, 64); err != nil {
 					log.Error("app", "output: parsing %v: %v", v, err)
-					return
+					continue
 				}
 			default:
 				log.Error("app", "output: got non-float64 value %v", val)
-				return
+				continue
 			}
 			setAsset(output.AssetId, function, value)
 		}
 	}
 }
 
-func setAsset(assetID int32, function string, val int32) {
+func setAsset(assetID int32, function string, val float64) {
 	if elionaTimerActive() {
 		return
 	}
@@ -185,7 +183,7 @@ func setAsset(assetID int32, function string, val int32) {
 		log.Fatal("conf", "fetching input for assetID %v function %v: %v", assetID, function, err)
 		return
 	}
-	if input.LastWrittenValue.Valid && input.LastWrittenValue.Int32 == val {
+	if input.LastWrittenValue.Valid && input.LastWrittenValue.Float64 == val {
 		log.Info("broker", "skipped setting value %v for asset %v, same as last written", val, assetID)
 		return
 	}
@@ -208,7 +206,7 @@ func setAsset(assetID int32, function string, val int32) {
 		log.Error("broker", "setting value %v for asset %v: %v", val, assetID, err)
 		return
 	}
-	input.LastWrittenValue.Int32 = val
+	input.LastWrittenValue.Float64 = val
 	input.LastWrittenValue.Valid = true
 	input.LastWrittenTime.Time = time.Now()
 	input.LastWrittenTime.Valid = true

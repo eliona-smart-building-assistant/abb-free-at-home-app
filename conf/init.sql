@@ -60,7 +60,7 @@ create table if not exists abb_free_at_home.datapoint
 	datapoint          text not null,
 	function           text not null,
 	is_input           boolean not null,
-	last_written_value integer,
+	last_written_value double precision,
 	last_written_time  timestamp with time zone
 );
 

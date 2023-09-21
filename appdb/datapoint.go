@@ -24,16 +24,16 @@ import (
 
 // Datapoint is an object representing the database table.
 type Datapoint struct {
-	ID               int64      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	AssetID          int32      `boil:"asset_id" json:"asset_id" toml:"asset_id" yaml:"asset_id"`
-	SystemID         string     `boil:"system_id" json:"system_id" toml:"system_id" yaml:"system_id"`
-	DeviceID         string     `boil:"device_id" json:"device_id" toml:"device_id" yaml:"device_id"`
-	ChannelID        string     `boil:"channel_id" json:"channel_id" toml:"channel_id" yaml:"channel_id"`
-	Datapoint        string     `boil:"datapoint" json:"datapoint" toml:"datapoint" yaml:"datapoint"`
-	Function         string     `boil:"function" json:"function" toml:"function" yaml:"function"`
-	IsInput          bool       `boil:"is_input" json:"is_input" toml:"is_input" yaml:"is_input"`
-	LastWrittenValue null.Int32 `boil:"last_written_value" json:"last_written_value,omitempty" toml:"last_written_value" yaml:"last_written_value,omitempty"`
-	LastWrittenTime  null.Time  `boil:"last_written_time" json:"last_written_time,omitempty" toml:"last_written_time" yaml:"last_written_time,omitempty"`
+	ID               int64        `boil:"id" json:"id" toml:"id" yaml:"id"`
+	AssetID          int32        `boil:"asset_id" json:"asset_id" toml:"asset_id" yaml:"asset_id"`
+	SystemID         string       `boil:"system_id" json:"system_id" toml:"system_id" yaml:"system_id"`
+	DeviceID         string       `boil:"device_id" json:"device_id" toml:"device_id" yaml:"device_id"`
+	ChannelID        string       `boil:"channel_id" json:"channel_id" toml:"channel_id" yaml:"channel_id"`
+	Datapoint        string       `boil:"datapoint" json:"datapoint" toml:"datapoint" yaml:"datapoint"`
+	Function         string       `boil:"function" json:"function" toml:"function" yaml:"function"`
+	IsInput          bool         `boil:"is_input" json:"is_input" toml:"is_input" yaml:"is_input"`
+	LastWrittenValue null.Float64 `boil:"last_written_value" json:"last_written_value,omitempty" toml:"last_written_value" yaml:"last_written_value,omitempty"`
+	LastWrittenTime  null.Time    `boil:"last_written_time" json:"last_written_time,omitempty" toml:"last_written_time" yaml:"last_written_time,omitempty"`
 
 	R *datapointR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L datapointL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -89,6 +89,44 @@ var DatapointTableColumns = struct {
 
 // Generated where
 
+type whereHelpernull_Float64 struct{ field string }
+
+func (w whereHelpernull_Float64) EQ(x null.Float64) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Float64) NEQ(x null.Float64) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Float64) LT(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Float64) LTE(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Float64) GT(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Float64) GTE(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+func (w whereHelpernull_Float64) IN(slice []float64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelpernull_Float64) NIN(slice []float64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
+
+func (w whereHelpernull_Float64) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Float64) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+
 var DatapointWhere = struct {
 	ID               whereHelperint64
 	AssetID          whereHelperint32
@@ -98,7 +136,7 @@ var DatapointWhere = struct {
 	Datapoint        whereHelperstring
 	Function         whereHelperstring
 	IsInput          whereHelperbool
-	LastWrittenValue whereHelpernull_Int32
+	LastWrittenValue whereHelpernull_Float64
 	LastWrittenTime  whereHelpernull_Time
 }{
 	ID:               whereHelperint64{field: "\"abb_free_at_home\".\"datapoint\".\"id\""},
@@ -109,7 +147,7 @@ var DatapointWhere = struct {
 	Datapoint:        whereHelperstring{field: "\"abb_free_at_home\".\"datapoint\".\"datapoint\""},
 	Function:         whereHelperstring{field: "\"abb_free_at_home\".\"datapoint\".\"function\""},
 	IsInput:          whereHelperbool{field: "\"abb_free_at_home\".\"datapoint\".\"is_input\""},
-	LastWrittenValue: whereHelpernull_Int32{field: "\"abb_free_at_home\".\"datapoint\".\"last_written_value\""},
+	LastWrittenValue: whereHelpernull_Float64{field: "\"abb_free_at_home\".\"datapoint\".\"last_written_value\""},
 	LastWrittenTime:  whereHelpernull_Time{field: "\"abb_free_at_home\".\"datapoint\".\"last_written_time\""},
 }
 
