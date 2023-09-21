@@ -133,10 +133,10 @@ type DataPointsSubscription struct {
 	DataPointsSubscription DataPoint `graphql:"DataPointsSubscription(datapointList: $datapointList)"`
 }
 
-func SubscribeDataPointValue(authToken string, datapoints []appdb.Datapoint, ch chan<- DataPoint) error {
+func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<- DataPoint) error {
 	client := graphql.NewSubscriptionClient("wss://apps.eu.mybuildings.abb.com/adtg-ws/graphql").
 		WithConnectionParams(map[string]interface{}{
-			"authorization": "Bearer " + authToken,
+			"authorization": auth,
 		}).
 		WithProtocol(graphql.GraphQLWS).
 		OnError(func(sc *graphql.SubscriptionClient, err error) error {

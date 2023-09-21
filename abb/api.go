@@ -47,11 +47,14 @@ const (
 
 type Credentials struct {
 	BasicAuth              bool
+	OAuth                  bool
+	Digest                 bool
 	User                   string
 	Password               string
 	ClientID               string
 	ClientSecret           string
 	OcpApimSubscriptionKey string
+	ApiKey                 string
 }
 
 type Api struct {
@@ -71,7 +74,25 @@ type Api struct {
 	tokenCheckTicker *time.Ticker
 }
 
-func NewGraphQLApi(config apiserver.Configuration, baseUrl string, oauth2RedirectURL string) *Api {
+func NewProServiceApi(config apiserver.Configuration, baseUrl string) *Api {
+	timeout := int(*config.RequestTimeout)
+	api := Api{
+		Credentials: Credentials{
+			Digest: true,
+			ApiKey: *config.ApiKey,
+		},
+		BaseUrl:     baseUrl,
+		Req:         abbconnection.NewHttpClient(true, true, timeout),
+		WebsocketUp: false,
+		Timeout:     timeout,
+	}
+
+	api.Req.AddHeader("Content-Type", "application/json")
+
+	return &api
+}
+
+func NewMyBuildingsApi(config apiserver.Configuration, baseUrl string, oauth2RedirectURL string) *Api {
 	timeout := int(*config.RequestTimeout)
 	var token *oauth2.Token
 	if config.AccessToken != nil {
@@ -84,7 +105,7 @@ func NewGraphQLApi(config apiserver.Configuration, baseUrl string, oauth2Redirec
 	}
 	api := Api{
 		Credentials: Credentials{
-			BasicAuth:    false,
+			OAuth:        true,
 			ClientID:     *config.ClientID,
 			ClientSecret: *config.ClientSecret,
 		},
@@ -116,16 +137,17 @@ func NewLocalApi(user string, password string,
 	}
 
 	api.Req.AddHeader("Content-Type", "application/json")
-	api.setAuthHeaders(nil)
+	api.setAuthHeaders("")
 	return &api
 }
 
-var tokenCheckerOnce sync.Once
-
 func (api *Api) Authorize() error {
-	if !api.Credentials.BasicAuth {
-		// cloud instance with oauth2
-		accessToken, err := api.Auth.Authorize(api.token)
+	switch {
+	case api.Credentials.Digest:
+		api.Auth.AuthorizeAPIKey(api.Credentials.ApiKey)
+		api.setAuthHeaders(api.Credentials.ApiKey)
+	case api.Credentials.OAuth:
+		accessToken, err := api.Auth.AuthorizeOAuth(api.token)
 		if err != nil {
 			return fmt.Errorf("obtaining access token: %v", err)
 		}
@@ -133,17 +155,9 @@ func (api *Api) Authorize() error {
 			return errors.New("couldn't get authorized client")
 		}
 
-		if err := api.setAuthHeaders(accessToken); err != nil {
-			return fmt.Errorf("setting auth headers: %v", err)
-		}
-		// go func() {
-		// 	tokenCheckerOnce.Do(api.tokenChecker)
-		// }()
-	} else {
-		// local instaces uses
-		if err := api.setAuthHeaders(nil); err != nil {
-			return fmt.Errorf("setting auth headers: %v", err)
-		}
+		api.setAuthHeaders(*accessToken)
+	case api.Credentials.BasicAuth:
+		api.setAuthHeaders("")
 	}
 
 	return nil
@@ -172,20 +186,17 @@ func (api *Api) tokenChecker() {
 	}
 }
 
-func (api *Api) setAuthHeaders(accessToken *string) error {
-	var err error
-	if !api.Credentials.BasicAuth {
-		if accessToken != nil {
-			api.Req.AddHeader("Ocp-Apim-Subscription-Key", api.Credentials.OcpApimSubscriptionKey)
-			api.Req.AddHeader("Authorization", "Bearer "+*accessToken)
-		} else {
-			err = errors.New("no access token given to set")
-		}
-	} else {
+func (api *Api) setAuthHeaders(secret string) {
+	switch {
+	case api.Credentials.Digest:
+		api.Req.AddHeader("Authorization", "digest "+secret)
+	case api.Credentials.OAuth:
+		api.Req.AddHeader("Ocp-Apim-Subscription-Key", api.Credentials.OcpApimSubscriptionKey)
+		api.Req.AddHeader("Authorization", "Bearer "+secret)
+	case api.Credentials.BasicAuth:
 		api.Req.AddHeader("Authorization", "Basic "+
 			encodeBase64(api.Credentials.User+":"+api.Credentials.Password))
 	}
-	return err
 }
 
 func encodeBase64(plain string) string {
@@ -200,7 +211,10 @@ func (api *Api) UpdateBearerManually(jwt string) {
 }
 
 func (api *Api) ListenGraphQLSubscriptions(datapoints []appdb.Datapoint, ch chan<- abbgraphql.DataPoint) error {
-	return abbgraphql.SubscribeDataPointValue(api.token.AccessToken, datapoints, ch)
+	if api.Credentials.OAuth {
+		return abbgraphql.SubscribeDataPointValue("Bearer "+api.token.AccessToken, datapoints, ch)
+	}
+	return abbgraphql.SubscribeDataPointValue("digest "+api.Credentials.ApiKey, datapoints, ch)
 }
 
 // ToDo: for local instances available?
@@ -453,11 +467,7 @@ func (api *Api) request(method string, path string, payload *[]byte) ([]byte, in
 			log.Println("error while refreshing token ", err)
 			return nil, -1, err
 		}
-		err = api.setAuthHeaders(accessToken)
-		if err != nil {
-			log.Println("error while renewing access token: ", err)
-			return nil, -1, err
-		}
+		api.setAuthHeaders(*accessToken)
 	}
 
 	return api.Req.Request(method, api.BaseUrl+path, payload)

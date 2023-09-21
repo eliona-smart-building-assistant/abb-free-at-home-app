@@ -33,6 +33,12 @@ import (
 
 var ErrBadRequest = errors.New("bad request")
 
+const (
+	ABB_LOCAL = "local"
+	ABB_MYBUILDINGS = "MyBuildings"
+	ABB_PROSERVICE = "ProService"
+)
+
 func InsertConfig(ctx context.Context, config apiserver.Configuration) (apiserver.Configuration, error) {
 	dbConfig, err := dbConfigFromApiConfig(config)
 	if err != nil {
@@ -78,7 +84,18 @@ func DeleteConfig(ctx context.Context, configID int64) error {
 }
 
 func dbConfigFromApiConfig(apiConfig apiserver.Configuration) (dbConfig appdb.Configuration, err error) {
-	dbConfig.IsCloud = apiConfig.IsCloud
+	switch apiConfig.AbbConnectionType {
+	case ABB_LOCAL:
+		dbConfig.IsLocal = true
+	case ABB_MYBUILDINGS:
+		dbConfig.IsMybuildings = true
+	case ABB_PROSERVICE:
+		dbConfig.IsProservice = true
+	}
+	if apiConfig.ApiKey != nil {
+		dbConfig.APIKey.String = *apiConfig.ApiKey
+		dbConfig.APIKey.Valid = true
+	}
 	if apiConfig.ClientID != nil {
 		dbConfig.ClientID.String = *apiConfig.ClientID
 		dbConfig.ClientID.Valid = true
@@ -132,7 +149,15 @@ func dbConfigFromApiConfig(apiConfig apiserver.Configuration) (dbConfig appdb.Co
 }
 
 func apiConfigFromDbConfig(dbConfig *appdb.Configuration) (apiConfig apiserver.Configuration, err error) {
-	apiConfig.IsCloud = dbConfig.IsCloud
+	switch {
+	case dbConfig.IsLocal:
+		apiConfig.AbbConnectionType = ABB_LOCAL
+	case dbConfig.IsMybuildings:
+		apiConfig.AbbConnectionType = ABB_MYBUILDINGS
+	case dbConfig.IsProservice:
+		apiConfig.AbbConnectionType = ABB_PROSERVICE
+	}
+	apiConfig.ApiKey = dbConfig.APIKey.Ptr()
 	apiConfig.ClientID = dbConfig.ClientID.Ptr()
 	apiConfig.ClientSecret = dbConfig.ClientSecret.Ptr()
 	apiConfig.AccessToken = dbConfig.AccessToken.Ptr()

@@ -104,7 +104,7 @@ func (t *oauthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return t.Transport.RoundTrip(req)
 }
 
-func (auth *ABBAuth) Authorize(originalToken *oauth2.Token) (*string, error) {
+func (auth *ABBAuth) AuthorizeOAuth(originalToken *oauth2.Token) (*string, error) {
 	auth.OauthToken = originalToken
 	if auth.oauthTokenSrc == nil {
 		ts := auth.oauthConf.TokenSource(context.Background(), auth.OauthToken)
@@ -160,6 +160,29 @@ func (auth *ABBAuth) Authorize(originalToken *oauth2.Token) (*string, error) {
 	// original comment: http client with token autorefresh ?> auto refresh doesn't work..
 	// auth.AuthorizedClient = auth.oauthConf.Client(context.Background(), auth.OauthToken)
 	return &auth.OauthToken.AccessToken, nil
+}
+
+type apiKeyTransport struct {
+	Transport http.RoundTripper
+	Headers   map[string]string
+}
+
+func (t *apiKeyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	for key, value := range t.Headers {
+		req.Header.Add(key, value)
+	}
+	return t.Transport.RoundTrip(req)
+}
+
+func (auth *ABBAuth) AuthorizeAPIKey(key string) {
+	auth.AuthorizedClient = &http.Client{
+		Transport: &apiKeyTransport{
+			Transport: http.DefaultTransport,
+			Headers: map[string]string{
+				"Authorization": "digest " + key,
+			},
+		},
+	}
 }
 
 type CodeResponse struct {

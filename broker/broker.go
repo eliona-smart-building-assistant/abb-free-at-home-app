@@ -48,16 +48,22 @@ var Functions = []string{
 
 func getAPI(config apiserver.Configuration) (*abb.Api, error) {
 	var api *abb.Api
-	if config.IsCloud {
-		if config.ClientID == nil || config.ClientSecret == nil || config.RequestTimeout == nil {
-			return nil, fmt.Errorf("one or more required config fields (ClientID, ClientSecret, RequestTimeout) are nil")
-		}
-		api = abb.NewGraphQLApi(config, "https://api.eu.mybuildings.abb.com", "https://api.eu.mybuildings.abb.com/external/oauth2helper/code/set/cd1a7768-680d-4040-ab76-b6a6f9c4bf9d")
-	} else {
+	switch config.AbbConnectionType {
+	case conf.ABB_LOCAL:
 		if config.ApiUsername == nil || config.ApiPassword == nil || config.ApiUrl == nil || config.RequestTimeout == nil {
 			return nil, fmt.Errorf("one or more required config fields (ApiUsername, ApiPassword, ApiUrl, RequestTimeout) are nil")
 		}
 		api = abb.NewLocalApi(*config.ApiUsername, *config.ApiPassword, *config.ApiUrl, int(*config.RequestTimeout))
+	case conf.ABB_MYBUILDINGS:
+		if config.ClientID == nil || config.ClientSecret == nil || config.RequestTimeout == nil {
+			return nil, fmt.Errorf("one or more required config fields (ClientID, ClientSecret, RequestTimeout) are nil")
+		}
+		api = abb.NewMyBuildingsApi(config, "https://api.eu.mybuildings.abb.com", "https://api.eu.mybuildings.abb.com/external/oauth2helper/code/set/cd1a7768-680d-4040-ab76-b6a6f9c4bf9d")
+	case conf.ABB_PROSERVICE:
+		if config.ApiKey == nil {
+			return nil, fmt.Errorf("api key is missing in config")
+		}
+		api = abb.NewProServiceApi(config, "https://api.eu.mybuildings.abb.com")
 	}
 	if err := api.Authorize(); err != nil {
 		if _, err := conf.InvalidateAuthorization(config); err != nil {
@@ -65,8 +71,10 @@ func getAPI(config apiserver.Configuration) (*abb.Api, error) {
 		}
 		return nil, fmt.Errorf("authorizing: %v", err)
 	}
-	if _, err := conf.PersistAuthorization(&config, *api.Auth.OauthToken); err != nil {
-		return nil, fmt.Errorf("persisting authorization: %v", err)
+	if api.Auth.OauthToken != nil {
+		if _, err := conf.PersistAuthorization(&config, *api.Auth.OauthToken); err != nil {
+			return nil, fmt.Errorf("persisting authorization: %v", err)
+		}
 	}
 	return api, nil
 }

@@ -26,12 +26,15 @@ import (
 // Configuration is an object representing the database table.
 type Configuration struct {
 	ID              int64             `boil:"id" json:"id" toml:"id" yaml:"id"`
-	IsCloud         bool              `boil:"is_cloud" json:"is_cloud" toml:"is_cloud" yaml:"is_cloud"`
+	IsLocal         bool              `boil:"is_local" json:"is_local" toml:"is_local" yaml:"is_local"`
+	IsMybuildings   bool              `boil:"is_mybuildings" json:"is_mybuildings" toml:"is_mybuildings" yaml:"is_mybuildings"`
+	IsProservice    bool              `boil:"is_proservice" json:"is_proservice" toml:"is_proservice" yaml:"is_proservice"`
 	ClientID        null.String       `boil:"client_id" json:"client_id,omitempty" toml:"client_id" yaml:"client_id,omitempty"`
 	ClientSecret    null.String       `boil:"client_secret" json:"client_secret,omitempty" toml:"client_secret" yaml:"client_secret,omitempty"`
 	AccessToken     null.String       `boil:"access_token" json:"access_token,omitempty" toml:"access_token" yaml:"access_token,omitempty"`
 	RefreshToken    null.String       `boil:"refresh_token" json:"refresh_token,omitempty" toml:"refresh_token" yaml:"refresh_token,omitempty"`
 	Expiry          null.Time         `boil:"expiry" json:"expiry,omitempty" toml:"expiry" yaml:"expiry,omitempty"`
+	APIKey          null.String       `boil:"api_key" json:"api_key,omitempty" toml:"api_key" yaml:"api_key,omitempty"`
 	APIURL          null.String       `boil:"api_url" json:"api_url,omitempty" toml:"api_url" yaml:"api_url,omitempty"`
 	APIUsername     null.String       `boil:"api_username" json:"api_username,omitempty" toml:"api_username" yaml:"api_username,omitempty"`
 	APIPassword     null.String       `boil:"api_password" json:"api_password,omitempty" toml:"api_password" yaml:"api_password,omitempty"`
@@ -48,12 +51,15 @@ type Configuration struct {
 
 var ConfigurationColumns = struct {
 	ID              string
-	IsCloud         string
+	IsLocal         string
+	IsMybuildings   string
+	IsProservice    string
 	ClientID        string
 	ClientSecret    string
 	AccessToken     string
 	RefreshToken    string
 	Expiry          string
+	APIKey          string
 	APIURL          string
 	APIUsername     string
 	APIPassword     string
@@ -65,12 +71,15 @@ var ConfigurationColumns = struct {
 	ProjectIds      string
 }{
 	ID:              "id",
-	IsCloud:         "is_cloud",
+	IsLocal:         "is_local",
+	IsMybuildings:   "is_mybuildings",
+	IsProservice:    "is_proservice",
 	ClientID:        "client_id",
 	ClientSecret:    "client_secret",
 	AccessToken:     "access_token",
 	RefreshToken:    "refresh_token",
 	Expiry:          "expiry",
+	APIKey:          "api_key",
 	APIURL:          "api_url",
 	APIUsername:     "api_username",
 	APIPassword:     "api_password",
@@ -84,12 +93,15 @@ var ConfigurationColumns = struct {
 
 var ConfigurationTableColumns = struct {
 	ID              string
-	IsCloud         string
+	IsLocal         string
+	IsMybuildings   string
+	IsProservice    string
 	ClientID        string
 	ClientSecret    string
 	AccessToken     string
 	RefreshToken    string
 	Expiry          string
+	APIKey          string
 	APIURL          string
 	APIUsername     string
 	APIPassword     string
@@ -101,12 +113,15 @@ var ConfigurationTableColumns = struct {
 	ProjectIds      string
 }{
 	ID:              "configuration.id",
-	IsCloud:         "configuration.is_cloud",
+	IsLocal:         "configuration.is_local",
+	IsMybuildings:   "configuration.is_mybuildings",
+	IsProservice:    "configuration.is_proservice",
 	ClientID:        "configuration.client_id",
 	ClientSecret:    "configuration.client_secret",
 	AccessToken:     "configuration.access_token",
 	RefreshToken:    "configuration.refresh_token",
 	Expiry:          "configuration.expiry",
+	APIKey:          "configuration.api_key",
 	APIURL:          "configuration.api_url",
 	APIUsername:     "configuration.api_username",
 	APIPassword:     "configuration.api_password",
@@ -302,12 +317,15 @@ func (w whereHelpertypes_StringArray) IsNotNull() qm.QueryMod {
 
 var ConfigurationWhere = struct {
 	ID              whereHelperint64
-	IsCloud         whereHelperbool
+	IsLocal         whereHelperbool
+	IsMybuildings   whereHelperbool
+	IsProservice    whereHelperbool
 	ClientID        whereHelpernull_String
 	ClientSecret    whereHelpernull_String
 	AccessToken     whereHelpernull_String
 	RefreshToken    whereHelpernull_String
 	Expiry          whereHelpernull_Time
+	APIKey          whereHelpernull_String
 	APIURL          whereHelpernull_String
 	APIUsername     whereHelpernull_String
 	APIPassword     whereHelpernull_String
@@ -319,12 +337,15 @@ var ConfigurationWhere = struct {
 	ProjectIds      whereHelpertypes_StringArray
 }{
 	ID:              whereHelperint64{field: "\"abb_free_at_home\".\"configuration\".\"id\""},
-	IsCloud:         whereHelperbool{field: "\"abb_free_at_home\".\"configuration\".\"is_cloud\""},
+	IsLocal:         whereHelperbool{field: "\"abb_free_at_home\".\"configuration\".\"is_local\""},
+	IsMybuildings:   whereHelperbool{field: "\"abb_free_at_home\".\"configuration\".\"is_mybuildings\""},
+	IsProservice:    whereHelperbool{field: "\"abb_free_at_home\".\"configuration\".\"is_proservice\""},
 	ClientID:        whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"client_id\""},
 	ClientSecret:    whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"client_secret\""},
 	AccessToken:     whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"access_token\""},
 	RefreshToken:    whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"refresh_token\""},
 	Expiry:          whereHelpernull_Time{field: "\"abb_free_at_home\".\"configuration\".\"expiry\""},
+	APIKey:          whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"api_key\""},
 	APIURL:          whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"api_url\""},
 	APIUsername:     whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"api_username\""},
 	APIPassword:     whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"api_password\""},
@@ -364,9 +385,9 @@ func (r *configurationR) GetAssets() AssetSlice {
 type configurationL struct{}
 
 var (
-	configurationAllColumns            = []string{"id", "is_cloud", "client_id", "client_secret", "access_token", "refresh_token", "expiry", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
+	configurationAllColumns            = []string{"id", "is_local", "is_mybuildings", "is_proservice", "client_id", "client_secret", "access_token", "refresh_token", "expiry", "api_key", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
 	configurationColumnsWithoutDefault = []string{}
-	configurationColumnsWithDefault    = []string{"id", "is_cloud", "client_id", "client_secret", "access_token", "refresh_token", "expiry", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
+	configurationColumnsWithDefault    = []string{"id", "is_local", "is_mybuildings", "is_proservice", "client_id", "client_secret", "access_token", "refresh_token", "expiry", "api_key", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
 	configurationPrimaryKeyColumns     = []string{"id"}
 	configurationGeneratedColumns      = []string{}
 )

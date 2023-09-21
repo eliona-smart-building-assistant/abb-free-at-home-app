@@ -19,22 +19,25 @@ type Configuration struct {
 	// Internal identifier for the configured API (created automatically).
 	Id *int64 `json:"id,omitempty"`
 
-	// Set if this API is in myBuildings cloud or a local installation.
-	IsCloud bool `json:"isCloud,omitempty"`
+	// Set if this API is in ProService portal, MyBuildings cloud or a local installation. Use ProService portal for highest reliability.
+	AbbConnectionType string `json:"abbConnectionType,omitempty"`
 
-	// ABB Cloud API OAuth client ID.
+	// ABB ProService API key.
+	ApiKey *string `json:"apiKey,omitempty"`
+
+	// ABB MyBuildings Cloud API OAuth client ID.
 	ClientID *string `json:"clientID,omitempty"`
 
-	// ABB Cloud API OAuth client secret.
+	// ABB MyBuildings Cloud API OAuth client secret.
 	ClientSecret *string `json:"clientSecret,omitempty"`
 
-	// ABB Cloud API OAuth current access token. Should not be needed to change.
+	// ABB MyBuildings Cloud API OAuth current access token. Should not be needed to change.
 	AccessToken *string `json:"accessToken,omitempty"`
 
-	// ABB Cloud API OAuth client refresh token. Should not be needed to change.
+	// ABB MyBuildings Cloud API OAuth client refresh token. Should not be needed to change.
 	RefreshToken *string `json:"refreshToken,omitempty"`
 
-	// ABB Cloud API OAuth client expiry time. Should not be needed to change.
+	// ABB MyBuildings Cloud API OAuth client expiry time. Should not be needed to change.
 	Expiry *time.Time `json:"expiry,omitempty"`
 
 	// URL of the local ABB API.

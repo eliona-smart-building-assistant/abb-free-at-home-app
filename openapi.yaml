@@ -218,35 +218,44 @@ components:
           description: Internal identifier for the configured API (created automatically).
           readOnly: true
           nullable: true
-        isCloud:
-          type: boolean
-          description: Set if this API is in myBuildings cloud or a local installation.
+        abbConnectionType:
+          type: string
+          enum:
+            - local
+            - MyBuildings
+            - ProService
+          description: Set if this API is in ProService portal, MyBuildings cloud or a local installation. Use ProService portal for highest reliability.
           default: false
+        apiKey:
+          type: string
+          format: string
+          description: ABB ProService API key.
+          nullable: true
         clientID:
           type: string
           format: string
-          description: ABB Cloud API OAuth client ID.
+          description: ABB MyBuildings Cloud API OAuth client ID.
           nullable: true
           example: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
         clientSecret:
           type: string
           format: string
-          description: ABB Cloud API OAuth client secret.
+          description: ABB MyBuildings Cloud API OAuth client secret.
           nullable: true
         accessToken:
           type: string
           format: string
-          description: ABB Cloud API OAuth current access token. Should not be needed to change.
+          description: ABB MyBuildings Cloud API OAuth current access token. Should not be needed to change.
           nullable: true
         refreshToken:
           type: string
           format: string
-          description: ABB Cloud API OAuth client refresh token. Should not be needed to change.
+          description: ABB MyBuildings Cloud API OAuth client refresh token. Should not be needed to change.
           nullable: true
         expiry:
           type: string
           format: date-time
-          description: ABB Cloud API OAuth client expiry time. Should not be needed to change.
+          description: ABB MyBuildings Cloud API OAuth client expiry time. Should not be needed to change.
           nullable: true
         apiUrl:
           type: string
