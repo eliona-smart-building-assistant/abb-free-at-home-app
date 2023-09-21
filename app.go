@@ -25,6 +25,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/eliona-smart-building-assistant/go-utils/common"
@@ -32,7 +33,6 @@ import (
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
-// collectData is the main app function which is called periodically
 func collectData() {
 	configs, err := conf.GetConfigs(context.Background())
 	if err != nil {
@@ -115,6 +115,10 @@ func subscribeToDataChanges(config apiserver.Configuration) {
 		}
 	}()
 	for dp := range dataPointChan {
+		if abbTimerActive() {
+			return
+		}
+		startElionaTimer()
 		datapoint, err := conf.FindDatapoint(string(dp.SerialNumber), string(dp.ChannelNumber), string(dp.DatapointId))
 		if err != nil {
 			log.Error("conf", "finding datapoint %+v: %v", dp, err)
@@ -172,26 +176,26 @@ func listenForOutputChanges() {
 }
 
 func setAsset(assetID int32, function string, val int32) {
+	if elionaTimerActive() {
+		return
+	}
+	startAbbTimer()
 	input, err := conf.FetchInput(assetID, function)
 	if err != nil {
 		log.Fatal("conf", "fetching input for assetID %v function %v: %v", assetID, function, err)
 		return
 	}
 	if input.LastWrittenValue.Valid && input.LastWrittenValue.Int32 == val {
-		log.Debug("broker", "skipped setting value %v for asset %v, same as last written", val, assetID)
+		log.Info("broker", "skipped setting value %v for asset %v, same as last written", val, assetID)
 		return
 	}
-	if input.LastWrittenTime.Valid && time.Since(input.LastWrittenTime.Time).Milliseconds() < 500 {
-		//fmt.Println(time.Since(input.LastWrittenTime.Time).Seconds())
-		log.Debug("broker", "skipped setting value %v for asset %v, to debounce", val, assetID)
-		return
-	}
+
 	config, err := conf.GetConfigForDatapoint(input)
 	if err != nil {
 		log.Error("conf", "getting config for input %v: %v", input.ID, err)
 		return
 	}
-	log.Debug("broker", "setting value %v for asset %v", val, assetID)
+	log.Info("broker", "setting value %v for asset %v", val, assetID)
 	if err := broker.SetInput(config, input, val); err != nil {
 		log.Error("broker", "setting value %v for asset %v: %v", val, assetID, err)
 		return
@@ -204,4 +208,61 @@ func setAsset(assetID int32, function string, val int32) {
 		log.Error("conf", "updating input: %v", err)
 		return
 	}
+}
+
+var (
+	mu                    sync.Mutex
+	abbIgnoreTimer        *time.Timer
+	elionaIgnoreTimer     *time.Timer
+	abbTimerActiveFlag    bool
+	elionaTimerActiveFlag bool
+	ignoreDuration        = 500 * time.Millisecond
+)
+
+func startAbbTimer() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if abbIgnoreTimer != nil {
+		abbIgnoreTimer.Stop()
+	}
+	abbIgnoreTimer = time.NewTimer(ignoreDuration)
+	abbTimerActiveFlag = true
+
+	go func() {
+		<-abbIgnoreTimer.C
+		mu.Lock()
+		abbTimerActiveFlag = false
+		mu.Unlock()
+	}()
+}
+
+func startElionaTimer() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if elionaIgnoreTimer != nil {
+		elionaIgnoreTimer.Stop()
+	}
+	elionaIgnoreTimer = time.NewTimer(ignoreDuration)
+	elionaTimerActiveFlag = true
+
+	go func() {
+		<-elionaIgnoreTimer.C
+		mu.Lock()
+		elionaTimerActiveFlag = false
+		mu.Unlock()
+	}()
+}
+
+func abbTimerActive() bool {
+	mu.Lock()
+	defer mu.Unlock()
+	return abbTimerActiveFlag
+}
+
+func elionaTimerActive() bool {
+	mu.Lock()
+	defer mu.Unlock()
+	return elionaTimerActiveFlag
 }
