@@ -22,8 +22,10 @@ import (
 	"abb-free-at-home/appdb"
 	"abb-free-at-home/conf"
 	"abb-free-at-home/model"
+	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	elionaapi "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
@@ -85,8 +87,13 @@ func GetLocations(config *apiserver.Configuration) ([]model.Floor, error) {
 		return nil, fmt.Errorf("getting API instance: %v", err)
 	}
 	abbLocations, err := api.GetLocations()
-	if err != nil {
-		return nil, fmt.Errorf("getting configuration: %v", err)
+	if err != nil && strings.Contains(err.Error(), "UNAUTHENTICATED") {
+		if _, err := conf.InvalidateAuthorization(*config); err != nil {
+			return nil, fmt.Errorf("invalidating authorization: %v", err)
+		}
+		return nil, errors.New("authorization invalidated")
+	} else if err != nil {
+		return nil, fmt.Errorf("getting locations: %v", err)
 	}
 	var floors []model.Floor
 	for _, system := range abbLocations.ISystemFH {
@@ -115,7 +122,12 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 		return nil, fmt.Errorf("getting API instance: %v", err)
 	}
 	abbConfiguration, err := api.GetConfiguration()
-	if err != nil {
+	if err != nil && strings.Contains(err.Error(), "UNAUTHENTICATED") {
+		if _, err := conf.InvalidateAuthorization(*config); err != nil {
+			return nil, fmt.Errorf("invalidating authorization: %v", err)
+		}
+		return nil, errors.New("authorization invalidated")
+	} else if err != nil {
 		return nil, fmt.Errorf("getting configuration: %v", err)
 	}
 
@@ -394,7 +406,12 @@ func ListenForDataChanges(config *apiserver.Configuration, datapoints []appdb.Da
 	if err != nil {
 		return fmt.Errorf("getting API instance: %v", err)
 	}
-	if err := api.ListenGraphQLSubscriptions(datapoints, ch); err != nil {
+	err = api.ListenGraphQLSubscriptions(datapoints, ch)
+	if err != nil && strings.Contains(err.Error(), "JsonWebTokenError") {
+		if _, err := conf.InvalidateAuthorization(*config); err != nil {
+			return fmt.Errorf("invalidating authorization: %v", err)
+		}
+	} else if err != nil {
 		return fmt.Errorf("listen for graphQL subscriptions: %v", err)
 	}
 	return nil
