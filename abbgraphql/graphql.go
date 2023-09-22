@@ -10,6 +10,30 @@ import (
 	"github.com/hasura/go-graphql-client/pkg/jsonutil"
 )
 
+type LocationsQuery struct {
+	ISystemFH []struct {
+		Locations []struct {
+			DtId         graphql.String `graphql:"dtId"`
+			Label        graphql.String `graphql:"label"`
+			Level        graphql.String `graphql:"level"`
+			Sublocations []struct {
+				DtId  graphql.String `graphql:"dtId"`
+				Label graphql.String `graphql:"label"`
+			} `graphql:"Sublocations"`
+		} `graphql:"Locations"`
+	} `graphql:"ISystemFH"`
+}
+
+func GetLocations(httpClient *http.Client) (LocationsQuery, error) {
+	client := getClient(httpClient)
+	var query LocationsQuery
+	variables := map[string]interface{}{}
+	if err := client.Query(context.Background(), &query, variables); err != nil {
+		return LocationsQuery{}, err
+	}
+	return query, nil
+}
+
 type SystemsQuery struct {
 	Refresh struct {
 		Refreshed graphql.Boolean `graphql:"refreshed"`
@@ -17,6 +41,9 @@ type SystemsQuery struct {
 	Systems []struct {
 		DtId   graphql.String `graphql:"dtId"`
 		Assets []struct {
+			IsLocated struct {
+				DtId graphql.String `graphql:"dtId"`
+			} `graphql:"IsLocated"`
 			SerialNumber graphql.String `graphql:"serialNumber"`
 			Name         struct {
 				En graphql.String `graphql:"en"`

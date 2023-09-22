@@ -33,6 +33,48 @@ type Asset interface {
 	Id() string
 }
 
+func CreateLocationAssetsIfNecessary(config apiserver.Configuration, locations []model.Floor) error {
+	for _, projectId := range conf.ProjIds(config) {
+		rootAssetID, err := upsertRootAsset(config, projectId)
+		if err != nil {
+			return fmt.Errorf("upserting root asset: %v", err)
+		}
+		for _, floor := range locations {
+			assetType := "abb_free_at_home_floor"
+			_, floorAssetID, err := upsertAsset(assetData{
+				config:                  config,
+				projectId:               projectId,
+				parentFunctionalAssetId: &rootAssetID,
+				parentLocationalAssetId: &rootAssetID,
+				identifier:              floor.GAI(),
+				assetType:               assetType,
+				name:                    floor.Name,
+				description:             fmt.Sprintf("%s (%v)", floor.Name, floor.GAI()),
+			})
+			if err != nil {
+				return fmt.Errorf("upserting floor %s: %v", floor.GAI(), err)
+			}
+			for _, room := range floor.Rooms {
+				assetType := "abb_free_at_home_room"
+				_, _, err := upsertAsset(assetData{
+					config:                  config,
+					projectId:               projectId,
+					parentFunctionalAssetId: &floorAssetID,
+					parentLocationalAssetId: &floorAssetID,
+					identifier:              room.GAI(),
+					assetType:               assetType,
+					name:                    room.Name,
+					description:             fmt.Sprintf("%s (%v)", room.Name, room.GAI()),
+				})
+				if err != nil {
+					return fmt.Errorf("upserting room %s: %v", room.GAI(), err)
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.System) error {
 	for _, projectId := range conf.ProjIds(config) {
 		rootAssetID, err := upsertRootAsset(config, projectId)
@@ -44,6 +86,7 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 			_, systemAssetID, err := upsertAsset(assetData{
 				config:                  config,
 				projectId:               projectId,
+				parentFunctionalAssetId: &rootAssetID,
 				parentLocationalAssetId: &rootAssetID,
 				identifier:              fmt.Sprintf("%s_%s", assetType, system.GAI),
 				assetType:               assetType,
@@ -55,16 +98,23 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 			}
 			for _, device := range system.Devices {
 				assetType := "abb_free_at_home_device"
-				_, deviceAssetID, err := upsertAsset(assetData{
+				ad := assetData{
 					config:                  config,
 					projectId:               projectId,
 					parentFunctionalAssetId: &systemAssetID,
-					parentLocationalAssetId: &rootAssetID,
 					identifier:              fmt.Sprintf("%s_%s", assetType, device.GAI),
 					assetType:               assetType,
 					name:                    device.Name,
 					description:             fmt.Sprintf("%s (%v)", device.Name, device.GAI),
-				})
+				}
+
+				locParentId := lookupLocationParent(config, projectId, device.Location)
+				if locParentId == nil {
+					locParentId = &systemAssetID
+				}
+				ad.parentLocationalAssetId = locParentId
+
+				_, deviceAssetID, err := upsertAsset(ad)
 				if err != nil {
 					return fmt.Errorf("upserting device %s: %v", device.GAI, err)
 				}
@@ -106,6 +156,16 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 		}
 	}
 	return nil
+}
+
+func lookupLocationParent(config apiserver.Configuration, projectId string, locationId string) *int32 {
+	parentId, err := conf.GetAssetId(context.Background(), config, projectId, "abb_free_at_home_room_"+locationId)
+	if err != nil {
+		log.Debug("conf", "looking up asset location parent %v: %v", "abb_free_at_home_room_"+locationId, err)
+		// Ignore. No location is a valid result as well.
+		return nil
+	}
+	return parentId
 }
 
 func upsertRootAsset(config apiserver.Configuration, projectId string) (int32, error) {

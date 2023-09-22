@@ -81,6 +81,16 @@ func collectData() {
 }
 
 func collectResources(config apiserver.Configuration) error {
+	locations, err := broker.GetLocations(config)
+	if err != nil {
+		log.Error("abb", "getting abb locations: %v", err)
+		return err
+	}
+	if err := eliona.CreateLocationAssetsIfNecessary(config, locations); err != nil {
+		log.Error("eliona", "creating location assets: %v", err)
+		return err
+	}
+
 	systems, err := broker.GetSystems(config)
 	if err != nil {
 		log.Error("abb", "getting abb configuration: %v", err)

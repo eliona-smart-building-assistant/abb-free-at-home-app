@@ -55,6 +55,7 @@ type Device struct {
 	Floor       interface{}        `json:"floor"`
 	Interface   interface{}        `json:"interface"`
 	Room        interface{}        `json:"room"`
+	Location    string
 }
 type System struct {
 	ConnectionState string            `json:"connectionState"`

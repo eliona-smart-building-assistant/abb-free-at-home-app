@@ -17,32 +17,26 @@ package eliona
 
 import (
 	"fmt"
+	"io/ioutil"
+	"strings"
 
 	"github.com/eliona-smart-building-assistant/go-eliona/asset"
 	"github.com/eliona-smart-building-assistant/go-utils/db"
 )
 
 func InitEliona(connection db.Connection) error {
-	if err := asset.InitAssetTypeFile("eliona/asset-type-root.json")(connection); err != nil {
-		return fmt.Errorf("init root asset type: %v", err)
+	dir := "eliona/"
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return fmt.Errorf("finding asset type definitions: %v", err)
 	}
-	if err := asset.InitAssetTypeFile("eliona/asset-type-system.json")(connection); err != nil {
-		return fmt.Errorf("init system asset type: %v", err)
-	}
-	if err := asset.InitAssetTypeFile("eliona/asset-type-device.json")(connection); err != nil {
-		return fmt.Errorf("init device asset type: %v", err)
-	}
-	if err := asset.InitAssetTypeFile("eliona/asset-type-channel.json")(connection); err != nil {
-		return fmt.Errorf("init channel asset type: %v", err)
-	}
-	if err := asset.InitAssetTypeFile("eliona/asset-type-switch-sensor.json")(connection); err != nil {
-		return fmt.Errorf("init switch asset type: %v", err)
-	}
-	if err := asset.InitAssetTypeFile("eliona/asset-type-dimmer-sensor.json")(connection); err != nil {
-		return fmt.Errorf("init dimmer asset type: %v", err)
-	}
-	if err := asset.InitAssetTypeFile("eliona/asset-type-room-temperature-controller.json")(connection); err != nil {
-		return fmt.Errorf("init rtc asset type: %v", err)
+
+	for _, file := range files {
+		if strings.HasPrefix(file.Name(), "asset-type-") && !file.IsDir() {
+			if err := asset.InitAssetTypeFile(dir + file.Name())(connection); err != nil {
+				return fmt.Errorf("init %s: %v", file.Name(), err)
+			}
+		}
 	}
 	return nil
 }

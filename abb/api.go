@@ -334,6 +334,13 @@ func (api *Api) GetWebsocketUrl() (string, error) {
 	return url, err
 }
 
+func (api *Api) GetLocations() (abbgraphql.LocationsQuery, error) {
+	if api.Auth.AuthorizedClient == nil {
+		return abbgraphql.LocationsQuery{}, errors.New("Fetching locations not implemented for legacy API")
+	}
+	return abbgraphql.GetLocations(api.Auth.AuthorizedClient)
+}
+
 func (api *Api) GetConfiguration() (DataFormat, error) {
 	if api.Auth.AuthorizedClient == nil {
 		return api.getConfigurationLegacy()
@@ -353,24 +360,21 @@ func (api *Api) getConfigurationGraphQL() (DataFormat, error) {
 func convertToDataFormat(query abbgraphql.SystemsQuery) DataFormat {
 	var dataFormat DataFormat
 	dataFormat.Systems = make(map[string]System)
-
 	for _, systemQuery := range query.Systems {
 		var system System
 		system.SysApName = string(systemQuery.DtId)
 		system.Devices = make(map[string]Device)
-
 		for _, asset := range systemQuery.Assets {
 			var device Device
 			device.DisplayName = string(asset.Name.En)
+			device.Location = string(asset.IsLocated.DtId)
 			device.Channels = make(map[string]Channel)
-
 			for _, ch := range asset.Channels {
 				var channel Channel
 				channel.DisplayName = string(ch.Name.En)
 				channel.FunctionId = string(ch.FunctionId)
 				channel.Outputs = make(map[string]Output)
 				channel.Inputs = make(map[string]Input)
-
 				for _, output := range ch.Outputs {
 					var out Output
 					pairingId, err := strconv.ParseInt(string(output.Value.PairingId), 16, 32)

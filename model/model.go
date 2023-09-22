@@ -9,6 +9,34 @@ import (
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 )
 
+type Floor struct {
+	Id    string
+	Name  string
+	Level string `eliona:"level" subtype:"info"`
+	Rooms []Room
+}
+
+func (f Floor) AssetType() string {
+	return "abb_free_at_home_floor"
+}
+
+func (f Floor) GAI() string {
+	return fmt.Sprintf("%s_%s", f.AssetType(), f.Id)
+}
+
+type Room struct {
+	Id   string
+	Name string
+}
+
+func (r Room) AssetType() string {
+	return "abb_free_at_home_room"
+}
+
+func (r Room) GAI() string {
+	return fmt.Sprintf("%s_%s", r.AssetType(), r.Id)
+}
+
 type System struct {
 	ID      string `eliona:"system_id,filterable"`
 	GAI     string `eliona:"system_id,filterable"`
@@ -20,6 +48,7 @@ type Device struct {
 	ID       string `eliona:"device_id,filterable"`
 	GAI      string
 	Name     string `eliona:"device_name,filterable"`
+	Location string
 	Channels []Asset
 }
 

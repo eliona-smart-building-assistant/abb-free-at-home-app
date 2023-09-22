@@ -79,6 +79,36 @@ func getAPI(config apiserver.Configuration) (*abb.Api, error) {
 	return api, nil
 }
 
+func GetLocations(config apiserver.Configuration) ([]model.Floor, error) {
+	api, err := getAPI(config)
+	if err != nil {
+		return nil, fmt.Errorf("getting API instance: %v", err)
+	}
+	abbLocations, err := api.GetLocations()
+	if err != nil {
+		return nil, fmt.Errorf("getting configuration: %v", err)
+	}
+	var floors []model.Floor
+	for _, system := range abbLocations.ISystemFH {
+		for _, floor := range system.Locations {
+			f := model.Floor{
+				Id:    string(floor.DtId),
+				Name:  string(floor.Label),
+				Level: string(floor.Level),
+			}
+			for _, room := range floor.Sublocations {
+				r := model.Room{
+					Id:   string(room.DtId),
+					Name: string(room.Label),
+				}
+				f.Rooms = append(f.Rooms, r)
+			}
+			floors = append(floors, f)
+		}
+	}
+	return floors, nil
+}
+
 func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 	api, err := getAPI(config)
 	if err != nil {
@@ -102,9 +132,10 @@ func GetSystems(config apiserver.Configuration) ([]model.System, error) {
 		// fmt.Printf("SysAP: %v\n", system.SysApName)
 		for id, device := range system.Devices {
 			d := model.Device{
-				ID:   id,
-				GAI:  s.GAI + "_" + id,
-				Name: device.DisplayName.(string),
+				ID:       id,
+				GAI:      s.GAI + "_" + id,
+				Name:     device.DisplayName.(string),
+				Location: device.Location,
 			}
 			// 	fmt.Printf("device: %v\n", id)
 			// 	fmt.Printf("DeviceName: %v\n", device.DisplayName)
