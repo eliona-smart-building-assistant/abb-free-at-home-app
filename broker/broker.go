@@ -46,7 +46,7 @@ var Functions = []string{
 	function_eco_mode,
 }
 
-func getAPI(config apiserver.Configuration) (*abb.Api, error) {
+func getAPI(config *apiserver.Configuration) (*abb.Api, error) {
 	var api *abb.Api
 	switch config.AbbConnectionType {
 	case conf.ABB_LOCAL:
@@ -58,28 +58,28 @@ func getAPI(config apiserver.Configuration) (*abb.Api, error) {
 		if config.ClientID == nil || config.ClientSecret == nil || config.RequestTimeout == nil {
 			return nil, fmt.Errorf("one or more required config fields (ClientID, ClientSecret, RequestTimeout) are nil")
 		}
-		api = abb.NewMyBuildingsApi(config)
+		api = abb.NewMyBuildingsApi(*config)
 	case conf.ABB_PROSERVICE:
 		if config.ApiKey == nil {
 			return nil, fmt.Errorf("api key is missing in config")
 		}
-		api = abb.NewProServiceApi(config)
+		api = abb.NewProServiceApi(*config)
 	}
 	if err := api.Authorize(); err != nil {
-		if _, err := conf.InvalidateAuthorization(config); err != nil {
+		if _, err := conf.InvalidateAuthorization(*config); err != nil {
 			return nil, fmt.Errorf("invalidating authorization: %v", err)
 		}
 		return nil, fmt.Errorf("authorizing: %v", err)
 	}
 	if api.Auth.OauthToken != nil {
-		if _, err := conf.PersistAuthorization(&config, *api.Auth.OauthToken); err != nil {
+		if _, err := conf.PersistAuthorization(config, *api.Auth.OauthToken); err != nil {
 			return nil, fmt.Errorf("persisting authorization: %v", err)
 		}
 	}
 	return api, nil
 }
 
-func GetLocations(config apiserver.Configuration) ([]model.Floor, error) {
+func GetLocations(config *apiserver.Configuration) ([]model.Floor, error) {
 	api, err := getAPI(config)
 	if err != nil {
 		return nil, fmt.Errorf("getting API instance: %v", err)
@@ -109,7 +109,7 @@ func GetLocations(config apiserver.Configuration) ([]model.Floor, error) {
 	return floors, nil
 }
 
-func GetSystems(config apiserver.Configuration) ([]model.System, error) {
+func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 	api, err := getAPI(config)
 	if err != nil {
 		return nil, fmt.Errorf("getting API instance: %v", err)
@@ -389,7 +389,7 @@ func parseFloat32(str string) float32 {
 	return float32(f)
 }
 
-func ListenForDataChanges(config apiserver.Configuration, datapoints []appdb.Datapoint, ch chan<- abbgraphql.DataPoint) error {
+func ListenForDataChanges(config *apiserver.Configuration, datapoints []appdb.Datapoint, ch chan<- abbgraphql.DataPoint) error {
 	api, err := getAPI(config)
 	if err != nil {
 		return fmt.Errorf("getting API instance: %v", err)
@@ -400,7 +400,7 @@ func ListenForDataChanges(config apiserver.Configuration, datapoints []appdb.Dat
 	return nil
 }
 
-func SetInput(config apiserver.Configuration, input appdb.Datapoint, value any) error {
+func SetInput(config *apiserver.Configuration, input appdb.Datapoint, value any) error {
 	api, err := getAPI(config)
 	if err != nil {
 		return fmt.Errorf("getting API instance: %v", err)

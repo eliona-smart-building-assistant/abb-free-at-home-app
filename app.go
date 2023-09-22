@@ -23,6 +23,7 @@ import (
 	"abb-free-at-home/conf"
 	"abb-free-at-home/eliona"
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"sync"
@@ -69,7 +70,7 @@ func collectData() {
 		common.RunOnceWithParam(func(config apiserver.Configuration) {
 			log.Info("main", "Collecting %d started", *config.Id)
 
-			if err := collectResources(config); err != nil {
+			if err := collectResources(&config); err != nil {
 				return // Error is handled in the method itself.
 			}
 
@@ -80,13 +81,13 @@ func collectData() {
 	}
 }
 
-func collectResources(config apiserver.Configuration) error {
+func collectResources(config *apiserver.Configuration) error {
 	locations, err := broker.GetLocations(config)
 	if err != nil {
 		log.Error("abb", "getting abb locations: %v", err)
 		return err
 	}
-	if err := eliona.CreateLocationAssetsIfNecessary(config, locations); err != nil {
+	if err := eliona.CreateLocationAssetsIfNecessary(*config, locations); err != nil {
 		log.Error("eliona", "creating location assets: %v", err)
 		return err
 	}
@@ -96,12 +97,12 @@ func collectResources(config apiserver.Configuration) error {
 		log.Error("abb", "getting abb configuration: %v", err)
 		return err
 	}
-	if err := eliona.CreateAssetsIfNecessary(config, systems); err != nil {
+	if err := eliona.CreateAssetsIfNecessary(*config, systems); err != nil {
 		log.Error("eliona", "creating assets: %v", err)
 		return err
 	}
 
-	if err := eliona.UpsertSystemsData(config, systems); err != nil {
+	if err := eliona.UpsertSystemsData(*config, systems); err != nil {
 		log.Error("eliona", "inserting data into Eliona: %v", err)
 		return err
 	}
@@ -110,7 +111,7 @@ func collectResources(config apiserver.Configuration) error {
 	return nil
 }
 
-func subscribeToDataChanges(config apiserver.Configuration) {
+func subscribeToDataChanges(config *apiserver.Configuration) {
 	datapoints, err := conf.FetchAllDatapoints()
 	if err != nil {
 		log.Error("conf", "fetching all datapoints: %v", err)
@@ -134,7 +135,7 @@ func subscribeToDataChanges(config apiserver.Configuration) {
 			log.Error("conf", "finding datapoint %+v: %v", dp, err)
 			return
 		}
-		if err := eliona.UpsertDatapointData(config, datapoint, dp.Value); err != nil {
+		if err := eliona.UpsertDatapointData(*config, datapoint, dp.Value); err != nil {
 			log.Error("eliona", "upserting datapoint data %+v: %v", dp, err)
 			return
 		}
@@ -212,7 +213,7 @@ func setAsset(assetID int32, function string, val float64) {
 		return
 	}
 	log.Info("broker", "setting value %v for asset %v", val, assetID)
-	if err := broker.SetInput(config, input, val); err != nil {
+	if err := broker.SetInput(&config, input, val); err != nil {
 		log.Error("broker", "setting value %v for asset %v: %v", val, assetID, err)
 		return
 	}
