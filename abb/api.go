@@ -36,6 +36,9 @@ import (
 )
 
 const (
+	base_url = "https://api.eu.mybuildings.abb.com"
+	// TODO: This shouldn't be hardcoded!
+	oauth2_redirect_url    = "https://api.eu.mybuildings.abb.com/external/oauth2helper/code/set/cd1a7768-680d-4040-ab76-b6a6f9c4bf9d"
 	API_PATH_CONFIGURATION = "/fhapi/v1/api/rest/configuration"
 	API_PATH_UPSTREAM      = "/fhapi/v1/api/rest/datapoint/"
 )
@@ -61,14 +64,14 @@ type Api struct {
 	token *oauth2.Token
 }
 
-func NewProServiceApi(config apiserver.Configuration, baseUrl string) *Api {
+func NewProServiceApi(config apiserver.Configuration) *Api {
 	timeout := int(*config.RequestTimeout)
 	api := Api{
 		Credentials: Credentials{
 			Digest: true,
 			ApiKey: *config.ApiKey,
 		},
-		BaseUrl: baseUrl,
+		BaseUrl: base_url,
 		Req:     abbconnection.NewHttpClient(true, true, timeout),
 	}
 
@@ -77,7 +80,7 @@ func NewProServiceApi(config apiserver.Configuration, baseUrl string) *Api {
 	return &api
 }
 
-func NewMyBuildingsApi(config apiserver.Configuration, baseUrl string, oauth2RedirectURL string) *Api {
+func NewMyBuildingsApi(config apiserver.Configuration) *Api {
 	timeout := int(*config.RequestTimeout)
 	var token *oauth2.Token
 	if config.AccessToken != nil {
@@ -94,8 +97,8 @@ func NewMyBuildingsApi(config apiserver.Configuration, baseUrl string, oauth2Red
 			ClientID:     *config.ClientID,
 			ClientSecret: *config.ClientSecret,
 		},
-		Auth:    *NewABBAuthorization(*config.ClientID, *config.ClientSecret, oauth2RedirectURL),
-		BaseUrl: baseUrl,
+		Auth:    *NewABBAuthorization(*config.ClientID, *config.ClientSecret, oauth2_redirect_url),
+		BaseUrl: base_url,
 		Req:     abbconnection.NewHttpClient(true, true, timeout),
 		token:   token,
 	}
@@ -105,8 +108,7 @@ func NewMyBuildingsApi(config apiserver.Configuration, baseUrl string, oauth2Red
 	return &api
 }
 
-func NewLocalApi(user string, password string,
-	baseUrl string, timeout int) *Api {
+func NewLocalApi(user string, password string, baseUrl string, timeout int) *Api {
 	api := Api{
 		Credentials: Credentials{
 			BasicAuth: true,

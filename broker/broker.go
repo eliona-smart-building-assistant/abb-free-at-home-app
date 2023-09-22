@@ -58,12 +58,12 @@ func getAPI(config apiserver.Configuration) (*abb.Api, error) {
 		if config.ClientID == nil || config.ClientSecret == nil || config.RequestTimeout == nil {
 			return nil, fmt.Errorf("one or more required config fields (ClientID, ClientSecret, RequestTimeout) are nil")
 		}
-		api = abb.NewMyBuildingsApi(config, "https://api.eu.mybuildings.abb.com", "https://api.eu.mybuildings.abb.com/external/oauth2helper/code/set/cd1a7768-680d-4040-ab76-b6a6f9c4bf9d")
+		api = abb.NewMyBuildingsApi(config)
 	case conf.ABB_PROSERVICE:
 		if config.ApiKey == nil {
 			return nil, fmt.Errorf("api key is missing in config")
 		}
-		api = abb.NewProServiceApi(config, "https://api.eu.mybuildings.abb.com")
+		api = abb.NewProServiceApi(config)
 	}
 	if err := api.Authorize(); err != nil {
 		if _, err := conf.InvalidateAuthorization(config); err != nil {
