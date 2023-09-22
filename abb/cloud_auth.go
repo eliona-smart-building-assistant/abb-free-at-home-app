@@ -23,7 +23,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -31,9 +30,8 @@ import (
 )
 
 const (
-	ABB_AUTH_URL        = "https://eu.mybuildings.abb.com/sso/authorize"
-	ABB_TOKEN_URL       = "https://eu.mybuildings.abb.com/sso/token"
-	ABB_AUTH_CONFIG_URL = "https://api.eu.mybuildings.abb.com/external/oauth2helper/config/"
+	ABB_AUTH_URL  = "https://eu.mybuildings.abb.com/sso/authorize"
+	ABB_TOKEN_URL = "https://eu.mybuildings.abb.com/sso/token"
 )
 
 type Oauth2Config struct {
@@ -227,24 +225,9 @@ func requestForCode(codeURL string) (string, error) {
 
 func (auth *ABBAuth) Refresh() (*string, error) {
 	var err error
-
 	auth.OauthToken, err = auth.oauthTokenSrc.Token()
-
 	if err != nil {
 		return nil, err
 	}
-
 	return &auth.OauthToken.AccessToken, err
-}
-
-func (auth *ABBAuth) GetCurrentAccessToken() string {
-	return auth.OauthToken.AccessToken
-}
-
-func (auth *ABBAuth) SetCurrentAccessToken(accessToken string) {
-	if auth.OauthToken == nil {
-		log.Println("WARNING: no token set now. create it.")
-		auth.OauthToken = &oauth2.Token{}
-	}
-	auth.OauthToken.AccessToken = accessToken
 }

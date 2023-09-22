@@ -26,35 +26,29 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
 	"abb-free-at-home/abbconnection"
 	"abb-free-at-home/abbgraphql"
 	"abb-free-at-home/apiserver"
 	"abb-free-at-home/appdb"
 
-	utilslog "github.com/eliona-smart-building-assistant/go-utils/log"
 	"golang.org/x/oauth2"
 )
 
 const (
-	API_PATH_WS_ADDR        = "/fhapi/v1/api/ws"
-	API_PATH_CONFIGURATION  = "/fhapi/v1/api/rest/configuration"
-	API_PATH_UPSTREAM       = "/fhapi/v1/api/rest/datapoint/"
-	WEBSOCK_RAW_BUFFER_SIZE = 1000
+	API_PATH_CONFIGURATION = "/fhapi/v1/api/rest/configuration"
+	API_PATH_UPSTREAM      = "/fhapi/v1/api/rest/datapoint/"
 )
 
 type Credentials struct {
-	BasicAuth              bool
-	OAuth                  bool
-	Digest                 bool
-	User                   string
-	Password               string
-	ClientID               string
-	ClientSecret           string
-	OcpApimSubscriptionKey string
-	ApiKey                 string
+	BasicAuth    bool
+	OAuth        bool
+	Digest       bool
+	User         string
+	Password     string
+	ClientID     string
+	ClientSecret string
+	ApiKey       string
 }
 
 type Api struct {
@@ -62,16 +56,9 @@ type Api struct {
 	Auth        ABBAuth
 	BaseUrl     string
 
-	Req       *abbconnection.HttpClient
-	Websocket abbconnection.WebSocketInterface
-	wssUrl    string
-
-	WebsocketUp bool
-	Timeout     int
+	Req *abbconnection.HttpClient
 
 	token *oauth2.Token
-
-	tokenCheckTicker *time.Ticker
 }
 
 func NewProServiceApi(config apiserver.Configuration, baseUrl string) *Api {
@@ -81,10 +68,8 @@ func NewProServiceApi(config apiserver.Configuration, baseUrl string) *Api {
 			Digest: true,
 			ApiKey: *config.ApiKey,
 		},
-		BaseUrl:     baseUrl,
-		Req:         abbconnection.NewHttpClient(true, true, timeout),
-		WebsocketUp: false,
-		Timeout:     timeout,
+		BaseUrl: baseUrl,
+		Req:     abbconnection.NewHttpClient(true, true, timeout),
 	}
 
 	api.Req.AddHeader("Content-Type", "application/json")
@@ -109,12 +94,10 @@ func NewMyBuildingsApi(config apiserver.Configuration, baseUrl string, oauth2Red
 			ClientID:     *config.ClientID,
 			ClientSecret: *config.ClientSecret,
 		},
-		Auth:        *NewABBAuthorization(*config.ClientID, *config.ClientSecret, oauth2RedirectURL),
-		BaseUrl:     baseUrl,
-		Req:         abbconnection.NewHttpClient(true, true, timeout),
-		WebsocketUp: false,
-		Timeout:     timeout,
-		token:       token,
+		Auth:    *NewABBAuthorization(*config.ClientID, *config.ClientSecret, oauth2RedirectURL),
+		BaseUrl: baseUrl,
+		Req:     abbconnection.NewHttpClient(true, true, timeout),
+		token:   token,
 	}
 
 	api.Req.AddHeader("Content-Type", "application/json")
@@ -130,10 +113,8 @@ func NewLocalApi(user string, password string,
 			User:      user,
 			Password:  password,
 		},
-		BaseUrl:     baseUrl,
-		Req:         abbconnection.NewHttpClient(true, true, timeout),
-		WebsocketUp: false,
-		Timeout:     timeout,
+		BaseUrl: baseUrl,
+		Req:     abbconnection.NewHttpClient(true, true, timeout),
 	}
 
 	api.Req.AddHeader("Content-Type", "application/json")
@@ -163,35 +144,11 @@ func (api *Api) Authorize() error {
 	return nil
 }
 
-func (api *Api) tokenChecker() {
-	api.tokenCheckTicker = time.NewTicker(1 * time.Second)
-	fmt.Println("start token validator")
-	for {
-		select {
-		case _, ok := <-api.tokenCheckTicker.C:
-			if ok {
-				// TODO: There is some mishandling of timezones.
-				if !api.Auth.OauthToken.Valid() { //|| api.Auth.OauthToken.Expiry.Before(time.Now().Add(2*time.Hour))
-					fmt.Println("reauthorizing token")
-					if err := api.Authorize(); err != nil {
-						utilslog.Error("abb", "reauthorizing token: %v", err)
-					}
-					fmt.Println("token reauthorized")
-				}
-			} else {
-				log.Println("ticker exited")
-				return
-			}
-		}
-	}
-}
-
 func (api *Api) setAuthHeaders(secret string) {
 	switch {
 	case api.Credentials.Digest:
 		api.Req.AddHeader("Authorization", "digest "+secret)
 	case api.Credentials.OAuth:
-		api.Req.AddHeader("Ocp-Apim-Subscription-Key", api.Credentials.OcpApimSubscriptionKey)
 		api.Req.AddHeader("Authorization", "Bearer "+secret)
 	case api.Credentials.BasicAuth:
 		api.Req.AddHeader("Authorization", "Basic "+
@@ -203,135 +160,11 @@ func encodeBase64(plain string) string {
 	return base64.StdEncoding.EncodeToString([]byte(plain))
 }
 
-func (api *Api) UpdateBearerManually(jwt string) {
-	api.Auth.SetCurrentAccessToken(jwt)
-
-	api.Req.AddHeader("Ocp-Apim-Subscription-Key", api.Credentials.OcpApimSubscriptionKey)
-	api.Req.AddHeader("Authorization", "Bearer "+api.Auth.GetCurrentAccessToken())
-}
-
 func (api *Api) ListenGraphQLSubscriptions(datapoints []appdb.Datapoint, ch chan<- abbgraphql.DataPoint) error {
 	if api.Credentials.OAuth {
 		return abbgraphql.SubscribeDataPointValue("Bearer "+api.token.AccessToken, datapoints, ch)
 	}
 	return abbgraphql.SubscribeDataPointValue("digest "+api.Credentials.ApiKey, datapoints, ch)
-}
-
-// ToDo: for local instances available?
-func (api *Api) ListenOnEvents(wg *sync.WaitGroup, events chan<- WsObject, ir <-chan bool) {
-	defer wg.Done()
-	defer close(events)
-	defer log.Println("abb event listener exited")
-
-	var wgWs sync.WaitGroup
-
-	wssUrl, err := api.GetWebsocketUrl()
-
-	if err != nil {
-		log.Println("error while getting websocket address: ", err)
-		wssUrl = "wss://fhapi.my.busch-jaeger.de/api/ws"
-	}
-
-	api.wssUrl = wssUrl
-
-	interrupted := false
-	for !interrupted {
-		api.Websocket = abbconnection.NewWebsocketClient(true, true)
-		if api.Websocket == nil {
-			log.Println("couldn't get a websocket")
-			return
-		}
-		// todo: make loop while not interrupted and get "new" token
-		api.Websocket.AddHeader("Ocp-Apim-Subscription-Key", api.Credentials.OcpApimSubscriptionKey)
-		api.Websocket.AddHeader("Authorization", "Bearer "+api.Auth.GetCurrentAccessToken())
-
-		log.Println("wss: sub key ", api.Credentials.OcpApimSubscriptionKey)
-		log.Println("wss: token ", api.Auth.GetCurrentAccessToken())
-		wgWs.Add(1)
-
-		rxRaw := make(chan []byte, WEBSOCK_RAW_BUFFER_SIZE)
-		irWs := make(chan bool)
-
-		go api.Websocket.ServeForever(&wgWs, rxRaw, irWs, api.wssUrl)
-
-		api.WebsocketUp = true
-		serve := true
-		for serve {
-			select {
-			case raw, ok := <-rxRaw:
-				if !ok {
-					log.Println("raw wss channel closed by wss client")
-					// irWs <- true
-					serve = false
-					break
-				}
-
-				var inJson WsObject
-				err := json.Unmarshal(raw, &inJson)
-				if err != nil {
-					log.Println("invalid data received by ws: ", err, rxRaw)
-				} else {
-					events <- inJson
-				}
-
-			case irupt, ok := <-ir:
-				if !ok || irupt {
-					log.Println("interrupted")
-					// non blocking?
-					interrupted = irupt
-					irWs <- irupt
-					goto exit
-				}
-			}
-		}
-
-		log.Println("try to restarting wss")
-		// irWs <- false
-		wgWs.Wait()
-		time.Sleep(1 * time.Second)
-		log.Println("restart wss")
-	}
-
-exit:
-
-	if api.tokenCheckTicker != nil {
-		api.tokenCheckTicker.Stop()
-	}
-
-	log.Println("wait for websocket serve loop")
-	wgWs.Wait()
-	api.WebsocketUp = false
-}
-
-func (api *Api) GetWebsocketUrl() (string, error) {
-	var url string
-
-	body, code, err := api.request(abbconnection.REQUEST_METHOD_GET, API_PATH_WS_ADDR, nil)
-	if err != nil {
-		errTxt := err.Error()
-
-		if strings.Contains(errTxt, "unsupported protocol scheme \"wss\"") {
-			start := strings.Index(errTxt, "wss://")
-			end := strings.LastIndex(errTxt, ":")
-			if start != -1 && end != -1 {
-				url = errTxt[start:end]
-			}
-		}
-
-		if len(url) > 0 {
-			err = nil
-		}
-	} else {
-		log.Println("**not implemented** error: while getting websocket url", code, string(body))
-		err = errors.New("error get websocket url")
-	}
-
-	// ToDo: check, why %22 is there ***************************************3
-	strings.ReplaceAll(url, "%22", "")
-	fmt.Println("* ws address (todo): ", url)
-	url = "wss://fhapi.my.busch-jaeger.de/api/ws"
-
-	return url, err
 }
 
 func (api *Api) GetLocations() (abbgraphql.LocationsQuery, error) {
