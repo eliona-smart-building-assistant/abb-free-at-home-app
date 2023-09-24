@@ -148,6 +148,20 @@ func (rtc RTC) GAI() string {
 	return fmt.Sprintf("%s_%s", rtc.AssetType(), rtc.GAIBase)
 }
 
+type HeatingActuator struct {
+	AssetBase
+	InfoFlow     int8 `eliona:"info_flow" subtype:"input"`
+	ActuatorFlow int8 `eliona:"actuator_flow" subtype:"input"`
+}
+
+func (c HeatingActuator) AssetType() string {
+	return "abb_free_at_home_heating_actuator"
+}
+
+func (c HeatingActuator) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
 type WindowSensor struct {
 	AssetBase
 	Position int8 `eliona:"position" subtype:"input"`

@@ -1,0 +1,33 @@
+{
+	"attributes": [
+		{
+			"enable": true,
+			"name": "info_flow",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Heizungsvorlauf",
+				"en": "Heating flow"
+			}
+		},
+		{
+			"enable": true,
+			"name": "actuator_flow",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Stellantrieb Heizungsvorlauf",
+				"en": "Actuator Heating flow"
+			}
+		}
+	],
+	"custom": false,
+	"icon": null,
+	"name": "abb_free_at_home_heating_actuator",
+	"translation": {
+		"de": "ABB-free@home Heizkörperthermostat",
+		"en": "ABB-free@home Heating Actuator"
+	},
+	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
+	"vendor": "ABB"
+}

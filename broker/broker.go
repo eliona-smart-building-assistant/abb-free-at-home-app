@@ -32,12 +32,14 @@ import (
 )
 
 const (
-	function_switch               = "switch"
-	function_status               = "status" // For simple abb outputs
-	function_dimmer               = "dimmer"
-	function_measured_temperature = "measured_temperature"
-	function_set_temperature      = "set_temperature"
-	function_eco_mode             = "eco_mode"
+	function_switch                = "switch"
+	function_status                = "status" // For simple abb outputs
+	function_dimmer                = "dimmer"
+	function_measured_temperature  = "measured_temperature"
+	function_set_temperature       = "set_temperature"
+	function_eco_mode              = "eco_mode"
+	function_heating_flow          = "heating_flow"
+	function_actuator_heating_flow = "actuator_heating_flow"
 )
 
 var Functions = []string{
@@ -419,6 +421,41 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					c = model.MovementSensor{
 						AssetBase: assetBase,
 						Movement:  movement,
+					}
+				case abb.FID_HEATING_ACTUATOR:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, input := range channel.Outputs {
+						if input.PairingId == abb.PID_AL_INFO_VALUE_HEATING {
+							outputs[function_heating_flow] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "info_flow",
+									},
+								},
+							}
+						}
+						if input.PairingId == abb.PID_ACTUATING_VALUE_HEATING {
+							outputs[function_actuator_heating_flow] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "actuator_flow",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					infoFlow := parseInt8(channel.FindOutputValueByPairingID(abb.PID_AL_INFO_VALUE_HEATING))
+					actuatorFlow := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ACTUATING_VALUE_HEATING))
+					c = model.HeatingActuator{
+						AssetBase:    assetBase,
+						InfoFlow:     infoFlow,
+						ActuatorFlow: actuatorFlow,
 					}
 				default:
 					c = model.Channel{
