@@ -23,6 +23,7 @@ import (
 	"abb-free-at-home/conf"
 	"abb-free-at-home/eliona"
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"sync"
@@ -75,6 +76,11 @@ func collectData() {
 
 			log.Info("main", "Collecting %d finished", *config.Id)
 
+			common.RunOnceWithParam(func(config apiserver.Configuration) {
+				log.Info("main", "subscription %d started", *config.Id)
+				subscribeToDataChanges(&config)
+				log.Info("main", "subscription %d finished", *config.Id)
+			}, config, fmt.Sprintf("subscription_%v", *config.Id))
 			time.Sleep(time.Second * time.Duration(config.RefreshInterval))
 		}, config, *config.Id)
 	}
@@ -105,8 +111,6 @@ func collectResources(config *apiserver.Configuration) error {
 		log.Error("eliona", "inserting data into Eliona: %v", err)
 		return err
 	}
-
-	subscribeToDataChanges(config)
 	return nil
 }
 

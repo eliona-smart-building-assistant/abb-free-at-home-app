@@ -34,9 +34,9 @@ import (
 var ErrBadRequest = errors.New("bad request")
 
 const (
-	ABB_LOCAL = "local"
+	ABB_LOCAL       = "local"
 	ABB_MYBUILDINGS = "MyBuildings"
-	ABB_PROSERVICE = "ProService"
+	ABB_PROSERVICE  = "ProService"
 )
 
 func InsertConfig(ctx context.Context, config apiserver.Configuration) (apiserver.Configuration, error) {
