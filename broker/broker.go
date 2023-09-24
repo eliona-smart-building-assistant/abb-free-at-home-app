@@ -352,6 +352,50 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						EcoMode:      ecoMode,
 						EcoModeState: ecoMode,
 					}
+				case abb.FID_WINDOW_DOOR_SENSOR:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, input := range channel.Outputs {
+						if input.PairingId == abb.PID_AL_WINDOW_DOOR {
+							outputs[function_switch] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "position",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					position := parseInt8(channel.FindOutputValueByPairingID(abb.PID_AL_WINDOW_DOOR))
+					c = model.DoorSensor{
+						AssetBase: assetBase,
+						Position:  position,
+					}
+				case abb.FID_WINDOW_DOOR_POSITION_SENSOR:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, input := range channel.Outputs {
+						if input.PairingId == abb.PID_AL_WINDOW_DOOR_POSITION {
+							outputs[function_switch] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "position",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					position := parseInt8(channel.FindOutputValueByPairingID(abb.PID_AL_WINDOW_DOOR_POSITION))
+					c = model.WindowSensor{
+						AssetBase: assetBase,
+						Position:  position,
+					}
 				default:
 					c = model.Channel{
 						AssetBase: assetBase,

@@ -130,6 +130,8 @@ const (
 	FID_COOLING_ACTUATOR                               = 0x0024
 	FID_SCENE_SENSOR                                   = 0x0006
 	FID_MOVEMENT_DETECTOR                              = 0x0011
+	FID_WINDOW_DOOR_SENSOR                             = 0x000F
+	FID_WINDOW_DOOR_POSITION_SENSOR                    = 0x0064
 )
 
 // *************************** VALUE MAP IN ELIONA
@@ -176,6 +178,8 @@ const (
 	PID_CURRENT_ABSOLUTE_POSITION_SLATS_PERCENTAGE = 0x0122
 	PID_MEASURED_TEMPERATURE                       = 0x0130 // indicator ??
 	PID_ABS_TEMPERATURE_SET                        = 0x0140 // set reg temp on room controller
+	PID_AL_WINDOW_DOOR                             = 0x0035
+	PID_AL_WINDOW_DOOR_POSITION                    = 0x0029
 )
 
 func WsFormatToApiFormat(wsFormat *WsObject) map[string]System {

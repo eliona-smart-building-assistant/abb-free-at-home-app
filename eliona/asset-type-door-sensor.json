@@ -2,21 +2,21 @@
 	"attributes": [
 		{
 			"enable": true,
-			"name": "switch_state",
+			"name": "position",
 			"subtype": "input",
 			"type": "inputs-and-switches",
 			"translation": {
-				"de": "Schalterzustand",
-				"en": "Switch state"
+				"de": "Position",
+				"en": "Position"
 			}
 		}
 	],
 	"custom": false,
 	"icon": null,
-	"name": "abb_free_at_home_switch_sensor",
+	"name": "abb_free_at_home_door_sensor",
 	"translation": {
-		"de": "ABB-free@home Schaltsensor",
-		"en": "ABB-free@home Switch sensor"
+		"de": "ABB-free@home Fenstersensor",
+		"en": "ABB-free@home Door Sensor"
 	},
 	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
 	"vendor": "ABB"

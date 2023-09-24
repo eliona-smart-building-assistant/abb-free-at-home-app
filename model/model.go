@@ -148,6 +148,34 @@ func (rtc RTC) GAI() string {
 	return fmt.Sprintf("%s_%s", rtc.AssetType(), rtc.GAIBase)
 }
 
+type WindowSensor struct {
+	AssetBase
+	Position int8 `eliona:"position" subtype:"input"`
+}
+
+func (c WindowSensor) AssetType() string {
+	return "abb_free_at_home_window_sensor"
+}
+
+func (c WindowSensor) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
+type DoorSensor struct {
+	AssetBase
+	Position int8 `eliona:"position" subtype:"input"`
+}
+
+func (c DoorSensor) AssetType() string {
+	return "abb_free_at_home_door_sensor"
+}
+
+func (c DoorSensor) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
+//
+
 func (tag *System) AdheresToFilter(filter [][]apiserver.FilterRule) (bool, error) {
 	f := apiFilterToCommonFilter(filter)
 	fp, err := structToMap(tag)
