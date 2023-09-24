@@ -33,6 +33,7 @@ import (
 
 const (
 	function_switch               = "switch"
+	function_status               = "status" // For simple abb outputs
 	function_dimmer               = "dimmer"
 	function_measured_temperature = "measured_temperature"
 	function_set_temperature      = "set_temperature"
@@ -40,6 +41,7 @@ const (
 )
 
 var Functions = []string{
+	function_status,
 	// Note: Depends on order.
 	function_dimmer,
 	function_switch,
@@ -356,7 +358,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {
 						if input.PairingId == abb.PID_AL_WINDOW_DOOR {
-							outputs[function_switch] = model.Datapoint{
+							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
 									{
@@ -378,7 +380,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {
 						if input.PairingId == abb.PID_AL_WINDOW_DOOR_POSITION {
-							outputs[function_switch] = model.Datapoint{
+							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
 									{
@@ -395,6 +397,28 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					c = model.WindowSensor{
 						AssetBase: assetBase,
 						Position:  position,
+					}
+				case abb.FID_MOVEMENT_DETECTOR:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, input := range channel.Outputs {
+						if input.PairingId == abb.PID_AL_MOVEMENT_DETECTOR_STATUS {
+							outputs[function_status] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "position",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					movement := parseInt8(channel.FindOutputValueByPairingID(abb.PID_AL_MOVEMENT_DETECTOR_STATUS))
+					c = model.MovementSensor{
+						AssetBase: assetBase,
+						Movement:  movement,
 					}
 				default:
 					c = model.Channel{

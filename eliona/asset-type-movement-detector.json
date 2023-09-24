@@ -1,0 +1,23 @@
+{
+	"attributes": [
+		{
+			"enable": true,
+			"name": "movement",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Bewegung",
+				"en": "Movement"
+			}
+		}
+	],
+	"custom": false,
+	"icon": null,
+	"name": "abb_free_at_home_movement_sensor",
+	"translation": {
+		"de": "ABB-free@home Bewegungssensor",
+		"en": "ABB-free@home Movement Sensor"
+	},
+	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
+	"vendor": "ABB"
+}

@@ -174,6 +174,19 @@ func (c DoorSensor) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
 }
 
+type MovementSensor struct {
+	AssetBase
+	Movement int8 `eliona:"movement" subtype:"input"`
+}
+
+func (c MovementSensor) AssetType() string {
+	return "abb_free_at_home_movement_sensor"
+}
+
+func (c MovementSensor) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
 //
 
 func (tag *System) AdheresToFilter(filter [][]apiserver.FilterRule) (bool, error) {
