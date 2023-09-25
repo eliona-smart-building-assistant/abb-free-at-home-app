@@ -8,7 +8,17 @@
 			"translation": {
 				"de": "Position",
 				"en": "Position"
-			}
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "Closed"
+				},
+				{
+					"value": 1,
+					"text": "Open"
+				}
+			]
 		}
 	],
 	"custom": false,

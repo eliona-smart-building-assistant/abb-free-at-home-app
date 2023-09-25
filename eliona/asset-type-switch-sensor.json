@@ -8,7 +8,37 @@
 			"translation": {
 				"de": "Schalterzustand",
 				"en": "Switch state"
-			}
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
+		},
+		{
+			"enable": true,
+			"name": "switch",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Schalter",
+				"en": "Switch"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
 		}
 	],
 	"custom": false,

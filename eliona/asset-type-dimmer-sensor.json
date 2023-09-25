@@ -8,7 +8,17 @@
 			"translation": {
 				"de": "Schalterzustand",
 				"en": "Switch state"
-			}
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
 		},
 		{
 			"enable": true,
@@ -16,6 +26,8 @@
 			"subtype": "input",
 			"type": "inputs-and-switches",
 			"unit": "%",
+			"min": 0,
+			"max": 100,
 			"translation": {
 				"de": "Dimmzustand",
 				"en": "Dimmer state"
@@ -47,6 +59,8 @@
 			"subtype": "output",
 			"type": "inputs-and-switches",
 			"unit": "%",
+			"min": 0,
+			"max": 100,
 			"translation": {
 				"de": "Dimmer",
 				"en": "Dimmer"
