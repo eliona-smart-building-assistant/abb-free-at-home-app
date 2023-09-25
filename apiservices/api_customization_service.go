@@ -17,6 +17,7 @@ package apiservices
 
 import (
 	"abb-free-at-home/apiserver"
+	"abb-free-at-home/eliona"
 	"context"
 	"net/http"
 )
@@ -35,7 +36,11 @@ func NewCustomizationApiService() apiserver.CustomizationApiServicer {
 // GetDashboardTemplateByName - Get a full dashboard template
 func (s *CustomizationApiService) GetDashboardTemplateByName(ctx context.Context, dashboardTemplateName string, projectId string) (apiserver.ImplResponse, error) {
 	if dashboardTemplateName == "ABB-free@home" {
-		return apiserver.ImplResponse{Code: http.StatusNotImplemented}, nil
+		dashboard, err := eliona.GetDashboard(projectId)
+		if err != nil {
+			return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
+		}
+		return apiserver.Response(http.StatusOK, dashboard), nil
 	} else {
 		return apiserver.ImplResponse{Code: http.StatusNotFound}, nil
 	}
