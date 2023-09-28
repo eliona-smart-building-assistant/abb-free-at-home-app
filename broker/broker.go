@@ -40,6 +40,11 @@ const (
 	function_eco_mode              = "eco_mode"
 	function_heating_flow          = "heating_flow"
 	function_actuator_heating_flow = "actuator_heating_flow"
+	function_heating_active        = "heating_active"
+	function_heating_value         = "heating_value"
+	function_status_indication     = "status_indication"
+	function_presence              = "presence"
+	function_window_door           = "window_door"
 )
 
 var Functions = []string{
@@ -50,6 +55,13 @@ var Functions = []string{
 	function_measured_temperature,
 	function_set_temperature,
 	function_eco_mode,
+	function_heating_flow,
+	function_actuator_heating_flow,
+	function_heating_active,
+	function_heating_value,
+	function_status_indication,
+	function_presence,
+	function_window_door,
 }
 
 func getAPI(config *apiserver.Configuration) (*abb.Api, error) {
@@ -176,6 +188,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 				}
 				switch fid {
 				case abb.FID_SWITCH_ACTUATOR:
+					// Used for ABB -> Eliona
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {
 						if input.PairingId == abb.PID_ON_OFF_INFO_GET {
@@ -195,6 +208,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						}
 					}
 					assetBase.OutputsBase = outputs
+					// Used for Eliona -> ABB
 					inputs := make(map[string]string)
 					for datapoint, input := range channel.Inputs {
 						if input.PairingId == abb.PID_SWITCH_ON_OFF_SET {
@@ -203,6 +217,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.InputsBase = inputs
 
+					// Used for current values in Eliona one-time update
 					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET))
 					switchInput := parseInt8(channel.FindInputValueByPairingID(abb.PID_SWITCH_ON_OFF_SET))
 					c = model.Switch{
@@ -355,6 +370,114 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						SetTempState: float32(setTemp),
 						EcoMode:      ecoMode,
 						EcoModeState: ecoMode,
+					}
+				case abb.FID_RADIATOR_THERMOSTAT:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, output := range channel.Outputs {
+						switch output.PairingId {
+						case abb.PID_CONTROLLER_ON_OFF_PROTECTED_GET:
+							outputs[function_switch] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "switch_state",
+									},
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "switch",
+									},
+								},
+							}
+						case abb.PID_MEASURED_TEMPERATURE:
+							outputs[function_measured_temperature] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "current_temperature",
+									},
+								},
+							}
+						case abb.PID_SETPOINT_TEMPERATURE_GET:
+							outputs[function_set_temperature] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "set_temperature_state",
+									},
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "set_temperature",
+									},
+								},
+							}
+						case abb.PID_HEATING_MODE_GET:
+							outputs[function_status_indication] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "status_indication",
+									},
+								},
+							}
+						case abb.PID_HEATING_ACTIVE:
+							outputs[function_heating_active] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "heating_active",
+									},
+								},
+							}
+						case abb.PID_HEATING_VALUE:
+							outputs[function_heating_value] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "heating_value",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					inputs := make(map[string]string)
+					for datapoint, input := range channel.Inputs {
+						switch input.PairingId {
+						case abb.PID_CONTROLLER_REQ_ON_OFF_SET:
+							inputs[function_switch] = datapoint
+						case abb.PID_ABS_TEMPERATURE_SET:
+							inputs[function_set_temperature] = datapoint
+						case abb.PID_PRESENCE:
+							inputs[function_presence] = datapoint
+						case abb.PID_AL_WINDOW_DOOR:
+							inputs[function_window_door] = datapoint
+						}
+					}
+					assetBase.InputsBase = inputs
+
+					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_CONTROLLER_ON_OFF_PROTECTED_GET))
+					currentTemp := parseFloat32(channel.FindOutputValueByPairingID(abb.PID_MEASURED_TEMPERATURE))
+					setTemp := parseFloat32(channel.FindOutputValueByPairingID(abb.PID_SETPOINT_TEMPERATURE_GET))
+					statusIndication := parseInt8(channel.FindOutputValueByPairingID(abb.PID_HEATING_MODE_GET))
+					heatingActive := parseInt8(channel.FindOutputValueByPairingID(abb.PID_HEATING_ACTIVE))
+					heatingValue := parseInt8(channel.FindOutputValueByPairingID(abb.PID_HEATING_VALUE))
+					c = model.RadiatorThermostat{
+						AssetBase:        assetBase,
+						SwitchState:      switchState,
+						Switch:           switchState,
+						CurrentTemp:      float32(currentTemp),
+						SetTemp:          float32(setTemp),
+						SetTempState:     float32(setTemp),
+						StatusIndication: statusIndication,
+						HeatingActive:    heatingActive,
+						HeatingValue:     heatingValue,
 					}
 				case abb.FID_WINDOW_DOOR_SENSOR:
 					outputs := make(map[string]model.Datapoint)

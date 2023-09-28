@@ -127,6 +127,7 @@ const (
 	FID_DES_DOOR_RINGING_SENSOR                        = 0x001F
 	FID_PANEL_ROOM_TEMPERATURE_CONTROLLER_SLAVE        = 0x0038
 	FID_HEATING_ACTUATOR                               = 0x0027
+	FID_RADIATOR_THERMOSTAT                            = 0x003f
 	FID_COOLING_ACTUATOR                               = 0x0024
 	FID_SCENE_SENSOR                                   = 0x0006
 	FID_MOVEMENT_DETECTOR                              = 0x0011
@@ -159,6 +160,7 @@ const (
 const (
 	PID_SWITCH_ON_OFF_SET                          = 0x0001
 	PID_TIMED_START_STOP                           = 0x0002
+	PID_PRESENCE                                   = 0x0007
 	PID_AL_RELATIVE_SET_VALUE_CONTROL              = 0x0010
 	PID_ABSOLUTE_VALUE_0_100_SET                   = 0x0011
 	PID_BLINDER_UP_DOWN_SET                        = 0x0020
@@ -179,6 +181,8 @@ const (
 	PID_CURRENT_ABSOLUTE_POSITION_SLATS_PERCENTAGE = 0x0122
 	PID_MEASURED_TEMPERATURE                       = 0x0130 // indicator ??
 	PID_ABS_TEMPERATURE_SET                        = 0x0140 // set reg temp on room controller
+	PID_HEATING_ACTIVE                             = 0x014B
+	PID_HEATING_VALUE                              = 0x0131
 	PID_AL_MOVEMENT_DETECTOR_STATUS                = 0x0166
 	PID_AL_WINDOW_DOOR                             = 0x0035
 	PID_AL_WINDOW_DOOR_POSITION                    = 0x0029

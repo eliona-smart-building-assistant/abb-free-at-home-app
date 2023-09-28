@@ -1,0 +1,169 @@
+{
+	"attributes": [
+		{
+			"enable": true,
+			"name": "switch_state",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Schalterzustand",
+				"en": "Switch state"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
+		},
+		{
+			"enable": true,
+			"name": "current_temperature",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"unit": "˚C",
+			"translation": {
+				"de": "Aktuelle Temperatur",
+				"en": "Current temperature"
+			}
+		},
+		{
+			"enable": true,
+			"name": "set_temperature_state",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"unit": "˚C",
+			"translation": {
+				"de": "Eingestellte Temperatur",
+				"en": "Set temperature"
+			}
+		},
+		{
+			"enable": true,
+			"name": "status_indication",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Statusanzeige",
+				"en": "Status indication"
+			}
+		},
+		{
+			"enable": true,
+			"name": "heating_active",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Heizung aktiv",
+				"en": "Heating active"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
+		},
+		{
+			"enable": true,
+			"name": "heating_value",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"unit": "%",
+			"min": 0,
+			"max": 100,
+			"translation": {
+				"de": "Heizungswert",
+				"en": "Heating value"
+			}
+		},
+		{
+			"enable": true,
+			"name": "switch",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Schalter",
+				"en": "Switch"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
+		},
+		{
+			"enable": true,
+			"name": "set_temperature",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"unit": "˚C",
+			"translation": {
+				"de": "Gewünschte Temperatur",
+				"en": "Desired temperature"
+			}
+		},
+		{
+			"enable": true,
+			"name": "presence",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Präsenz",
+				"en": "Presence"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
+		},
+		{
+			"enable": true,
+			"name": "window_door",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Fenster/Tür",
+				"en": "Window/Door"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "Closed"
+				},
+				{
+					"value": 1,
+					"text": "Open"
+				}
+			]
+		}
+	],
+	"custom": false,
+	"icon": null,
+	"name": "abb_free_at_home_radiator_thermostat",
+	"translation": {
+		"de": "ABB-free@home Heizkörperthermostat",
+		"en": "ABB-free@home Radiator Thermostat"
+	},
+	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
+	"vendor": "ABB"
+}

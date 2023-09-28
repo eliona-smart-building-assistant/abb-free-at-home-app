@@ -148,6 +148,28 @@ func (rtc RTC) GAI() string {
 	return fmt.Sprintf("%s_%s", rtc.AssetType(), rtc.GAIBase)
 }
 
+type RadiatorThermostat struct {
+	AssetBase
+
+	SwitchState      int8    `eliona:"switch_state" subtype:"input"`
+	CurrentTemp      float32 `eliona:"current_temperature" subtype:"input"`
+	SetTempState     float32 `eliona:"set_temperature_state" subtype:"input"`
+	StatusIndication int8    `eliona:"status_indication" subtype:"input"`
+	HeatingActive    int8    `eliona:"heating_active" subtype:"input"`
+	HeatingValue     int8    `eliona:"heating_value" subtype:"input"`
+
+	Switch  int8    `eliona:"switch" subtype:"output"`
+	SetTemp float32 `eliona:"set_temperature" subtype:"output"`
+}
+
+func (rt RadiatorThermostat) AssetType() string {
+	return "abb_free_at_home_radiator_thermostat"
+}
+
+func (rt RadiatorThermostat) GAI() string {
+	return fmt.Sprintf("%s_%s", rt.AssetType(), rt.GAIBase)
+}
+
 type HeatingActuator struct {
 	AssetBase
 	InfoFlow     int8 `eliona:"info_flow" subtype:"input"`
