@@ -45,6 +45,9 @@ const (
 	function_status_indication     = "status_indication"
 	function_presence              = "presence"
 	function_window_door           = "window_door"
+	function_rgb                   = "rgb"
+	function_color_mode            = "color_mode"
+	function_color_temperature     = "color_temperature"
 )
 
 var Functions = []string{
@@ -62,6 +65,9 @@ var Functions = []string{
 	function_status_indication,
 	function_presence,
 	function_window_door,
+	function_rgb,
+	function_color_mode,
+	function_color_temperature,
 }
 
 func getAPI(config *apiserver.Configuration) (*abb.Api, error) {
@@ -284,6 +290,112 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						Dimmer:      dimmerState,
 					}
 					_, _ = dimmerInput, switchInput
+				case abb.FID_HUE_ACTUATOR:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, output := range channel.Outputs {
+						switch output.PairingId {
+						case abb.PID_ON_OFF_INFO_GET:
+							outputs[function_switch] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "switch_state",
+									},
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "switch",
+									},
+								},
+							}
+						case abb.PID_ACTUAL_DIM_VALUE_0_100_GET:
+							outputs[function_dimmer] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "dimmer_state",
+									},
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "dimmer",
+									},
+								},
+							}
+						case abb.PID_RGB_COLOR_GET:
+							outputs[function_rgb] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "rgb_state",
+									},
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "rgb",
+									},
+								},
+							}
+						case abb.PID_COLOR_MODE_GET:
+							outputs[function_color_mode] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "color_mode_state",
+									},
+								},
+							}
+						case abb.PID_COLOR_TEMPERATURE_GET:
+							outputs[function_color_temperature] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "color_temperature_state",
+									},
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "color_temperature",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					inputs := make(map[string]string)
+					for datapoint, input := range channel.Inputs {
+						switch input.PairingId {
+						case abb.PID_SWITCH_ON_OFF_SET:
+							inputs[function_switch] = datapoint
+						case abb.PID_ABSOLUTE_VALUE_0_100_SET:
+							inputs[function_dimmer] = datapoint
+						case abb.PID_RGB_COLOR_SET:
+							inputs[function_rgb] = datapoint
+						case abb.PID_COLOR_TEMPERATURE_SET:
+							inputs[function_color_temperature] = datapoint
+						}
+					}
+					assetBase.InputsBase = inputs
+
+					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET))
+					dimmerState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ACTUAL_DIM_VALUE_0_100_GET))
+					rgbState := channel.FindOutputValueByPairingID(abb.PID_RGB_COLOR_GET)
+					colorMode := channel.FindOutputValueByPairingID(abb.PID_COLOR_MODE_GET)
+					colorTemperature := parseInt8(channel.FindOutputValueByPairingID(abb.PID_COLOR_TEMPERATURE_GET))
+					c = model.HueActuator{
+						AssetBase:             assetBase,
+						SwitchState:           switchState,
+						Switch:                switchState,
+						DimmerState:           dimmerState,
+						Dimmer:                dimmerState,
+						RGBState:              rgbState,
+						RGB:                   rgbState,
+						ColorModeState:        colorMode,
+						ColorTemperatureState: colorTemperature,
+						ColorTemperature:      colorTemperature,
+					}
 				case abb.FID_ROOM_TEMPERATURE_CONTROLLER_MASTER_WITH_FAN, abb.FID_ROOM_TEMPERATURE_CONTROLLER_MASTER_WITHOUT_FAN, abb.FID_ROOM_TEMPERATURE_CONTROLLER_SLAVE:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {

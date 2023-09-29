@@ -127,6 +127,27 @@ func (c Dimmer) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
 }
 
+type HueActuator struct {
+	AssetBase
+	SwitchState           int8   `eliona:"switch_state" subtype:"input"`
+	DimmerState           int8   `eliona:"dimmer_state" subtype:"input"`
+	RGBState              string `eliona:"rgb_state" subtype:"input"`
+	ColorModeState        string `eliona:"color_mode_state" subtype:"input"`
+	ColorTemperatureState int8   `eliona:"color_temperature_state" subtype:"input"`
+	Switch                int8   `eliona:"switch" subtype:"output"`
+	Dimmer                int8   `eliona:"dimmer" subtype:"output"`
+	RGB                   string `eliona:"rgb" subtype:"output"`
+	ColorTemperature      int8   `eliona:"color_temperature" subtype:"output"`
+}
+
+func (c HueActuator) AssetType() string {
+	return "abb_free_at_home_hue_actuator"
+}
+
+func (c HueActuator) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
 type RTC struct {
 	AssetBase
 

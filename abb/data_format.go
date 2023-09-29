@@ -133,6 +133,7 @@ const (
 	FID_MOVEMENT_DETECTOR                              = 0x0011
 	FID_WINDOW_DOOR_SENSOR                             = 0x000F
 	FID_WINDOW_DOOR_POSITION_SENSOR                    = 0x0064
+	FID_HUE_ACTUATOR                                   = 0x002E
 )
 
 // *************************** VALUE MAP IN ELIONA
@@ -187,6 +188,11 @@ const (
 	PID_MOVEMENT_UNDER_CONSIDERATION_OF_BRIGHTNESS = 0x0006
 	PID_AL_WINDOW_DOOR                             = 0x0035
 	PID_AL_WINDOW_DOOR_POSITION                    = 0x0029
+	PID_RGB_COLOR_GET                              = 0x0117
+	PID_RGB_COLOR_SET                              = 0x0015
+	PID_COLOR_MODE_GET                             = 0x011D
+	PID_COLOR_TEMPERATURE_GET                      = 0x0118
+	PID_COLOR_TEMPERATURE_SET                      = 0x0016
 )
 
 func WsFormatToApiFormat(wsFormat *WsObject) map[string]System {
