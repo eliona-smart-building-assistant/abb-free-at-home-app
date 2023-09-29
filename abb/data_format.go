@@ -184,6 +184,7 @@ const (
 	PID_HEATING_ACTIVE                             = 0x014B
 	PID_HEATING_VALUE                              = 0x0131
 	PID_AL_MOVEMENT_DETECTOR_STATUS                = 0x0166
+	PID_MOVEMENT_UNDER_CONSIDERATION_OF_BRIGHTNESS = 0x0006
 	PID_AL_WINDOW_DOOR                             = 0x0035
 	PID_AL_WINDOW_DOOR_POSITION                    = 0x0029
 )

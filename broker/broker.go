@@ -526,7 +526,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 				case abb.FID_MOVEMENT_DETECTOR:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {
-						if input.PairingId == abb.PID_AL_MOVEMENT_DETECTOR_STATUS {
+						if input.PairingId == abb.PID_MOVEMENT_UNDER_CONSIDERATION_OF_BRIGHTNESS {
 							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -540,7 +540,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.OutputsBase = outputs
 
-					movement := parseInt8(channel.FindOutputValueByPairingID(abb.PID_AL_MOVEMENT_DETECTOR_STATUS))
+					movement := parseInt8(channel.FindOutputValueByPairingID(abb.PID_MOVEMENT_UNDER_CONSIDERATION_OF_BRIGHTNESS))
 					c = model.MovementSensor{
 						AssetBase: assetBase,
 						Movement:  movement,
