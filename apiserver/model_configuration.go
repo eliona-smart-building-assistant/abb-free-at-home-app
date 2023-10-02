@@ -25,6 +25,9 @@ type Configuration struct {
 	// ABB ProService API key.
 	ApiKey *string `json:"apiKey,omitempty"`
 
+	// ABB ProService organization UUID.
+	OrgUUID *string `json:"orgUUID,omitempty"`
+
 	// ABB MyBuildings Cloud API OAuth client ID.
 	ClientID *string `json:"clientID,omitempty"`
 

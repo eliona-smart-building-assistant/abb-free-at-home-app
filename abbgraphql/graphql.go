@@ -3,12 +3,16 @@ package abbgraphql
 import (
 	"abb-free-at-home/appdb"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/eliona-smart-building-assistant/go-utils/log"
 	graphql "github.com/hasura/go-graphql-client"
 	"github.com/hasura/go-graphql-client/pkg/jsonutil"
 )
+
+const proServiceUser = "eliona"
 
 type LocationsQuery struct {
 	ISystemFH []struct {
@@ -91,12 +95,19 @@ type SystemsQuery struct {
 	} `graphql:"ISystemFH"`
 }
 
-func GetSystems(httpClient *http.Client) (SystemsQuery, error) {
+func GetSystems(httpClient *http.Client, orgUUID string) (SystemsQuery, error) {
 	client := getClient(httpClient)
 	var query SystemsQuery
 	variables := map[string]interface{}{}
 	if err := client.Query(context.Background(), &query, variables); err != nil {
 		return SystemsQuery{}, err
+	}
+	if orgUUID != "" {
+		for _, system := range query.Systems {
+			if err := createUserIfNotExists(client, orgUUID, string(system.DtId)); err != nil {
+				return SystemsQuery{}, fmt.Errorf("creating user if not exists: %v", err)
+			}
+		}
 	}
 	return query, nil
 }
@@ -121,8 +132,28 @@ type setQuery struct {
 	} `graphql:"IDeviceFH(find: $deviceFind)"`
 }
 
-func SetDataPointValue(httpClient *http.Client, serialNumber string, channel int, datapoint string, value any) error {
-	var query setQuery
+type setQueryProService struct {
+	IDeviceFH []struct {
+		Channels []struct {
+			ChannelNumber graphql.Int `graphql:"channelNumber"`
+			Inputs        []struct {
+				Value struct {
+					DataPointService struct {
+						SetDataPointMethod struct {
+							CallMethod struct {
+								Code    graphql.Int    `graphql:"code"`
+								Message graphql.String `graphql:"message"`
+							} `graphql:"callMethod(value: $callValue, setOrgUser: $orgUser)"`
+						} `graphql:"SetDataPointMethod"`
+					} `graphql:"DataPointService"`
+				} `graphql:"value"`
+			} `graphql:"inputs(key: $inputKey)"`
+		} `graphql:"Channels(find: $channelFind)"`
+	} `graphql:"IDeviceFH(find: $deviceFind)"`
+}
+
+func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber string, channel int, datapoint string, value any) error {
+	client := getClient(httpClient)
 	variables := map[string]interface{}{
 		"deviceFind":  graphql.String(fmt.Sprintf("{'serialNumber': '%s'}", serialNumber)),
 		"channelFind": graphql.String(fmt.Sprintf("{'channelNumber': %d}", channel)),
@@ -130,22 +161,44 @@ func SetDataPointValue(httpClient *http.Client, serialNumber string, channel int
 		"callValue":   graphql.String(fmt.Sprintf("%v", value)),
 	}
 
-	client := getClient(httpClient)
-	if err := client.Query(context.Background(), &query, variables); err != nil {
-		return fmt.Errorf("querying: %v", err)
-	}
+	// TODO: This is ugly, but doesn't work with type casting. We should find a nicer solution.
+	if isProService {
+		query := setQueryProService{}
+		variables["orgUser"] = graphql.String(proServiceUser)
+		if err := client.Query(context.Background(), &query, variables); err != nil {
+			return fmt.Errorf("querying: %v", err)
+		}
 
-	// Check for errors
-	for _, device := range query.IDeviceFH {
-		for _, channel := range device.Channels {
-			for _, input := range channel.Inputs {
-				cm := input.Value.DataPointService.SetDataPointMethod.CallMethod
-				if cm.Code >= 300 {
-					return fmt.Errorf("setting data point on device %v channel %v input %v: %v (%v)", serialNumber, channel, datapoint, cm.Code, cm.Message)
+		// Check for errors
+		for _, device := range query.IDeviceFH {
+			for _, channel := range device.Channels {
+				for _, input := range channel.Inputs {
+					methodCall := input.Value.DataPointService.SetDataPointMethod.CallMethod
+					if methodCall.Code >= 300 {
+						return fmt.Errorf("setting data point on device %v channel %v input %v: %v (%v)", serialNumber, channel, datapoint, methodCall.Code, methodCall.Message)
+					}
+				}
+			}
+		}
+	} else {
+		query := setQuery{}
+		if err := client.Query(context.Background(), &query, variables); err != nil {
+			return fmt.Errorf("querying: %v", err)
+		}
+
+		// Check for errors
+		for _, device := range query.IDeviceFH {
+			for _, channel := range device.Channels {
+				for _, input := range channel.Inputs {
+					methodCall := input.Value.DataPointService.SetDataPointMethod.CallMethod
+					if methodCall.Code >= 300 {
+						return fmt.Errorf("setting data point on device %v channel %v input %v: %v (%v)", serialNumber, channel, datapoint, methodCall.Code, methodCall.Message)
+					}
 				}
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -218,6 +271,106 @@ func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<
 	close(ch)
 	fmt.Println("client exited")
 	return nil
+}
+
+// type systemsSimpleQuery struct {
+// 	Systems []struct {
+// 		DtId graphql.String `graphql:"dtId"`
+// 	} `graphql:"ISystemFH"`
+// }
+
+// func EnsureAllUsersAreCreated(httpClient *http.Client) error {
+// 	client := getClient(httpClient)
+// 	var systems systemsSimpleQuery
+// 	variables := map[string]interface{}{}
+// 	if err := client.Query(context.Background(), &systems, variables); err != nil {
+// 		return fmt.Errorf("fetching list of systems: %v", err)
+// 	}
+// 	for _, system := range systems.Systems {
+// 		if err := createUserIfNotExists(client, string(system.DtId)); err != nil {
+// 			return fmt.Errorf("creatíng user if not exists: %v", err)
+// 		}
+// 	}
+// 	return nil
+// }
+
+type createUserMutation struct {
+	ISystem []struct {
+		DeviceManagement struct {
+			RPCCreateUserWithPermissionsMethod struct {
+				CallMethod struct {
+					Code    graphql.Int
+					Details graphql.String
+				} `graphql:"callMethod(displayName: $displayName, user: $user, scopes: $scopes)"`
+			} `graphql:"RPCCreateUserWithPermissionsMethod"`
+		} `graphql:"DeviceManagement"`
+	} `graphql:"ISystem(dtId: $dtId)"`
+}
+
+func createUserIfNotExists(client *graphql.Client, orgUUID, dtId string) error {
+	username := fmt.Sprintf("%s_%s", orgUUID, proServiceUser)
+	if exists, err := userExists(client, dtId, username); err != nil {
+		return fmt.Errorf("checking if ProService user exists: %v", err)
+	} else if exists {
+		return nil
+	}
+
+	var mutation createUserMutation
+	variables := map[string]interface{}{
+		"dtId":        []graphql.String{graphql.String(dtId)},
+		"displayName": graphql.String("Eliona ProService"),
+		"user":        graphql.String(username),
+		"scopes":      []graphql.String{graphql.String("RemoteControl")},
+	}
+
+	jsonVars, err := json.MarshalIndent(variables, "", "    ")
+	if err != nil {
+		fmt.Println("Error encoding to JSON:", err)
+	}
+	s2, err := graphql.ConstructQuery(mutation, variables)
+	fmt.Printf("%v\n%v\n%v\n", s2, err, string(jsonVars))
+
+	if err := client.Query(context.Background(), &mutation, variables); err != nil {
+		return fmt.Errorf("failed to create user: %v", err)
+	}
+
+	for _, system := range mutation.ISystem {
+		if system.DeviceManagement.RPCCreateUserWithPermissionsMethod.CallMethod.Code != 204 {
+			methodCall := system.DeviceManagement.RPCCreateUserWithPermissionsMethod.CallMethod
+			return fmt.Errorf("API returned error code %d: %s", methodCall.Code, methodCall.Details)
+		}
+	}
+
+	log.Info("GraphQL", "Created a new user %s in system %s. Please log in to that system and give write permissions to this user.", proServiceUser, dtId)
+	return nil
+}
+
+type usersQuery struct {
+	ISystemFH []struct {
+		Users []struct {
+			UserName graphql.String
+		} `graphql:"Users"`
+	} `graphql:"ISystemFH(dtId: $dtId)"`
+}
+
+func userExists(client *graphql.Client, dtId string, userName string) (bool, error) {
+	var query usersQuery
+	variables := map[string]interface{}{
+		"dtId": []graphql.String{graphql.String(dtId)},
+	}
+
+	if err := client.Query(context.Background(), &query, variables); err != nil {
+		return false, fmt.Errorf("executing query: %v", err)
+	}
+
+	for _, system := range query.ISystemFH {
+		for _, user := range system.Users {
+			if string(user.UserName) == userName {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }
 
 //

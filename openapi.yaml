@@ -231,6 +231,11 @@ components:
           format: string
           description: ABB ProService API key.
           nullable: true
+        orgUUID:
+          type: string
+          format: string
+          description: ABB ProService organization UUID.
+          nullable: true
         clientID:
           type: string
           format: string

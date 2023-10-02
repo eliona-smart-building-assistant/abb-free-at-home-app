@@ -44,14 +44,15 @@ const (
 )
 
 type Credentials struct {
-	BasicAuth    bool
-	OAuth        bool
-	Digest       bool
+	BasicAuth    bool // Local API
+	OAuth        bool // MyBuildings Cloud API
+	Digest       bool // ProService API key
 	User         string
 	Password     string
 	ClientID     string
 	ClientSecret string
 	ApiKey       string
+	OrgUUID      string
 }
 
 type Api struct {
@@ -68,8 +69,9 @@ func NewProServiceApi(config apiserver.Configuration) *Api {
 	timeout := int(*config.RequestTimeout)
 	api := Api{
 		Credentials: Credentials{
-			Digest: true,
-			ApiKey: *config.ApiKey,
+			Digest:  true,
+			ApiKey:  *config.ApiKey,
+			OrgUUID: *config.OrgUUID,
 		},
 		BaseUrl: base_url,
 		Req:     abbconnection.NewHttpClient(true, true, timeout),
@@ -184,7 +186,7 @@ func (api *Api) GetConfiguration() (DataFormat, error) {
 }
 
 func (api *Api) getConfigurationGraphQL() (DataFormat, error) {
-	systemsQueryResult, err := abbgraphql.GetSystems(api.Auth.AuthorizedClient)
+	systemsQueryResult, err := abbgraphql.GetSystems(api.Auth.AuthorizedClient, api.Credentials.OrgUUID)
 	if err != nil {
 		return DataFormat{}, fmt.Errorf("getting systems from graphQL: %v", err)
 	}
@@ -270,7 +272,7 @@ func (api *Api) writeDatapointGraphQL(system string, deviceId string, channel st
 		return fmt.Errorf("parsing channel number: %v", err)
 	}
 
-	return abbgraphql.SetDataPointValue(api.Auth.AuthorizedClient, deviceId, c, datapoint, value)
+	return abbgraphql.SetDataPointValue(api.Auth.AuthorizedClient, api.Credentials.Digest, deviceId, c, datapoint, value)
 }
 
 func (api *Api) writeDatapointLegacy(system string, deviceId string, channel string, datapoint string, value any) error {

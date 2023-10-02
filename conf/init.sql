@@ -31,6 +31,7 @@ create table if not exists abb_free_at_home.configuration
 	expiry           timestamp,
 
 	api_key          text,
+	org_uuid         text,
 
 	api_url          text,
 	api_username     text,

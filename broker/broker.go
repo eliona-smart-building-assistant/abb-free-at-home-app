@@ -84,8 +84,8 @@ func getAPI(config *apiserver.Configuration) (*abb.Api, error) {
 		}
 		api = abb.NewMyBuildingsApi(*config)
 	case conf.ABB_PROSERVICE:
-		if config.ApiKey == nil {
-			return nil, fmt.Errorf("api key is missing in config")
+		if config.ApiKey == nil || config.OrgUUID == nil {
+			return nil, fmt.Errorf("api key or org-uuid is missing in config")
 		}
 		api = abb.NewProServiceApi(*config)
 	}

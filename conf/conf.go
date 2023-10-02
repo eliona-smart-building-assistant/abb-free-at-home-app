@@ -96,6 +96,10 @@ func dbConfigFromApiConfig(apiConfig apiserver.Configuration) (dbConfig appdb.Co
 		dbConfig.APIKey.String = *apiConfig.ApiKey
 		dbConfig.APIKey.Valid = true
 	}
+	if apiConfig.OrgUUID != nil {
+		dbConfig.OrgUUID.String = *apiConfig.OrgUUID
+		dbConfig.OrgUUID.Valid = true
+	}
 	if apiConfig.ClientID != nil {
 		dbConfig.ClientID.String = *apiConfig.ClientID
 		dbConfig.ClientID.Valid = true
@@ -158,6 +162,7 @@ func apiConfigFromDbConfig(dbConfig *appdb.Configuration) (apiConfig apiserver.C
 		apiConfig.AbbConnectionType = ABB_PROSERVICE
 	}
 	apiConfig.ApiKey = dbConfig.APIKey.Ptr()
+	apiConfig.OrgUUID = dbConfig.OrgUUID.Ptr()
 	apiConfig.ClientID = dbConfig.ClientID.Ptr()
 	apiConfig.ClientSecret = dbConfig.ClientSecret.Ptr()
 	apiConfig.AccessToken = dbConfig.AccessToken.Ptr()
