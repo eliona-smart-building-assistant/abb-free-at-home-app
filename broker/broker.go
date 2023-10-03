@@ -698,6 +698,28 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						InfoFlow:     infoFlow,
 						ActuatorFlow: actuatorFlow,
 					}
+				case abb.FID_SCENE, abb.FID_SPECIAL_SCENE_PANIC, abb.FID_SPECIAL_SCENE_ALL_OFF, abb.FID_SPECIAL_SCENE_ALL_BLINDS_UP, abb.FID_SPECIAL_SCENE_ALL_BLINDS_DOWN:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, input := range channel.Outputs {
+						if input.PairingId == abb.PID_AL_SCENE_CONTROL {
+							outputs[function_switch] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "switch_state",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_AL_SCENE_CONTROL))
+					c = model.Scene{
+						AssetBase:   assetBase,
+						SwitchState: switchState,
+					}
 				default:
 					c = model.Channel{
 						AssetBase: assetBase,

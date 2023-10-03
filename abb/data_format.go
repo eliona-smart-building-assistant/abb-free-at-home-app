@@ -134,6 +134,11 @@ const (
 	FID_WINDOW_DOOR_SENSOR                             = 0x000F
 	FID_WINDOW_DOOR_POSITION_SENSOR                    = 0x0064
 	FID_HUE_ACTUATOR                                   = 0x002E
+	FID_SCENE                                          = 0x4800
+	FID_SPECIAL_SCENE_PANIC                            = 0x4801
+	FID_SPECIAL_SCENE_ALL_OFF                          = 0x4802
+	FID_SPECIAL_SCENE_ALL_BLINDS_UP                    = 0x4803
+	FID_SPECIAL_SCENE_ALL_BLINDS_DOWN                  = 0x4804
 )
 
 // *************************** VALUE MAP IN ELIONA
@@ -161,6 +166,7 @@ const (
 const (
 	PID_SWITCH_ON_OFF_SET                          = 0x0001
 	PID_TIMED_START_STOP                           = 0x0002
+	PID_AL_SCENE_CONTROL                           = 0x0004
 	PID_PRESENCE                                   = 0x0007
 	PID_AL_RELATIVE_SET_VALUE_CONTROL              = 0x0010
 	PID_ABSOLUTE_VALUE_0_100_SET                   = 0x0011

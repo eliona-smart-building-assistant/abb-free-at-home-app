@@ -246,6 +246,19 @@ func (c MovementSensor) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
 }
 
+type Scene struct {
+	AssetBase
+	SwitchState int8 `eliona:"switch_state" subtype:"input"`
+}
+
+func (c Scene) AssetType() string {
+	return "abb_free_at_home_scene"
+}
+
+func (c Scene) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
 //
 
 func (tag *System) AdheresToFilter(filter [][]apiserver.FilterRule) (bool, error) {

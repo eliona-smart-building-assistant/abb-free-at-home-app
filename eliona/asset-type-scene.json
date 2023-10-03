@@ -1,0 +1,33 @@
+{
+	"attributes": [
+		{
+			"enable": true,
+			"name": "switch_state",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Szenezustand",
+				"en": "Scene state"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
+		}
+	],
+	"custom": false,
+	"icon": null,
+	"name": "abb_free_at_home_scene",
+	"translation": {
+		"de": "ABB-free@home Szene",
+		"en": "ABB-free@home Scene"
+	},
+	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
+	"vendor": "ABB"
+}
