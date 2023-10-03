@@ -188,8 +188,10 @@ const (
 	PID_MOVEMENT_UNDER_CONSIDERATION_OF_BRIGHTNESS = 0x0006
 	PID_AL_WINDOW_DOOR                             = 0x0035
 	PID_AL_WINDOW_DOOR_POSITION                    = 0x0029
-	PID_RGB_COLOR_GET                              = 0x0117
-	PID_RGB_COLOR_SET                              = 0x0015
+	PID_HSV_COLOR_GET                              = 0x011B
+	PID_HSV_HUE_SET                                = 0x0018
+	PID_HSV_SATURATION_SET                         = 0x0019
+	PID_HSV_VALUE_SET                              = 0x001A
 	PID_COLOR_MODE_GET                             = 0x011D
 	PID_COLOR_TEMPERATURE_GET                      = 0x0118
 	PID_COLOR_TEMPERATURE_SET                      = 0x0016

@@ -131,12 +131,14 @@ type HueActuator struct {
 	AssetBase
 	SwitchState           int8   `eliona:"switch_state" subtype:"input"`
 	DimmerState           int8   `eliona:"dimmer_state" subtype:"input"`
-	RGBState              string `eliona:"rgb_state" subtype:"input"`
+	HSVState              string `eliona:"hsv_state" subtype:"input"`
 	ColorModeState        string `eliona:"color_mode_state" subtype:"input"`
 	ColorTemperatureState int8   `eliona:"color_temperature_state" subtype:"input"`
 	Switch                int8   `eliona:"switch" subtype:"output"`
 	Dimmer                int8   `eliona:"dimmer" subtype:"output"`
-	RGB                   string `eliona:"rgb" subtype:"output"`
+	HSVHue                int16  `eliona:"hsv_hue" subtype:"output"`
+	HSVSaturation         int8   `eliona:"hsv_saturation" subtype:"output"`
+	HSVValue              int8   `eliona:"hsv_value" subtype:"output"`
 	ColorTemperature      int8   `eliona:"color_temperature" subtype:"output"`
 }
 

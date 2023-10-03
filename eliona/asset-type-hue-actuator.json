@@ -35,12 +35,12 @@
 		},
 		{
 			"enable": true,
-			"name": "rgb_state",
+			"name": "hsv_state",
 			"subtype": "input",
 			"type": "inputs-and-switches",
 			"translation": {
-				"de": "Aktuelle Farbe (RGB)",
-				"en": "Current Color (RGB)"
+				"de": "Aktuelle Farbe (HSV)",
+				"en": "Current Color (HSV)"
 			}
 		},
 		{
@@ -101,12 +101,32 @@
 		},
 		{
 			"enable": true,
-			"name": "rgb",
+			"name": "hsv_hue",
 			"subtype": "output",
 			"type": "inputs-and-switches",
 			"translation": {
-				"de": "Farbe (RGB)",
-				"en": "Color (RGB)"
+				"de": "HSV - Farbwert",
+				"en": "HSV - Hue"
+			}
+		},
+		{
+			"enable": true,
+			"name": "hsv_saturation",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "HSV - Farbsättigung",
+				"en": "HSV - Saturation"
+			}
+		},
+		{
+			"enable": true,
+			"name": "hsv_value",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "HSV - Hellwert",
+				"en": "HSV - Value"
 			}
 		},
 		{

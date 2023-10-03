@@ -45,7 +45,10 @@ const (
 	function_status_indication     = "status_indication"
 	function_presence              = "presence"
 	function_window_door           = "window_door"
-	function_rgb                   = "rgb"
+	function_hsv                   = "hsv"
+	function_hsv_hue               = "hsv_hue"
+	function_hsv_saturation        = "hsv_saturation"
+	function_hsv_value             = "hsv_value"
 	function_color_mode            = "color_mode"
 	function_color_temperature     = "color_temperature"
 )
@@ -65,7 +68,10 @@ var Functions = []string{
 	function_status_indication,
 	function_presence,
 	function_window_door,
-	function_rgb,
+	function_hsv,
+	function_hsv_hue,
+	function_hsv_saturation,
+	function_hsv_value,
 	function_color_mode,
 	function_color_temperature,
 }
@@ -322,17 +328,13 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_RGB_COLOR_GET:
-							outputs[function_rgb] = model.Datapoint{
+						case abb.PID_HSV_COLOR_GET:
+							outputs[function_hsv] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
 									{
 										Subtype:       elionaapi.SUBTYPE_INPUT,
-										AttributeName: "rgb_state",
-									},
-									{
-										Subtype:       elionaapi.SUBTYPE_OUTPUT,
-										AttributeName: "rgb",
+										AttributeName: "hsv_state",
 									},
 								},
 							}
@@ -371,8 +373,12 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 							inputs[function_switch] = datapoint
 						case abb.PID_ABSOLUTE_VALUE_0_100_SET:
 							inputs[function_dimmer] = datapoint
-						case abb.PID_RGB_COLOR_SET:
-							inputs[function_rgb] = datapoint
+						case abb.PID_HSV_HUE_SET:
+							inputs[function_hsv_hue] = datapoint
+						case abb.PID_HSV_SATURATION_SET:
+							inputs[function_hsv_saturation] = datapoint
+						case abb.PID_HSV_VALUE_SET:
+							inputs[function_hsv_value] = datapoint
 						case abb.PID_COLOR_TEMPERATURE_SET:
 							inputs[function_color_temperature] = datapoint
 						}
@@ -381,7 +387,8 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 
 					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET))
 					dimmerState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ACTUAL_DIM_VALUE_0_100_GET))
-					rgbState := channel.FindOutputValueByPairingID(abb.PID_RGB_COLOR_GET)
+					// TODO: HSV could be calculated for this to populate the three-channel inputs as well.
+					hsvState := channel.FindOutputValueByPairingID(abb.PID_HSV_COLOR_GET)
 					colorMode := channel.FindOutputValueByPairingID(abb.PID_COLOR_MODE_GET)
 					colorTemperature := parseInt8(channel.FindOutputValueByPairingID(abb.PID_COLOR_TEMPERATURE_GET))
 					c = model.HueActuator{
@@ -390,8 +397,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						Switch:                switchState,
 						DimmerState:           dimmerState,
 						Dimmer:                dimmerState,
-						RGBState:              rgbState,
-						RGB:                   rgbState,
+						HSVState:              hsvState,
 						ColorModeState:        colorMode,
 						ColorTemperatureState: colorTemperature,
 						ColorTemperature:      colorTemperature,
