@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 
 	"github.com/eliona-smart-building-assistant/go-utils/log"
@@ -152,13 +153,14 @@ type setQueryProService struct {
 	} `graphql:"IDeviceFH(find: $deviceFind)"`
 }
 
-func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber string, channel int, datapoint string, value any) error {
+func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber string, channel int, datapoint string, value float64) error {
 	client := getClient(httpClient)
+	val := formatFloat(value)
 	variables := map[string]interface{}{
 		"deviceFind":  graphql.String(fmt.Sprintf("{'serialNumber': '%s'}", serialNumber)),
 		"channelFind": graphql.String(fmt.Sprintf("{'channelNumber': %d}", channel)),
 		"inputKey":    graphql.String(datapoint),
-		"callValue":   graphql.String(fmt.Sprintf("%v", value)),
+		"callValue":   graphql.String(val),
 	}
 
 	// TODO: This is ugly, but doesn't work with type casting. We should find a nicer solution.
@@ -175,7 +177,7 @@ func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber 
 				for _, input := range channel.Inputs {
 					methodCall := input.Value.DataPointService.SetDataPointMethod.CallMethod
 					if methodCall.Code >= 300 {
-						return fmt.Errorf("setting data point on device %v channel %v input %v: %v (%v)", serialNumber, channel, datapoint, methodCall.Code, methodCall.Message)
+						return fmt.Errorf("setting data point value %s on device %v channel %v input %v: %v (%v)", val, serialNumber, channel, datapoint, methodCall.Code, methodCall.Message)
 					}
 				}
 			}
@@ -192,7 +194,7 @@ func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber 
 				for _, input := range channel.Inputs {
 					methodCall := input.Value.DataPointService.SetDataPointMethod.CallMethod
 					if methodCall.Code >= 300 {
-						return fmt.Errorf("setting data point on device %v channel %v input %v: %v (%v)", serialNumber, channel, datapoint, methodCall.Code, methodCall.Message)
+						return fmt.Errorf("setting data point value %s on device %v channel %v input %v: %v (%v)", val, serialNumber, channel, datapoint, methodCall.Code, methodCall.Message)
 					}
 				}
 			}
@@ -200,6 +202,14 @@ func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber 
 	}
 
 	return nil
+}
+
+func formatFloat(f float64) string {
+	if f == math.Trunc(f) {
+		return fmt.Sprintf("%.0f", f)
+	}
+	fmt.Println(f)
+	return fmt.Sprintf("%f", f)
 }
 
 type DataPoint struct {

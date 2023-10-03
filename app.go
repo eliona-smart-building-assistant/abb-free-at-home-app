@@ -179,7 +179,7 @@ func listenForOutputChanges() {
 					continue
 				}
 			default:
-				log.Error("app", "output: got non-float64 value %v", val)
+				log.Error("app", "output: got value of unknown type: %v", val)
 				continue
 			}
 			setAsset(output.AssetId, function, value)
@@ -217,7 +217,7 @@ func setAsset(assetID int32, function string, val float64) {
 	}
 	log.Info("broker", "setting value %v for asset %v", val, assetID)
 	if err := broker.SetInput(&config, input, val); err != nil {
-		log.Error("broker", "setting value %v for asset %v: %v", val, assetID, err)
+		log.Error("broker", "setting value for asset %v: %v", assetID, err)
 		return
 	}
 	input.LastWrittenValue.Float64 = val

@@ -757,7 +757,7 @@ func ListenForDataChanges(config *apiserver.Configuration, datapoints []appdb.Da
 	return nil
 }
 
-func SetInput(config *apiserver.Configuration, input appdb.Datapoint, value any) error {
+func SetInput(config *apiserver.Configuration, input appdb.Datapoint, value float64) error {
 	api, err := getAPI(config)
 	if err != nil {
 		return fmt.Errorf("getting API instance: %v", err)

@@ -259,14 +259,14 @@ func (api *Api) getConfigurationLegacy() (DataFormat, error) {
 	return DataFormat{Systems: systems}, err
 }
 
-func (api *Api) WriteDatapoint(system string, deviceId string, channel string, datapoint string, value any) error {
+func (api *Api) WriteDatapoint(system string, deviceId string, channel string, datapoint string, value float64) error {
 	if api.Auth.AuthorizedClient == nil {
 		return api.writeDatapointLegacy(system, deviceId, channel, datapoint, value)
 	}
 	return api.writeDatapointGraphQL(system, deviceId, channel, datapoint, value)
 }
 
-func (api *Api) writeDatapointGraphQL(system string, deviceId string, channel string, datapoint string, value any) error {
+func (api *Api) writeDatapointGraphQL(system string, deviceId string, channel string, datapoint string, value float64) error {
 	c, err := strconv.Atoi(channel)
 	if err != nil {
 		return fmt.Errorf("parsing channel number: %v", err)
@@ -275,7 +275,7 @@ func (api *Api) writeDatapointGraphQL(system string, deviceId string, channel st
 	return abbgraphql.SetDataPointValue(api.Auth.AuthorizedClient, api.Credentials.Digest, deviceId, c, datapoint, value)
 }
 
-func (api *Api) writeDatapointLegacy(system string, deviceId string, channel string, datapoint string, value any) error {
+func (api *Api) writeDatapointLegacy(system string, deviceId string, channel string, datapoint string, value float64) error {
 	dpPath := system + "/" + deviceId + "." + channel + "." + datapoint
 	reqBody := []byte(fmt.Sprint(value))
 
