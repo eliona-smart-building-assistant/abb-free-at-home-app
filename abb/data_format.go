@@ -79,15 +79,6 @@ type DataFormat struct {
 	Systems map[string]System `json:""`
 }
 
-func (c *Channel) FindInputValueByPairingID(pairingId int) string {
-	for _, i := range c.Inputs {
-		if i.PairingId == pairingId {
-			return i.Value
-		}
-	}
-	return ""
-}
-
 func (c *Channel) FindOutputValueByPairingID(pairingId int) string {
 	for _, o := range c.Outputs {
 		if o.PairingId == pairingId {

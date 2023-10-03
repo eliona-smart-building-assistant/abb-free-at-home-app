@@ -231,11 +231,10 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 
 					// Used for current values in Eliona one-time update
 					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET))
-					switchInput := parseInt8(channel.FindInputValueByPairingID(abb.PID_SWITCH_ON_OFF_SET))
 					c = model.Switch{
 						AssetBase:   assetBase,
 						SwitchState: switchState,
-						Switch:      switchInput,
+						Switch:      switchState,
 					}
 				case abb.FID_DIMMING_ACTUATOR:
 					outputs := make(map[string]model.Datapoint)
@@ -285,9 +284,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					assetBase.InputsBase = inputs
 
 					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET))
-					switchInput := parseInt8(channel.FindInputValueByPairingID(abb.PID_SWITCH_ON_OFF_SET))
 					dimmerState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ACTUAL_DIM_VALUE_0_100_GET))
-					dimmerInput := parseInt8(channel.FindInputValueByPairingID(abb.PID_ABSOLUTE_VALUE_0_100_SET))
 					c = model.Dimmer{
 						AssetBase:   assetBase,
 						SwitchState: switchState,
@@ -295,7 +292,6 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						DimmerState: dimmerState,
 						Dimmer:      dimmerState,
 					}
-					_, _ = dimmerInput, switchInput
 				case abb.FID_HUE_ACTUATOR:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {
