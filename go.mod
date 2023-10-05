@@ -4,8 +4,8 @@ go 1.20
 
 require (
 	github.com/eliona-smart-building-assistant/app-integration-tests v0.0.5
-	github.com/eliona-smart-building-assistant/go-eliona v1.9.16
-	github.com/eliona-smart-building-assistant/go-utils v1.0.38
+	github.com/eliona-smart-building-assistant/go-eliona v1.9.18
+	github.com/eliona-smart-building-assistant/go-utils v1.0.41
 	github.com/friendsofgo/errors v0.9.2
 	github.com/gorilla/mux v1.8.0
 	github.com/hasura/go-graphql-client v0.10.0
