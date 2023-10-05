@@ -82,6 +82,9 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 			return fmt.Errorf("upserting root asset: %v", err)
 		}
 		for _, system := range systems {
+			if len(system.Devices) == 0 {
+				continue
+			}
 			assetType := "abb_free_at_home_system"
 			_, systemAssetID, err := upsertAsset(assetData{
 				config:                  config,
@@ -97,6 +100,9 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 				return fmt.Errorf("upserting system %s: %v", system.GAI, err)
 			}
 			for _, device := range system.Devices {
+				if len(device.Channels) == 0 {
+					continue
+				}
 				assetType := "abb_free_at_home_device"
 				ad := assetData{
 					config:                  config,

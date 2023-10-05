@@ -708,9 +708,10 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						SwitchState: switchState,
 					}
 				default:
-					c = model.Channel{
-						AssetBase: assetBase,
-					}
+					continue // Don't create any asset if user cannot work with it.
+					// c = model.Channel{
+					// 	AssetBase: assetBase,
+					// }
 				}
 				d.Channels = append(d.Channels, c)
 			}
