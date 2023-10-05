@@ -36,9 +36,7 @@ import (
 )
 
 const (
-	base_url = "https://api.eu.mybuildings.abb.com"
-	// TODO: This shouldn't be hardcoded!
-	oauth2_redirect_url    = "https://api.eu.mybuildings.abb.com/external/oauth2helper/code/set/cd1a7768-680d-4040-ab76-b6a6f9c4bf9d"
+	base_url               = "https://api.eu.mybuildings.abb.com"
 	API_PATH_CONFIGURATION = "/fhapi/v1/api/rest/configuration"
 	API_PATH_UPSTREAM      = "/fhapi/v1/api/rest/datapoint/"
 )
@@ -99,7 +97,7 @@ func NewMyBuildingsApi(config apiserver.Configuration) *Api {
 			ClientID:     *config.ClientID,
 			ClientSecret: *config.ClientSecret,
 		},
-		Auth:    *NewABBAuthorization(*config.ClientID, *config.ClientSecret, oauth2_redirect_url),
+		Auth:    *NewABBAuthorization(*config.ClientID, *config.ClientSecret),
 		BaseUrl: base_url,
 		Req:     abbconnection.NewHttpClient(true, true, timeout),
 		token:   token,

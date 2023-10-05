@@ -31,8 +31,9 @@ import (
 )
 
 const (
-	ABB_AUTH_URL  = "https://eu.mybuildings.abb.com/sso/authorize"
-	ABB_TOKEN_URL = "https://eu.mybuildings.abb.com/sso/token"
+	ABB_AUTH_URL        = "https://eu.mybuildings.abb.com/sso/authorize"
+	ABB_TOKEN_URL       = "https://eu.mybuildings.abb.com/sso/token"
+	oauth2_redirect_url = "https://api.eu.mybuildings.abb.com/external/oauth2helper/code/set/"
 )
 
 type Oauth2Config struct {
@@ -69,13 +70,13 @@ type ABBAuth struct {
 	oauthTokenSrc    oauth2.TokenSource
 }
 
-func NewABBAuthorization(clientId string, clientSecret string, redirectURL string) *ABBAuth {
+func NewABBAuthorization(clientId string, clientSecret string) *ABBAuth {
 	abbAuth := ABBAuth{}
 
 	abbAuth.oauthConf = &oauth2.Config{
 		ClientID:     clientId,
 		ClientSecret: clientSecret,
-		RedirectURL:  redirectURL,
+		RedirectURL:  oauth2_redirect_url + clientId,
 		Scopes:       scopes,
 		Endpoint: oauth2.Endpoint{
 			AuthURL:   ABB_AUTH_URL,
