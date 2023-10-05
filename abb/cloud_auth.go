@@ -24,7 +24,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/http/httputil"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -171,8 +170,9 @@ func (t *apiKeyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	for key, value := range t.Headers {
 		req.Header.Add(key, value)
 	}
-	bytes, _ := httputil.DumpRequestOut(req, true)
-	fmt.Printf("%s\n", bytes)
+	// Useful for debugging
+	// bytes, _ := httputil.DumpRequestOut(req, true)
+	// fmt.Printf("%s\n", bytes)
 	return t.Transport.RoundTrip(req)
 }
 

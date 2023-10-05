@@ -3,7 +3,6 @@ package abbgraphql
 import (
 	"abb-free-at-home/appdb"
 	"context"
-	"encoding/json"
 	"fmt"
 	"math"
 	"net/http"
@@ -208,7 +207,6 @@ func formatFloat(f float64) string {
 	if f == math.Trunc(f) {
 		return fmt.Sprintf("%.0f", f)
 	}
-	fmt.Println(f)
 	return fmt.Sprintf("%f", f)
 }
 
@@ -279,7 +277,6 @@ func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<
 		return fmt.Errorf("running client: %v", err)
 	}
 	close(ch)
-	fmt.Println("client exited")
 	return nil
 }
 
@@ -332,13 +329,6 @@ func createUserIfNotExists(client *graphql.Client, orgUUID, dtId string) error {
 		"user":        graphql.String(username),
 		"scopes":      []graphql.String{graphql.String("RemoteControl")},
 	}
-
-	jsonVars, err := json.MarshalIndent(variables, "", "    ")
-	if err != nil {
-		fmt.Println("Error encoding to JSON:", err)
-	}
-	s2, err := graphql.ConstructQuery(mutation, variables)
-	fmt.Printf("%v\n%v\n%v\n", s2, err, string(jsonVars))
 
 	if err := client.Query(context.Background(), &mutation, variables); err != nil {
 		return fmt.Errorf("failed to create user: %v", err)

@@ -77,9 +77,9 @@ func collectData() {
 			log.Info("main", "Collecting %d finished", *config.Id)
 
 			common.RunOnceWithParam(func(config apiserver.Configuration) {
-				log.Info("main", "subscription %d started", *config.Id)
+				log.Info("main", "Subscription %d started.", *config.Id)
 				subscribeToDataChanges(&config)
-				log.Info("main", "subscription %d finished", *config.Id)
+				log.Info("main", "Subscription %d exited.", *config.Id)
 			}, config, fmt.Sprintf("subscription_%v", *config.Id))
 			time.Sleep(time.Second * time.Duration(config.RefreshInterval))
 		}, config, *config.Id)
@@ -127,6 +127,7 @@ func subscribeToDataChanges(config *apiserver.Configuration) {
 			log.Error("broker", "listen for data changes: %v", err)
 			return
 		}
+		log.Info("broker", "ABB subscription exited")
 	}()
 	for dp := range dataPointChan {
 		if abbTimerActive() {

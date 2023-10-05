@@ -166,10 +166,6 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 			GAI:  id,
 			Name: system.SysApName,
 		}
-		// fmt.Printf("system: %v\n", id)
-		// fmt.Printf("ConnectionState: %v\n", system.ConnectionState)
-		// fmt.Printf("Floorplan: %v\n", system.Floorplan)
-		// fmt.Printf("SysAP: %v\n", system.SysApName)
 		for id, device := range system.Devices {
 			d := model.Device{
 				ID:       id,
@@ -177,11 +173,6 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 				Name:     device.DisplayName.(string),
 				Location: device.Location,
 			}
-			// 	fmt.Printf("device: %v\n", id)
-			// 	fmt.Printf("DeviceName: %v\n", device.DisplayName)
-			// 	fmt.Printf("Floor: %v\n", device.Floor)
-			// 	fmt.Printf("Room: %v\n", device.Room)
-			// 	fmt.Printf("Interface: %v\n", device.Interface)
 			for id, channel := range device.Channels {
 				if channel.FunctionId == "" {
 					log.Debug("broker", "skipped channel %v with empty functionID", channel.DisplayName)
@@ -722,19 +713,6 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 				}
 				d.Channels = append(d.Channels, c)
-				// fmt.Printf("channel: %v\n", id)
-				// fmt.Printf("ChannelName: %v\n", channel.DisplayName)
-				// fmt.Printf("FunctionId: %v\n", channel.FunctionId)
-				// for id, input := range channel.Inputs {
-				// 	fmt.Printf("InputID: %v\n", id)
-				// 	fmt.Printf("InputPairingId: %v\n", input.PairingId)
-				// 	fmt.Printf("InputValue: %v\n", input.Value)
-				// }
-				// for id, output := range channel.Outputs {
-				// 	fmt.Printf("OutputID: %v\n", id)
-				// 	fmt.Printf("OutputPairingId: %v\n", output.PairingId)
-				// 	fmt.Printf("OutputValue: %v\n", output.Value)
-				// }
 			}
 			s.Devices = append(s.Devices, d)
 		}
