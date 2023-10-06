@@ -16,7 +16,7 @@
 package main
 
 import (
-	"abb-free-at-home/eliona"
+	"github.com/eliona-smart-building-assistant/go-eliona/asset"
 	"time"
 
 	"github.com/eliona-smart-building-assistant/go-eliona/app"
@@ -37,10 +37,10 @@ func main() {
 	boil.SetDB(database)
 
 	// Set the database logging level.
-	// if log.Lev() >= log.DebugLevel {
-	// 	boil.DebugMode = true
-	// 	boil.DebugWriter = log.GetWriter(log.DebugLevel, "database")
-	// }
+	if log.Lev() >= log.DebugLevel {
+		boil.DebugMode = true
+		boil.DebugWriter = log.GetWriter(log.DebugLevel, "database")
+	}
 
 	// Necessary to close used init resources, because db.Pool() is used in this app.
 	defer db.ClosePool()
@@ -48,7 +48,7 @@ func main() {
 	// Init the app before the first run.
 	app.Init(db.Pool(), app.AppName(),
 		app.ExecSqlFile("conf/init.sql"),
-		eliona.InitEliona,
+		asset.InitAssetTypeFiles("eliona/asset-type-*.json"),
 	)
 
 	// Starting the service to collect the data for this app.
