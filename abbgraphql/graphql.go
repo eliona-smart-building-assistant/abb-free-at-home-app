@@ -269,7 +269,7 @@ func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<
 		}
 		ch <- data.DataPointsSubscription
 		return nil
-	}, nil); err != nil {
+	}); err != nil {
 		return fmt.Errorf("establishing subscription: %v", err)
 	}
 
