@@ -12,9 +12,9 @@
   "dashboardTemplateNames": [
     "ABB-free@home"
   ],
-  "apiUrl": "http://localhost:3030/v1",
+  "apiUrl": "v1",
   "apiSpecificationPath": "/version/openapi.json",
-  "documentationUrl": "todo",
+  "documentationUrl": "https://doc.eliona.io/eliona/referenzen/app-entwicklung",
   "useEnvironment": [
     "CONNECTION_STRING",
     "API_ENDPOINT",

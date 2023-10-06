@@ -35,7 +35,5 @@ COPY eliona/*.json ./eliona/
 COPY openapi.yaml ./
 COPY metadata.json ./
 
-ENV APPNAME=abb-free-at-home
-
 ENV TZ=Europe/Zurich
 CMD [ "/app" ]

@@ -3,7 +3,7 @@ module abb-free-at-home
 go 1.20
 
 require (
-	github.com/eliona-smart-building-assistant/app-integration-tests v0.0.5
+	github.com/eliona-smart-building-assistant/app-integration-tests v1.0.1
 	github.com/eliona-smart-building-assistant/go-eliona v1.9.18
 	github.com/eliona-smart-building-assistant/go-utils v1.0.41
 	github.com/friendsofgo/errors v0.9.2
