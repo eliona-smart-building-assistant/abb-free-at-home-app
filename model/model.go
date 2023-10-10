@@ -3,9 +3,9 @@ package model
 import (
 	"abb-free-at-home/apiserver"
 	"fmt"
-	"reflect"
 
 	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
+	"github.com/eliona-smart-building-assistant/go-eliona/utils"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 )
 
@@ -156,11 +156,9 @@ type RTC struct {
 	SwitchState  int8    `eliona:"switch_state" subtype:"input"`
 	CurrentTemp  float32 `eliona:"current_temperature" subtype:"input"`
 	SetTempState float32 `eliona:"set_temperature_state" subtype:"input"`
-	EcoModeState int8    `eliona:"eco_mode_state" subtype:"input"`
 
 	Switch  int8    `eliona:"switch" subtype:"output"`
 	SetTemp float32 `eliona:"set_temperature" subtype:"output"`
-	EcoMode int8    `eliona:"eco_mode" subtype:"output"`
 }
 
 func (rtc RTC) AssetType() string {
@@ -263,7 +261,7 @@ func (c Scene) GAI() string {
 
 func (tag *System) AdheresToFilter(filter [][]apiserver.FilterRule) (bool, error) {
 	f := apiFilterToCommonFilter(filter)
-	fp, err := structToMap(tag)
+	fp, err := utils.StructToMap(tag)
 	if err != nil {
 		return false, fmt.Errorf("converting strict to map: %v", err)
 	}
@@ -272,33 +270,6 @@ func (tag *System) AdheresToFilter(filter [][]apiserver.FilterRule) (bool, error
 		return false, err
 	}
 	return adheres, nil
-}
-
-func structToMap(input interface{}) (map[string]string, error) {
-	if input == nil {
-		return nil, fmt.Errorf("input is nil")
-	}
-
-	inputValue := reflect.ValueOf(input)
-	inputType := reflect.TypeOf(input)
-
-	if inputValue.Kind() == reflect.Ptr {
-		inputValue = inputValue.Elem()
-		inputType = inputType.Elem()
-	}
-
-	if inputValue.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("input is not a struct")
-	}
-
-	output := make(map[string]string)
-	for i := 0; i < inputValue.NumField(); i++ {
-		fieldValue := inputValue.Field(i)
-		fieldType := inputType.Field(i)
-		output[fieldType.Name] = fieldValue.String()
-	}
-
-	return output, nil
 }
 
 func apiFilterToCommonFilter(input [][]apiserver.FilterRule) [][]common.FilterRule {
