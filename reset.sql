@@ -23,8 +23,8 @@ DELETE FROM versioning.patches
 WHERE app_name = 'abb-free-at-home';
 
 INSERT INTO public.eliona_store (app_name, category, version)
-VALUES ('abb-free-at-home', 'app', '1.0.0')
-	ON CONFLICT (app_name) DO UPDATE SET version = '1.0.0';
+VALUES ('abb-free-at-home', 'app', 'v1.0.2')
+	ON CONFLICT (app_name) DO UPDATE SET version = 'v1.0.2';
 
 INSERT INTO public.eliona_app (app_name, enable)
 VALUES ('abb-free-at-home', 't')

@@ -34,6 +34,8 @@ import (
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
+var once sync.Once
+
 func collectData() {
 	configs, err := conf.GetConfigs(context.Background())
 	if err != nil {
@@ -41,7 +43,9 @@ func collectData() {
 		return
 	}
 	if len(configs) == 0 {
-		log.Info("conf", "No configs in DB")
+		once.Do(func() {
+			log.Info("conf", "No configs in DB. Please configure the app in Eliona.")
+		})
 		return
 	}
 
