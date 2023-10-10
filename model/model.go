@@ -259,9 +259,9 @@ func (c Scene) GAI() string {
 
 //
 
-func (tag *System) AdheresToFilter(filter [][]apiserver.FilterRule) (bool, error) {
+func (sys *System) AdheresToFilter(filter [][]apiserver.FilterRule) (bool, error) {
 	f := apiFilterToCommonFilter(filter)
-	fp, err := utils.StructToMap(tag)
+	fp, err := utils.StructToMap(sys)
 	if err != nil {
 		return false, fmt.Errorf("converting strict to map: %v", err)
 	}
