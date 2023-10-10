@@ -44,26 +44,6 @@
 		},
 		{
 			"enable": true,
-			"name": "eco_mode_state",
-			"subtype": "input",
-			"type": "inputs-and-switches",
-			"translation": {
-				"de": "Ökomodus",
-				"en": "ECO mode"
-			},
-			"map": [
-				{
-					"value": 0,
-					"text": "OFF"
-				},
-				{
-					"value": 1,
-					"text": "ON"
-				}
-			]
-		},
-		{
-			"enable": true,
 			"name": "switch",
 			"subtype": "output",
 			"type": "inputs-and-switches",
@@ -92,26 +72,6 @@
 				"de": "Gewünschte Temperatur",
 				"en": "Desired temperature"
 			}
-		},
-		{
-			"enable": true,
-			"name": "eco_mode",
-			"subtype": "output",
-			"type": "inputs-and-switches",
-			"translation": {
-				"de": "Ökomodus",
-				"en": "ECO mode"
-			},
-			"map": [
-				{
-					"value": 0,
-					"text": "OFF"
-				},
-				{
-					"value": 1,
-					"text": "ON"
-				}
-			]
 		}
 	],
 	"custom": false,

@@ -156,11 +156,9 @@ type RTC struct {
 	SwitchState  int8    `eliona:"switch_state" subtype:"input"`
 	CurrentTemp  float32 `eliona:"current_temperature" subtype:"input"`
 	SetTempState float32 `eliona:"set_temperature_state" subtype:"input"`
-	EcoModeState int8    `eliona:"eco_mode_state" subtype:"input"`
 
 	Switch  int8    `eliona:"switch" subtype:"output"`
 	SetTemp float32 `eliona:"set_temperature" subtype:"output"`
-	EcoMode int8    `eliona:"eco_mode" subtype:"output"`
 }
 
 func (rtc RTC) AssetType() string {

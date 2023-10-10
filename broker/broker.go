@@ -431,20 +431,6 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_CONTROLLER_ECOMODE_SET:
-							outputs[function_eco_mode] = model.Datapoint{
-								Name: datapoint,
-								Map: model.DatapointMap{
-									{
-										Subtype:       elionaapi.SUBTYPE_INPUT,
-										AttributeName: "eco_mode_state",
-									},
-									{
-										Subtype:       elionaapi.SUBTYPE_OUTPUT,
-										AttributeName: "eco_mode",
-									},
-								},
-							}
 						}
 					}
 					assetBase.OutputsBase = outputs
@@ -456,8 +442,6 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 							inputs[function_switch] = datapoint
 						case abb.PID_ABS_TEMPERATURE_SET:
 							inputs[function_set_temperature] = datapoint
-						case abb.PID_CONTROLLER_ECOMODE_SET:
-							inputs[function_eco_mode] = datapoint
 						}
 					}
 					assetBase.InputsBase = inputs
@@ -465,7 +449,6 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_CONTROLLER_ON_OFF_PROTECTED_GET))
 					currentTemp := parseFloat32(channel.FindOutputValueByPairingID(abb.PID_MEASURED_TEMPERATURE))
 					setTemp := parseFloat32(channel.FindOutputValueByPairingID(abb.PID_SETPOINT_TEMPERATURE_GET))
-					ecoMode := parseInt8(channel.FindOutputValueByPairingID(abb.PID_CONTROLLER_ECOMODE_SET))
 					c = model.RTC{
 						AssetBase:    assetBase,
 						SwitchState:  switchState,
@@ -473,8 +456,6 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						CurrentTemp:  float32(currentTemp),
 						SetTemp:      float32(setTemp),
 						SetTempState: float32(setTemp),
-						EcoMode:      ecoMode,
-						EcoModeState: ecoMode,
 					}
 				case abb.FID_RADIATOR_THERMOSTAT:
 					outputs := make(map[string]model.Datapoint)
