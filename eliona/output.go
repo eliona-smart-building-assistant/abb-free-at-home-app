@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// on assets (only output attributes). Returns a channel with all changes.
+// ListenForOutputChanges on assets (only output attributes). Returns a channel with all changes.
 func ListenForOutputChanges() (chan api.Data, error) {
 	outputs := make(chan api.Data)
 	go http.ListenWebSocketWithReconnect(newWebsocket, time.Duration(0), outputs)

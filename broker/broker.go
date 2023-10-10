@@ -166,6 +166,11 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 			GAI:  id,
 			Name: system.SysApName,
 		}
+		if adheres, err := s.AdheresToFilter(config.AssetFilter); err != nil {
+			return nil, fmt.Errorf("determining whether system adheres to a filter: %v", err)
+		} else if !adheres {
+			continue
+		}
 		for id, device := range system.Devices {
 			d := model.Device{
 				ID:       id,
