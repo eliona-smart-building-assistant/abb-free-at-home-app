@@ -229,6 +229,16 @@ func setAsset(assetID int32, function string, val float64) {
 		log.Error("conf", "updating input: %v", err)
 		return
 	}
+
+	// This is an ugly hack to handle state when the RTC is in ECO mode. First
+	// call turns off the eco mode (and highens the temperature), second call
+	// really sets the temperature.
+	if function == broker.SET_TEMP_TWICE {
+		if err := conf.UpdateDatapoint(input); err != nil {
+			log.Error("conf", "updating input second time: %v", err)
+			return
+		}
+	}
 }
 
 var (

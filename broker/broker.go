@@ -37,7 +37,6 @@ const (
 	function_dimmer                = "dimmer"
 	function_measured_temperature  = "measured_temperature"
 	function_set_temperature       = "set_temperature"
-	function_eco_mode              = "eco_mode"
 	function_heating_flow          = "heating_flow"
 	function_actuator_heating_flow = "actuator_heating_flow"
 	function_heating_active        = "heating_active"
@@ -53,6 +52,8 @@ const (
 	function_color_temperature     = "color_temperature"
 )
 
+const SET_TEMP_TWICE = function_set_temperature
+
 var Functions = []string{
 	function_status,
 	// Note: Depends on order.
@@ -60,7 +61,6 @@ var Functions = []string{
 	function_switch,
 	function_measured_temperature,
 	function_set_temperature,
-	function_eco_mode,
 	function_heating_flow,
 	function_actuator_heating_flow,
 	function_heating_active,
