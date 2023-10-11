@@ -24,6 +24,7 @@ import (
 
 	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
 	"github.com/eliona-smart-building-assistant/go-eliona/asset"
+	"github.com/eliona-smart-building-assistant/go-eliona/client"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
@@ -77,6 +78,7 @@ func CreateLocationAssetsIfNecessary(config apiserver.Configuration, locations [
 
 func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.System) error {
 	for _, projectId := range conf.ProjIds(config) {
+		assetsCreated := 0
 		rootAssetID, err := upsertRootAsset(config, projectId)
 		if err != nil {
 			return fmt.Errorf("upserting root asset: %v", err)
@@ -86,7 +88,7 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 				continue
 			}
 			assetType := "abb_free_at_home_system"
-			_, systemAssetID, err := upsertAsset(assetData{
+			created, systemAssetID, err := upsertAsset(assetData{
 				config:                  config,
 				projectId:               projectId,
 				parentFunctionalAssetId: &rootAssetID,
@@ -98,6 +100,9 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 			})
 			if err != nil {
 				return fmt.Errorf("upserting system %s: %v", system.GAI, err)
+			}
+			if created {
+				assetsCreated++
 			}
 			for _, device := range system.Devices {
 				if len(device.Channels) == 0 {
@@ -120,9 +125,12 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 				}
 				ad.parentLocationalAssetId = locParentId
 
-				_, deviceAssetID, err := upsertAsset(ad)
+				created, deviceAssetID, err := upsertAsset(ad)
 				if err != nil {
 					return fmt.Errorf("upserting device %s: %v", device.GAI, err)
+				}
+				if created {
+					assetsCreated++
 				}
 				for _, channel := range device.Channels {
 					created, channelAssetID, err := upsertAsset(assetData{
@@ -137,6 +145,9 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 					})
 					if err != nil {
 						return fmt.Errorf("upserting channel %s: %v", channel.GAI(), err)
+					}
+					if created {
+						assetsCreated++
 					}
 					if created {
 						for function, datapoint := range channel.Inputs() {
@@ -158,6 +169,11 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 						}
 					}
 				}
+			}
+		}
+		if assetsCreated > 0 {
+			if err := notifyUsers(projectId, assetsCreated); err != nil {
+				return fmt.Errorf("notifying users about CAC: %v", err)
 			}
 		}
 	}
@@ -233,4 +249,30 @@ func upsertAsset(d assetData) (created bool, assetID int32, err error) {
 	log.Debug("eliona", "Created new asset for project %s and device %s.", d.projectId, d.identifier)
 
 	return true, *newID, nil
+}
+
+func notifyUsers(projectId string, assetsCreated int) error {
+	users, _, err := client.NewClient().UsersAPI.GetUsers(client.AuthenticationContext()).Execute()
+	if err != nil {
+		return fmt.Errorf("fetching all users: %v", err)
+	}
+	for _, user := range users {
+		n := api.Notification{
+			User:      user.Email,
+			ProjectId: *api.NewNullableString(&projectId),
+			Message: *api.NewNullableTranslation(&api.Translation{
+				De: api.PtrString(fmt.Sprintf("Die kontinuierliche Asset-Erstellung für ABB-Free@home hat %v neue Assets hinzugefügt. Diese sind nun im Asset-Management verfügbar.", assetsCreated)),
+				En: api.PtrString(fmt.Sprintf("The Continuous Asset Creation for ABB-Free@home added %v new assets. They are now available in Asset Management.", assetsCreated)),
+			}),
+		}
+		receipt, _, err := client.NewClient().CommunicationAPI.
+			PostNotification(client.AuthenticationContext()).
+			Notification(n).
+			Execute()
+		log.Debug("eliona", "posted notification about CAC: %v", receipt)
+		if err != nil {
+			return fmt.Errorf("posting notification: %v", err)
+		}
+	}
+	return nil
 }
