@@ -39,9 +39,6 @@ func GetLocations(httpClient *http.Client) (LocationsQuery, error) {
 }
 
 type SystemsQuery struct {
-	Refresh struct {
-		Refreshed graphql.Boolean `graphql:"refreshed"`
-	} `graphql:"Refresh"`
 	Systems []struct {
 		DtId   graphql.String `graphql:"dtId"`
 		Assets []struct {
