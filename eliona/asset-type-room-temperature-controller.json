@@ -37,6 +37,8 @@
 			"subtype": "input",
 			"type": "inputs-and-switches",
 			"unit": "˚C",
+			"min": 7,
+			"max": 35,
 			"translation": {
 				"de": "Eingestellte Temperatur",
 				"en": "Set temperature"
@@ -68,6 +70,8 @@
 			"subtype": "output",
 			"type": "inputs-and-switches",
 			"unit": "˚C",
+			"min": 7,
+			"max": 35,
 			"translation": {
 				"de": "Gewünschte Temperatur",
 				"en": "Desired temperature"
