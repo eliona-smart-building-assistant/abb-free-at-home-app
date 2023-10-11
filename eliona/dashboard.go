@@ -207,28 +207,6 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 					},
 				},
 				{
-					ElementSequence: nullableInt32(2),
-					AssetId:         rtc.Id,
-					Data: map[string]interface{}{
-						"attribute":   "eco_mode",
-						"description": "ECO mode",
-						"key":         "_CURRENT",
-						"seq":         1,
-						"subtype":     "output",
-					},
-				},
-				{
-					ElementSequence: nullableInt32(2),
-					AssetId:         rtc.Id,
-					Data: map[string]interface{}{
-						"attribute":   "eco_mode",
-						"description": "ECO mode",
-						"key":         "_SETPOINT",
-						"seq":         1,
-						"subtype":     "output",
-					},
-				},
-				{
 					ElementSequence: nullableInt32(3),
 					AssetId:         rtc.Id,
 					Data: map[string]interface{}{
