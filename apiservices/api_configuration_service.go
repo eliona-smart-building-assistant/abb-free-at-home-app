@@ -63,7 +63,7 @@ func (s *ConfigurationApiService) GetConfigurationById(ctx context.Context, conf
 
 func (s *ConfigurationApiService) PutConfigurationById(ctx context.Context, configId int64, config apiserver.Configuration) (apiserver.ImplResponse, error) {
 	config.Id = &configId
-	upsertedConfig, err := conf.InsertConfig(ctx, config)
+	upsertedConfig, err := conf.UpsertConfig(ctx, config)
 	if err != nil {
 		return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
 	}

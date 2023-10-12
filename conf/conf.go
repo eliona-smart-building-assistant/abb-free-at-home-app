@@ -50,6 +50,17 @@ func InsertConfig(ctx context.Context, config apiserver.Configuration) (apiserve
 	return config, nil
 }
 
+func UpsertConfig(ctx context.Context, config apiserver.Configuration) (apiserver.Configuration, error) {
+	dbConfig, err := dbConfigFromApiConfig(config)
+	if err != nil {
+		return apiserver.Configuration{}, fmt.Errorf("creating DB config from API config: %v", err)
+	}
+	if err := dbConfig.UpsertG(ctx, true, []string{"id"}, boil.Blacklist("id"), boil.Infer()); err != nil {
+		return apiserver.Configuration{}, fmt.Errorf("inserting DB config: %v", err)
+	}
+	return config, nil
+}
+
 func GetConfig(ctx context.Context, configID int64) (*apiserver.Configuration, error) {
 	dbConfig, err := appdb.Configurations(
 		appdb.ConfigurationWhere.ID.EQ(configID),
