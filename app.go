@@ -161,34 +161,38 @@ func listenApi() {
 	log.Fatal("main", "API server: %v", err)
 }
 
+// Eliona -> ABB
 func listenForOutputChanges() {
-	outputs, err := eliona.ListenForOutputChanges()
-	if err != nil {
-		log.Error("eliona", "listening for output changes: %v", err)
-		return
-	}
-	for output := range outputs {
-		for _, function := range broker.Functions {
-			val, ok := output.Data[function]
-			if !ok {
-				continue
-			}
-			var value float64
-
-			switch v := val.(type) {
-			case float64:
-				value = v
-			case string:
-				if value, err = strconv.ParseFloat(v, 64); err != nil {
-					log.Error("app", "output: parsing %v: %v", v, err)
+	for { // We want to restart listening in case something breaks.
+		outputs, err := eliona.ListenForOutputChanges()
+		if err != nil {
+			log.Error("eliona", "listening for output changes: %v", err)
+			return
+		}
+		for output := range outputs {
+			for _, function := range broker.Functions {
+				val, ok := output.Data[function]
+				if !ok {
 					continue
 				}
-			default:
-				log.Error("app", "output: got value of unknown type: %v", val)
-				continue
+				var value float64
+
+				switch v := val.(type) {
+				case float64:
+					value = v
+				case string:
+					if value, err = strconv.ParseFloat(v, 64); err != nil {
+						log.Error("app", "output: parsing %v: %v", v, err)
+						continue
+					}
+				default:
+					log.Error("app", "output: got value of unknown type: %v", val)
+					continue
+				}
+				setAsset(output.AssetId, function, value)
 			}
-			setAsset(output.AssetId, function, value)
 		}
+		time.Sleep(time.Second * 5) // Give the server a little break.
 	}
 }
 
