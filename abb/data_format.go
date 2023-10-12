@@ -34,8 +34,7 @@ type WsObject map[string]struct {
 }
 
 type Input struct {
-	Value     string `json:"value"`
-	PairingId int    `json:"pairingID"`
+	PairingId int `json:"pairingID"`
 }
 type Output struct {
 	Value     string `json:"value"`
@@ -226,9 +225,7 @@ func WsFormatToApiFormat(wsFormat *WsObject) map[string]System {
 				}
 				c.Outputs[assignmentSplit[2]] = o
 			} else {
-				i := Input{
-					Value: value.(string),
-				}
+				i := Input{}
 				c.Inputs[assignmentSplit[2]] = i
 			}
 

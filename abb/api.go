@@ -227,7 +227,6 @@ func convertToDataFormat(query abbgraphql.SystemsQuery) DataFormat {
 						log.Printf("Error converting pairingId from hex: %v", err)
 					}
 					in.PairingId = int(pairingId)
-					in.Value = string(input.Value.DataPointService.RequestDataPointValue.Value)
 					channel.Inputs[string(input.Key)] = in
 				}
 				device.Channels[strconv.Itoa(int(ch.ChannelNumber))] = channel

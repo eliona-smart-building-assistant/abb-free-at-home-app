@@ -78,13 +78,6 @@ type SystemsQuery struct {
 						Name      struct {
 							En graphql.String `graphql:"en"`
 						} `graphql:"Name"`
-						Dpt              graphql.String `graphql:"dpt"`
-						DataPointService struct {
-							RequestDataPointValue struct {
-								Value graphql.String `graphql:"value"`
-								Time  graphql.String `graphql:"time"`
-							} `graphql:"RequestDataPointValue"`
-						} `graphql:"DataPointService"`
 					} `graphql:"value"`
 				} `graphql:"inputs"`
 			} `graphql:"Channels"`
