@@ -80,7 +80,7 @@ type SystemsQuery struct {
 						} `graphql:"Name"`
 					} `graphql:"value"`
 				} `graphql:"inputs"`
-			} `graphql:"Channels"`
+			} `graphql:"Channels(selective:false)"`
 		} `graphql:"Assets"`
 	} `graphql:"ISystemFH"`
 }
