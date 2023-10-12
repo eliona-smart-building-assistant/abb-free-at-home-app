@@ -157,10 +157,6 @@ func subscribeToDataChanges(config *apiserver.Configuration) {
 		log.Info("broker", "ABB subscription exited")
 	}()
 	for dp := range dataPointChan {
-		if abbTimerActive() {
-			return
-		}
-		startElionaTimer()
 		datapoint, err := conf.FindDatapoint(string(dp.SerialNumber), string(dp.ChannelNumber), string(dp.DatapointId))
 		if err != nil {
 			log.Error("conf", "finding datapoint %+v: %v", dp, err)
@@ -220,10 +216,6 @@ func listenForOutputChanges() {
 }
 
 func setAsset(assetID int32, function string, val float64) {
-	if elionaTimerActive() {
-		return
-	}
-	startAbbTimer()
 	input, err := conf.FetchInput(assetID, function)
 	if err != nil {
 		log.Fatal("conf", "fetching input for assetID %v function %v: %v", assetID, function, err)
@@ -270,61 +262,4 @@ func setAsset(assetID int32, function string, val float64) {
 			return
 		}
 	}
-}
-
-var (
-	mu                    sync.Mutex
-	abbIgnoreTimer        *time.Timer
-	elionaIgnoreTimer     *time.Timer
-	abbTimerActiveFlag    bool
-	elionaTimerActiveFlag bool
-	ignoreDuration        = 500 * time.Millisecond
-)
-
-func startAbbTimer() {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if abbIgnoreTimer != nil {
-		abbIgnoreTimer.Stop()
-	}
-	abbIgnoreTimer = time.NewTimer(ignoreDuration)
-	abbTimerActiveFlag = true
-
-	go func() {
-		<-abbIgnoreTimer.C
-		mu.Lock()
-		abbTimerActiveFlag = false
-		mu.Unlock()
-	}()
-}
-
-func startElionaTimer() {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if elionaIgnoreTimer != nil {
-		elionaIgnoreTimer.Stop()
-	}
-	elionaIgnoreTimer = time.NewTimer(ignoreDuration)
-	elionaTimerActiveFlag = true
-
-	go func() {
-		<-elionaIgnoreTimer.C
-		mu.Lock()
-		elionaTimerActiveFlag = false
-		mu.Unlock()
-	}()
-}
-
-func abbTimerActive() bool {
-	mu.Lock()
-	defer mu.Unlock()
-	return abbTimerActiveFlag
-}
-
-func elionaTimerActive() bool {
-	mu.Lock()
-	defer mu.Unlock()
-	return elionaTimerActiveFlag
 }
