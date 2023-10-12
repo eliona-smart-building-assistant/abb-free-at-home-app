@@ -35,6 +35,7 @@ import (
 )
 
 var once sync.Once
+var resynchronizeTrigger = make(chan struct{}, 1)
 
 func collectData() {
 	configs, err := conf.GetConfigs(context.Background())
@@ -70,23 +71,44 @@ func collectData() {
 				*config.RequestTimeout,
 				*config.ProjectIDs)
 		}
+		collectAndStartSubscription(config)
+	}
+}
+
+func collectAndStartSubscription(config apiserver.Configuration) {
+	common.RunOnceWithParam(func(config apiserver.Configuration) {
+		log.Info("main", "Collecting %d started", *config.Id)
+
+		if err := collectResources(&config); err != nil {
+			return // Error is handled in the method itself.
+		}
+
+		log.Info("main", "Collecting %d finished", *config.Id)
 
 		common.RunOnceWithParam(func(config apiserver.Configuration) {
-			log.Info("main", "Collecting %d started", *config.Id)
-
-			if err := collectResources(&config); err != nil {
-				return // Error is handled in the method itself.
+			log.Info("main", "Subscription %d started.", *config.Id)
+			subscribeToDataChanges(&config)
+			log.Info("main", "Subscription %d exited. Restarting ...", *config.Id)
+			triggerResynchronize()
+		}, config, fmt.Sprintf("subscription_%v", *config.Id))
+		for {
+			// Wait for the time duration or a trigger
+			select {
+			case <-time.After(time.Second * time.Duration(config.RefreshInterval)):
+				return
+			case <-resynchronizeTrigger:
+				log.Info("main", "Resynchronization trigerred.")
+				return
 			}
+		}
+	}, config, *config.Id)
+}
 
-			log.Info("main", "Collecting %d finished", *config.Id)
-
-			common.RunOnceWithParam(func(config apiserver.Configuration) {
-				log.Info("main", "Subscription %d started.", *config.Id)
-				subscribeToDataChanges(&config)
-				log.Info("main", "Subscription %d exited.", *config.Id)
-			}, config, fmt.Sprintf("subscription_%v", *config.Id))
-			time.Sleep(time.Second * time.Duration(config.RefreshInterval))
-		}, config, *config.Id)
+func triggerResynchronize() {
+	// Non-blocking Send: This ensures that sending to the channel doesn't block if the channel buffer is full.
+	select {
+	case resynchronizeTrigger <- struct{}{}:
+	default:
 	}
 }
 
@@ -118,6 +140,7 @@ func collectResources(config *apiserver.Configuration) error {
 	return nil
 }
 
+// ABB -> Eliona
 func subscribeToDataChanges(config *apiserver.Configuration) {
 	datapoints, err := conf.FetchAllDatapoints()
 	if err != nil {
