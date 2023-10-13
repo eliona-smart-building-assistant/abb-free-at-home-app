@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"strings"
 
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 	graphql "github.com/hasura/go-graphql-client"
@@ -81,6 +82,7 @@ type SystemsQuery struct {
 					} `graphql:"value"`
 				} `graphql:"inputs"`
 			} `graphql:"Channels(selective:false)"`
+			//} `graphql:"Channels(find:$channelFind, selective:false)"`
 		} `graphql:"Assets"`
 	} `graphql:"ISystemFH"`
 }
@@ -88,7 +90,11 @@ type SystemsQuery struct {
 func GetSystems(httpClient *http.Client, orgUUID string) (SystemsQuery, error) {
 	client := getClient(httpClient)
 	var query SystemsQuery
-	variables := map[string]interface{}{}
+	variables := map[string]interface{}{
+		// Fetch only supported devices.
+		// TODO: This is currently blocked by ABB's firewall. Once  they fix it, re-enable this variable (along with change in SystemsQuery).
+		// "channelFind": graphql.String(fmt.Sprintf("{'functionId': {'$in': %s}}", formatSlice(model.GetFunctionIDsList()))),
+	}
 	if err := client.Query(context.Background(), &query, variables); err != nil {
 		return SystemsQuery{}, err
 	}
@@ -100,6 +106,14 @@ func GetSystems(httpClient *http.Client, orgUUID string) (SystemsQuery, error) {
 		}
 	}
 	return query, nil
+}
+
+func formatSlice(slice []string) string {
+	var formattedSlice []string
+	for _, s := range slice {
+		formattedSlice = append(formattedSlice, fmt.Sprintf("'%s'", s))
+	}
+	return "[" + strings.Join(formattedSlice, ",") + "]"
 }
 
 type setQuery struct {
