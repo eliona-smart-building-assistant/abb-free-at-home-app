@@ -195,11 +195,11 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					NameBase: channel.DisplayName.(string) + " " + id,
 				}
 				switch fid {
-				case abb.FID_SWITCH_ACTUATOR:
+				case model.FID_SWITCH_ACTUATOR:
 					// Used for ABB -> Eliona
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {
-						if input.PairingId == abb.PID_ON_OFF_INFO_GET {
+						if input.PairingId == model.PID_ON_OFF_INFO_GET {
 							outputs[function_switch] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -219,24 +219,24 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					// Used for Eliona -> ABB
 					inputs := make(map[string]string)
 					for datapoint, input := range channel.Inputs {
-						if input.PairingId == abb.PID_SWITCH_ON_OFF_SET {
+						if input.PairingId == model.PID_SWITCH_ON_OFF_SET {
 							inputs[function_switch] = datapoint
 						}
 					}
 					assetBase.InputsBase = inputs
 
 					// Used for current values in Eliona one-time update
-					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET))
+					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_ON_OFF_INFO_GET))
 					c = model.Switch{
 						AssetBase:   assetBase,
 						SwitchState: switchState,
 						Switch:      switchState,
 					}
-				case abb.FID_DIMMING_ACTUATOR:
+				case model.FID_DIMMING_ACTUATOR:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {
 						switch output.PairingId {
-						case abb.PID_ON_OFF_INFO_GET:
+						case model.PID_ON_OFF_INFO_GET:
 							outputs[function_switch] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -250,7 +250,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_ACTUAL_DIM_VALUE_0_100_GET:
+						case model.PID_ACTUAL_DIM_VALUE_0_100_GET:
 							outputs[function_dimmer] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -271,16 +271,16 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					inputs := make(map[string]string)
 					for datapoint, input := range channel.Inputs {
 						switch input.PairingId {
-						case abb.PID_SWITCH_ON_OFF_SET:
+						case model.PID_SWITCH_ON_OFF_SET:
 							inputs[function_switch] = datapoint
-						case abb.PID_ABSOLUTE_VALUE_0_100_SET:
+						case model.PID_ABSOLUTE_VALUE_0_100_SET:
 							inputs[function_dimmer] = datapoint
 						}
 					}
 					assetBase.InputsBase = inputs
 
-					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET))
-					dimmerState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ACTUAL_DIM_VALUE_0_100_GET))
+					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_ON_OFF_INFO_GET))
+					dimmerState := parseInt8(channel.FindOutputValueByPairingID(model.PID_ACTUAL_DIM_VALUE_0_100_GET))
 					c = model.Dimmer{
 						AssetBase:   assetBase,
 						SwitchState: switchState,
@@ -288,11 +288,11 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						DimmerState: dimmerState,
 						Dimmer:      dimmerState,
 					}
-				case abb.FID_HUE_ACTUATOR:
+				case model.FID_HUE_ACTUATOR:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {
 						switch output.PairingId {
-						case abb.PID_ON_OFF_INFO_GET:
+						case model.PID_ON_OFF_INFO_GET:
 							outputs[function_switch] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -306,7 +306,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_ACTUAL_DIM_VALUE_0_100_GET:
+						case model.PID_ACTUAL_DIM_VALUE_0_100_GET:
 							outputs[function_dimmer] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -320,7 +320,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_HSV_COLOR_GET:
+						case model.PID_HSV_COLOR_GET:
 							outputs[function_hsv] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -330,7 +330,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_COLOR_MODE_GET:
+						case model.PID_COLOR_MODE_GET:
 							outputs[function_color_mode] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -340,7 +340,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_COLOR_TEMPERATURE_GET:
+						case model.PID_COLOR_TEMPERATURE_GET:
 							outputs[function_color_temperature] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -361,28 +361,28 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					inputs := make(map[string]string)
 					for datapoint, input := range channel.Inputs {
 						switch input.PairingId {
-						case abb.PID_SWITCH_ON_OFF_SET:
+						case model.PID_SWITCH_ON_OFF_SET:
 							inputs[function_switch] = datapoint
-						case abb.PID_ABSOLUTE_VALUE_0_100_SET:
+						case model.PID_ABSOLUTE_VALUE_0_100_SET:
 							inputs[function_dimmer] = datapoint
-						case abb.PID_HSV_HUE_SET:
+						case model.PID_HSV_HUE_SET:
 							inputs[function_hsv_hue] = datapoint
-						case abb.PID_HSV_SATURATION_SET:
+						case model.PID_HSV_SATURATION_SET:
 							inputs[function_hsv_saturation] = datapoint
-						case abb.PID_HSV_VALUE_SET:
+						case model.PID_HSV_VALUE_SET:
 							inputs[function_hsv_value] = datapoint
-						case abb.PID_COLOR_TEMPERATURE_SET:
+						case model.PID_COLOR_TEMPERATURE_SET:
 							inputs[function_color_temperature] = datapoint
 						}
 					}
 					assetBase.InputsBase = inputs
 
-					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ON_OFF_INFO_GET))
-					dimmerState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ACTUAL_DIM_VALUE_0_100_GET))
+					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_ON_OFF_INFO_GET))
+					dimmerState := parseInt8(channel.FindOutputValueByPairingID(model.PID_ACTUAL_DIM_VALUE_0_100_GET))
 					// TODO: HSV could be calculated for this to populate the three-channel inputs as well.
-					hsvState := channel.FindOutputValueByPairingID(abb.PID_HSV_COLOR_GET)
-					colorMode := channel.FindOutputValueByPairingID(abb.PID_COLOR_MODE_GET)
-					colorTemperature := parseInt8(channel.FindOutputValueByPairingID(abb.PID_COLOR_TEMPERATURE_GET))
+					hsvState := channel.FindOutputValueByPairingID(model.PID_HSV_COLOR_GET)
+					colorMode := channel.FindOutputValueByPairingID(model.PID_COLOR_MODE_GET)
+					colorTemperature := parseInt8(channel.FindOutputValueByPairingID(model.PID_COLOR_TEMPERATURE_GET))
 					c = model.HueActuator{
 						AssetBase:             assetBase,
 						SwitchState:           switchState,
@@ -394,11 +394,11 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						ColorTemperatureState: colorTemperature,
 						ColorTemperature:      colorTemperature,
 					}
-				case abb.FID_ROOM_TEMPERATURE_CONTROLLER_MASTER_WITH_FAN, abb.FID_ROOM_TEMPERATURE_CONTROLLER_MASTER_WITHOUT_FAN, abb.FID_ROOM_TEMPERATURE_CONTROLLER_SLAVE:
+				case model.FID_ROOM_TEMPERATURE_CONTROLLER_MASTER_WITH_FAN, model.FID_ROOM_TEMPERATURE_CONTROLLER_MASTER_WITHOUT_FAN, model.FID_ROOM_TEMPERATURE_CONTROLLER_SLAVE:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {
 						switch output.PairingId {
-						case abb.PID_CONTROLLER_ON_OFF_PROTECTED_GET:
+						case model.PID_CONTROLLER_ON_OFF_PROTECTED_GET:
 							outputs[function_switch] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -412,7 +412,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_MEASURED_TEMPERATURE:
+						case model.PID_MEASURED_TEMPERATURE:
 							outputs[function_measured_temperature] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -422,7 +422,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_SETPOINT_TEMPERATURE_GET:
+						case model.PID_SETPOINT_TEMPERATURE_GET:
 							outputs[function_set_temperature] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -443,17 +443,17 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					inputs := make(map[string]string)
 					for datapoint, input := range channel.Inputs {
 						switch input.PairingId {
-						case abb.PID_CONTROLLER_REQ_ON_OFF_SET:
+						case model.PID_CONTROLLER_REQ_ON_OFF_SET:
 							inputs[function_switch] = datapoint
-						case abb.PID_ABS_TEMPERATURE_SET:
+						case model.PID_ABS_TEMPERATURE_SET:
 							inputs[function_set_temperature] = datapoint
 						}
 					}
 					assetBase.InputsBase = inputs
 
-					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_CONTROLLER_ON_OFF_PROTECTED_GET))
-					currentTemp := parseFloat32(channel.FindOutputValueByPairingID(abb.PID_MEASURED_TEMPERATURE))
-					setTemp := parseFloat32(channel.FindOutputValueByPairingID(abb.PID_SETPOINT_TEMPERATURE_GET))
+					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_CONTROLLER_ON_OFF_PROTECTED_GET))
+					currentTemp := parseFloat32(channel.FindOutputValueByPairingID(model.PID_MEASURED_TEMPERATURE))
+					setTemp := parseFloat32(channel.FindOutputValueByPairingID(model.PID_SETPOINT_TEMPERATURE_GET))
 					c = model.RTC{
 						AssetBase:    assetBase,
 						SwitchState:  switchState,
@@ -462,11 +462,11 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						SetTemp:      float32(setTemp),
 						SetTempState: float32(setTemp),
 					}
-				case abb.FID_RADIATOR_THERMOSTAT:
+				case model.FID_RADIATOR_THERMOSTAT:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {
 						switch output.PairingId {
-						case abb.PID_CONTROLLER_ON_OFF_PROTECTED_GET:
+						case model.PID_CONTROLLER_ON_OFF_PROTECTED_GET:
 							outputs[function_switch] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -480,7 +480,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_MEASURED_TEMPERATURE:
+						case model.PID_MEASURED_TEMPERATURE:
 							outputs[function_measured_temperature] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -490,7 +490,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_SETPOINT_TEMPERATURE_GET:
+						case model.PID_SETPOINT_TEMPERATURE_GET:
 							outputs[function_set_temperature] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -504,7 +504,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_HEATING_MODE_GET:
+						case model.PID_HEATING_MODE_GET:
 							outputs[function_status_indication] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -514,7 +514,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_HEATING_ACTIVE:
+						case model.PID_HEATING_ACTIVE:
 							outputs[function_heating_active] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -524,7 +524,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 									},
 								},
 							}
-						case abb.PID_HEATING_VALUE:
+						case model.PID_HEATING_VALUE:
 							outputs[function_heating_value] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -541,24 +541,24 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					inputs := make(map[string]string)
 					for datapoint, input := range channel.Inputs {
 						switch input.PairingId {
-						case abb.PID_CONTROLLER_REQ_ON_OFF_SET:
+						case model.PID_CONTROLLER_REQ_ON_OFF_SET:
 							inputs[function_switch] = datapoint
-						case abb.PID_ABS_TEMPERATURE_SET:
+						case model.PID_ABS_TEMPERATURE_SET:
 							inputs[function_set_temperature] = datapoint
-						case abb.PID_PRESENCE:
+						case model.PID_PRESENCE:
 							inputs[function_presence] = datapoint
-						case abb.PID_AL_WINDOW_DOOR:
+						case model.PID_AL_WINDOW_DOOR:
 							inputs[function_window_door] = datapoint
 						}
 					}
 					assetBase.InputsBase = inputs
 
-					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_CONTROLLER_ON_OFF_PROTECTED_GET))
-					currentTemp := parseFloat32(channel.FindOutputValueByPairingID(abb.PID_MEASURED_TEMPERATURE))
-					setTemp := parseFloat32(channel.FindOutputValueByPairingID(abb.PID_SETPOINT_TEMPERATURE_GET))
-					statusIndication := parseInt8(channel.FindOutputValueByPairingID(abb.PID_HEATING_MODE_GET))
-					heatingActive := parseInt8(channel.FindOutputValueByPairingID(abb.PID_HEATING_ACTIVE))
-					heatingValue := parseInt8(channel.FindOutputValueByPairingID(abb.PID_HEATING_VALUE))
+					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_CONTROLLER_ON_OFF_PROTECTED_GET))
+					currentTemp := parseFloat32(channel.FindOutputValueByPairingID(model.PID_MEASURED_TEMPERATURE))
+					setTemp := parseFloat32(channel.FindOutputValueByPairingID(model.PID_SETPOINT_TEMPERATURE_GET))
+					statusIndication := parseInt8(channel.FindOutputValueByPairingID(model.PID_HEATING_MODE_GET))
+					heatingActive := parseInt8(channel.FindOutputValueByPairingID(model.PID_HEATING_ACTIVE))
+					heatingValue := parseInt8(channel.FindOutputValueByPairingID(model.PID_HEATING_VALUE))
 					c = model.RadiatorThermostat{
 						AssetBase:        assetBase,
 						SwitchState:      switchState,
@@ -570,10 +570,10 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						HeatingActive:    heatingActive,
 						HeatingValue:     heatingValue,
 					}
-				case abb.FID_WINDOW_DOOR_SENSOR:
+				case model.FID_WINDOW_DOOR_SENSOR:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {
-						if input.PairingId == abb.PID_AL_WINDOW_DOOR {
+						if input.PairingId == model.PID_AL_WINDOW_DOOR {
 							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -587,15 +587,15 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.OutputsBase = outputs
 
-					position := parseInt8(channel.FindOutputValueByPairingID(abb.PID_AL_WINDOW_DOOR))
+					position := parseInt8(channel.FindOutputValueByPairingID(model.PID_AL_WINDOW_DOOR))
 					c = model.DoorSensor{
 						AssetBase: assetBase,
 						Position:  position,
 					}
-				case abb.FID_WINDOW_DOOR_POSITION_SENSOR:
+				case model.FID_WINDOW_DOOR_POSITION_SENSOR:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {
-						if input.PairingId == abb.PID_AL_WINDOW_DOOR_POSITION {
+						if input.PairingId == model.PID_AL_WINDOW_DOOR_POSITION {
 							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -609,15 +609,15 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.OutputsBase = outputs
 
-					position := parseInt8(channel.FindOutputValueByPairingID(abb.PID_AL_WINDOW_DOOR_POSITION))
+					position := parseInt8(channel.FindOutputValueByPairingID(model.PID_AL_WINDOW_DOOR_POSITION))
 					c = model.WindowSensor{
 						AssetBase: assetBase,
 						Position:  position,
 					}
-				case abb.FID_MOVEMENT_DETECTOR:
+				case model.FID_MOVEMENT_DETECTOR:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {
-						if input.PairingId == abb.PID_MOVEMENT_UNDER_CONSIDERATION_OF_BRIGHTNESS {
+						if input.PairingId == model.PID_MOVEMENT_UNDER_CONSIDERATION_OF_BRIGHTNESS {
 							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -631,15 +631,15 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.OutputsBase = outputs
 
-					movement := parseInt8(channel.FindOutputValueByPairingID(abb.PID_MOVEMENT_UNDER_CONSIDERATION_OF_BRIGHTNESS))
+					movement := parseInt8(channel.FindOutputValueByPairingID(model.PID_MOVEMENT_UNDER_CONSIDERATION_OF_BRIGHTNESS))
 					c = model.MovementSensor{
 						AssetBase: assetBase,
 						Movement:  movement,
 					}
-				case abb.FID_HEATING_ACTUATOR:
+				case model.FID_HEATING_ACTUATOR:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {
-						if input.PairingId == abb.PID_AL_INFO_VALUE_HEATING {
+						if input.PairingId == model.PID_AL_INFO_VALUE_HEATING {
 							outputs[function_heating_flow] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -650,7 +650,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 								},
 							}
 						}
-						if input.PairingId == abb.PID_ACTUATING_VALUE_HEATING {
+						if input.PairingId == model.PID_ACTUATING_VALUE_HEATING {
 							outputs[function_actuator_heating_flow] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -664,17 +664,17 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.OutputsBase = outputs
 
-					infoFlow := parseInt8(channel.FindOutputValueByPairingID(abb.PID_AL_INFO_VALUE_HEATING))
-					actuatorFlow := parseInt8(channel.FindOutputValueByPairingID(abb.PID_ACTUATING_VALUE_HEATING))
+					infoFlow := parseInt8(channel.FindOutputValueByPairingID(model.PID_AL_INFO_VALUE_HEATING))
+					actuatorFlow := parseInt8(channel.FindOutputValueByPairingID(model.PID_ACTUATING_VALUE_HEATING))
 					c = model.HeatingActuator{
 						AssetBase:    assetBase,
 						InfoFlow:     infoFlow,
 						ActuatorFlow: actuatorFlow,
 					}
-				case abb.FID_SCENE, abb.FID_SPECIAL_SCENE_PANIC, abb.FID_SPECIAL_SCENE_ALL_OFF, abb.FID_SPECIAL_SCENE_ALL_BLINDS_UP, abb.FID_SPECIAL_SCENE_ALL_BLINDS_DOWN:
+				case model.FID_SCENE, model.FID_SPECIAL_SCENE_PANIC, model.FID_SPECIAL_SCENE_ALL_OFF, model.FID_SPECIAL_SCENE_ALL_BLINDS_UP, model.FID_SPECIAL_SCENE_ALL_BLINDS_DOWN:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {
-						if input.PairingId == abb.PID_AL_SCENE_CONTROL {
+						if input.PairingId == model.PID_AL_SCENE_CONTROL {
 							outputs[function_switch] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -688,7 +688,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.OutputsBase = outputs
 
-					switchState := parseInt8(channel.FindOutputValueByPairingID(abb.PID_AL_SCENE_CONTROL))
+					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_AL_SCENE_CONTROL))
 					c = model.Scene{
 						AssetBase:   assetBase,
 						SwitchState: switchState,
