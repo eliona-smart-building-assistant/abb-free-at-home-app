@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/eliona-smart-building-assistant/go-utils/common"
+	"github.com/eliona-smart-building-assistant/go-utils/log"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -45,6 +46,7 @@ func InsertConfig(ctx context.Context, config apiserver.Configuration) (apiserve
 		return apiserver.Configuration{}, fmt.Errorf("creating DB config from API config: %v", err)
 	}
 	if err := dbConfig.InsertG(ctx, boil.Infer()); err != nil {
+		log.Error("conf", "inserting config: %v", err)
 		return apiserver.Configuration{}, fmt.Errorf("inserting DB config: %v", err)
 	}
 	return config, nil
@@ -56,6 +58,7 @@ func UpsertConfig(ctx context.Context, config apiserver.Configuration) (apiserve
 		return apiserver.Configuration{}, fmt.Errorf("creating DB config from API config: %v", err)
 	}
 	if err := dbConfig.UpsertG(ctx, true, []string{"id"}, boil.Blacklist("id"), boil.Infer()); err != nil {
+		log.Error("conf", "upserting config %v: %v", config.Id, err)
 		return apiserver.Configuration{}, fmt.Errorf("inserting DB config: %v", err)
 	}
 	return config, nil
@@ -66,6 +69,7 @@ func GetConfig(ctx context.Context, configID int64) (*apiserver.Configuration, e
 		appdb.ConfigurationWhere.ID.EQ(configID),
 	).OneG(ctx)
 	if err != nil {
+		log.Error("conf", "getting config %v: %v", configID, err)
 		return nil, fmt.Errorf("fetching config from database")
 	}
 	if dbConfig == nil {
@@ -83,6 +87,7 @@ func DeleteConfig(ctx context.Context, configID int64) error {
 		appdb.ConfigurationWhere.ID.EQ(configID),
 	).DeleteAllG(ctx)
 	if err != nil {
+		log.Error("conf", "deleting config %v: %v", configID, err)
 		return fmt.Errorf("fetching config from database")
 	}
 	if count > 1 {
