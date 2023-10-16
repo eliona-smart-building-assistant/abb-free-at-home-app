@@ -50,7 +50,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 	if err != nil {
 		return api.Dashboard{}, fmt.Errorf("fetching switches: %v", err)
 	}
-	sequence := int32(0)
+	widgetSequence := int32(0)
 	var switchesData []api.WidgetData
 	for i, sw := range switches {
 		switchesData = append(switchesData, api.WidgetData{
@@ -77,16 +77,16 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 		})
 	}
 	widget := api.Widget{
-		WidgetTypeName: "Switch",
+		WidgetTypeName: "ABB Switch list",
 		AssetId:        rootAsset.Id,
-		Sequence:       nullableInt32(sequence),
+		Sequence:       nullableInt32(widgetSequence),
 		Details: map[string]any{
 			"size":     1,
 			"timespan": 7,
 		},
 		Data: switchesData,
 	}
-	sequence++
+	widgetSequence++
 	dashboard.Widgets = append(dashboard.Widgets, widget)
 
 	dimmers, _, err := client.NewClient().AssetsAPI.
@@ -123,17 +123,223 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 		})
 	}
 	widget = api.Widget{
-		WidgetTypeName: "LightControl",
+		WidgetTypeName: "ABB Dimmer list",
 		AssetId:        rootAsset.Id,
-		Sequence:       nullableInt32(sequence),
+		Sequence:       nullableInt32(widgetSequence),
 		Details: map[string]any{
 			"size":     1,
 			"timespan": 7,
 		},
 		Data: dimmersData,
 	}
-	sequence++
+	widgetSequence++
 	dashboard.Widgets = append(dashboard.Widgets, widget)
+
+	hueLights, _, err := client.NewClient().AssetsAPI.
+		GetAssets(client.AuthenticationContext()).
+		AssetTypeName("abb_free_at_home_hue_actuator").
+		ProjectId(projectId).
+		Execute()
+	if err != nil {
+		return api.Dashboard{}, fmt.Errorf("fetching hueLights: %v", err)
+	}
+
+	for _, hueLight := range hueLights {
+		dashboard.Widgets = append(dashboard.Widgets, api.Widget{
+			WidgetTypeName: "ABB Philips Hue",
+			AssetId:        hueLight.Id,
+			Sequence:       nullableInt32(widgetSequence),
+			Details: map[string]any{
+				"size":     1,
+				"timespan": 7,
+			},
+			Data: []api.WidgetData{
+				{
+					ElementSequence: nullableInt32(1),
+					AssetId:         hueLight.Id,
+					Data: map[string]interface{}{
+						"attribute":   "switch",
+						"description": "Light",
+						"key":         "_SETPOINT",
+						"seq":         0,
+						"subtype":     "output",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(1),
+					AssetId:         hueLight.Id,
+					Data: map[string]interface{}{
+						"attribute":   "switch",
+						"description": "Light",
+						"key":         "_CURRENT",
+						"seq":         0,
+						"subtype":     "output",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(2),
+					AssetId:         hueLight.Id,
+					Data: map[string]interface{}{
+						"attribute":   "dimmer",
+						"description": "Dimmer",
+						"key":         "_SETPOINT",
+						"seq":         0,
+						"subtype":     "output",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(2),
+					AssetId:         hueLight.Id,
+					Data: map[string]interface{}{
+						"attribute":   "dimmer",
+						"description": "Dimmer",
+						"key":         "_CURRENT",
+						"seq":         0,
+						"subtype":     "output",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(2),
+					AssetId:         hueLight.Id,
+					Data: map[string]interface{}{
+						"attribute":   "color_temperature",
+						"description": "Color temperature",
+						"key":         "_CURRENT",
+						"seq":         1,
+						"subtype":     "output",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(2),
+					AssetId:         hueLight.Id,
+					Data: map[string]interface{}{
+						"attribute":   "color_temperature",
+						"description": "Color temperature",
+						"key":         "_SETPOINT",
+						"seq":         1,
+						"subtype":     "output",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(2),
+					AssetId:         hueLight.Id,
+					Data: map[string]interface{}{
+						"attribute":   "hsv_state",
+						"description": "Hue",
+						"key":         "_CURRENT",
+						"seq":         2,
+						"subtype":     "input",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(2),
+					AssetId:         hueLight.Id,
+					Data: map[string]interface{}{
+						"attribute":   "hsv_hue",
+						"description": "Hue",
+						"key":         "_SETPOINT",
+						"seq":         2,
+						"subtype":     "output",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(2),
+					AssetId:         hueLight.Id,
+					Data: map[string]interface{}{
+						"attribute":   "hsv_saturation",
+						"description": "Saturation",
+						"key":         "_SETPOINT",
+						"seq":         3,
+						"subtype":     "output",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(2),
+					AssetId:         hueLight.Id,
+					Data: map[string]interface{}{
+						"attribute":   "color_mode_state",
+						"description": "Saturation",
+						"key":         "_CURRENT",
+						"seq":         3,
+						"subtype":     "input",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(2),
+					AssetId:         hueLight.Id,
+					Data: map[string]interface{}{
+						"attribute":   "hsv_value",
+						"description": "Value",
+						"key":         "_SETPOINT",
+						"seq":         4,
+						"subtype":     "output",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(2),
+					AssetId:         hueLight.Id,
+					Data: map[string]interface{}{
+						"attribute":   "switch_state",
+						"description": "Value",
+						"key":         "_CURRENT",
+						"seq":         4,
+						"subtype":     "input",
+					},
+				},
+			},
+		})
+		widgetSequence++
+	}
+
+	movementSensors, _, err := client.NewClient().AssetsAPI.
+		GetAssets(client.AuthenticationContext()).
+		AssetTypeName("abb_free_at_home_movement_sensor").
+		ProjectId(projectId).
+		Execute()
+	if err != nil {
+		return api.Dashboard{}, fmt.Errorf("fetching movementSensors: %v", err)
+	}
+
+	for _, movementSensor := range movementSensors {
+		dashboard.Widgets = append(dashboard.Widgets, api.Widget{
+			WidgetTypeName: "ABB Binary trend",
+			AssetId:        movementSensor.Id,
+			Sequence:       nullableInt32(widgetSequence),
+			Details: map[string]any{
+				"size":     1,
+				"timespan": 7,
+			},
+			Data: []api.WidgetData{
+				{
+					ElementSequence: nullableInt32(1),
+					AssetId:         movementSensor.Id,
+					Data: map[string]interface{}{
+						"aggregatedDataType": "heap",
+						"attribute":          "movement",
+						"description":        "Movement detector ",
+						"key":                "",
+						"seq":                0,
+						"subtype":            "input",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(2),
+					AssetId:         movementSensor.Id,
+					Data: map[string]interface{}{
+						"aggregatedDataField":  nil,
+						"aggregatedDataRaster": nil,
+						"aggregatedDataType":   "heap",
+						"attribute":            "movement",
+						"description":          "Movement detector ",
+						"key":                  "",
+						"seq":                  0,
+						"subtype":              "input",
+					},
+				},
+			},
+		})
+		widgetSequence++
+	}
 
 	rtcs, _, err := client.NewClient().AssetsAPI.
 		GetAssets(client.AuthenticationContext()).
@@ -146,14 +352,17 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 
 	for _, rtc := range rtcs {
 		dashboard.Widgets = append(dashboard.Widgets, api.Widget{
-			WidgetTypeName: "AnalogInput",
+			WidgetTypeName: "ABB Temperature regulator",
 			AssetId:        rtc.Id,
-			Sequence:       nullableInt32(sequence),
-			Details: map[string]any{
-				"5": map[string]any{
+			Sequence:       nullableInt32(widgetSequence),
+			Details: map[string]interface{}{
+				"2006": map[string]interface{}{
 					"colors": []string{
-						"#61D583",
-						"#35c7d5",
+						"#656565",
+					},
+					"guideline": map[string]interface{}{
+						"type":  "value",
+						"value": "20",
 					},
 				},
 				"size":     1,
@@ -164,28 +373,40 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 					ElementSequence: nullableInt32(1),
 					AssetId:         rtc.Id,
 					Data: map[string]interface{}{
-						"aggregatedDataType": "heap",
-						"attribute":          "current_temperature",
-						"description":        "Current temperature",
-						"key":                "",
-						"seq":                0,
-						"subtype":            "input",
+						"attribute":   "switch",
+						"description": "Room temperature controller",
+						"key":         "_SETPOINT",
+						"seq":         0,
+						"subtype":     "output",
 					},
 				},
 				{
 					ElementSequence: nullableInt32(1),
 					AssetId:         rtc.Id,
 					Data: map[string]interface{}{
-						"aggregatedDataType": "heap",
-						"attribute":          "set_temperature_state",
-						"description":        "Set temperature",
-						"key":                "",
-						"seq":                1,
-						"subtype":            "input",
+						"attribute":   "switch",
+						"description": "Room temperature controller",
+						"key":         "_CURRENT",
+						"seq":         0,
+						"subtype":     "output",
 					},
 				},
 				{
 					ElementSequence: nullableInt32(2),
+					AssetId:         rtc.Id,
+					Data: map[string]interface{}{
+						"aggregatedDataField":  nil,
+						"aggregatedDataRaster": nil,
+						"aggregatedDataType":   "heap",
+						"attribute":            "current_temperature",
+						"description":          "Temperature",
+						"key":                  "",
+						"seq":                  0,
+						"subtype":              "input",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(3),
 					AssetId:         rtc.Id,
 					Data: map[string]interface{}{
 						"attribute":   "set_temperature",
@@ -196,7 +417,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 					},
 				},
 				{
-					ElementSequence: nullableInt32(2),
+					ElementSequence: nullableInt32(3),
 					AssetId:         rtc.Id,
 					Data: map[string]interface{}{
 						"attribute":   "set_temperature",
@@ -207,33 +428,256 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 					},
 				},
 				{
-					ElementSequence: nullableInt32(3),
+					ElementSequence: nullableInt32(4),
 					AssetId:         rtc.Id,
 					Data: map[string]interface{}{
+						"aggregatedDataField":  nil,
+						"aggregatedDataRaster": nil,
+						"aggregatedDataType":   "heap",
+						"attribute":            "current_temperature",
+						"description":          "Current temperature",
+						"key":                  "",
+						"seq":                  0,
+						"subtype":              "input",
+					},
+				},
+			},
+		})
+		widgetSequence++
+	}
+
+	thermostats, _, err := client.NewClient().AssetsAPI.
+		GetAssets(client.AuthenticationContext()).
+		AssetTypeName("abb_free_at_home_radiator_thermostat").
+		ProjectId(projectId).
+		Execute()
+	if err != nil {
+		return api.Dashboard{}, fmt.Errorf("fetching thermostats: %v", err)
+	}
+
+	for _, thermostat := range thermostats {
+		dashboard.Widgets = append(dashboard.Widgets, api.Widget{
+			WidgetTypeName: "ABB Temperature regulator",
+			AssetId:        thermostat.Id,
+			Sequence:       nullableInt32(4),
+			Details: map[string]interface{}{
+				"size":     1,
+				"timespan": 7,
+				"2006": map[string]interface{}{
+					"barValues":     []interface{}{},
+					"colors":        []string{"#656565"},
+					"description":   "",
+					"guideline":     map[string]interface{}{"type": "value", "value": "21"},
+					"multipleYAxes": false,
+					"overlap":       true,
+					"showCurrent":   true,
+					"type":          "analog",
+					"variant":       "line",
+					"yAxisLabels":   "mam",
+				},
+			},
+			Data: []api.WidgetData{
+				{
+					ElementSequence: nullableInt32(1),
+					AssetId:         thermostat.Id,
+					Data: map[string]interface{}{
+						"attribute":   "switch",
+						"description": "Radiator thermostate",
+						"key":         "_SETPOINT",
+						"seq":         0,
+						"subtype":     "output",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(1),
+					AssetId:         thermostat.Id,
+					Data: map[string]interface{}{
+						"attribute":   "switch",
+						"description": "Radiator thermostate",
+						"key":         "_CURRENT",
+						"seq":         0,
+						"subtype":     "output",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(2),
+					AssetId:         thermostat.Id,
+					Data: map[string]interface{}{
+						"aggregatedDataField":  nil,
+						"aggregatedDataRaster": nil,
+						"aggregatedDataType":   "heap",
+						"attribute":            "current_temperature",
+						"description":          "Temperature",
+						"key":                  "",
+						"seq":                  0,
+						"subtype":              "input",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(3),
+					AssetId:         thermostat.Id,
+					Data: map[string]interface{}{
+						"attribute":   "set_temperature",
+						"description": "Desired temperature",
+						"key":         "_CURRENT",
+						"seq":         0,
+						"subtype":     "output",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(3),
+					AssetId:         thermostat.Id,
+					Data: map[string]interface{}{
+						"attribute":   "set_temperature",
+						"description": "Desired temperature",
+						"key":         "_SETPOINT",
+						"seq":         0,
+						"subtype":     "output",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(4),
+					AssetId:         thermostat.Id,
+					Data: map[string]interface{}{
+						"aggregatedDataField":  nil,
+						"aggregatedDataRaster": nil,
+						"aggregatedDataType":   "heap",
+						"attribute":            "current_temperature",
+						"description":          "Current temperature",
+						"key":                  "",
+						"seq":                  0,
+						"subtype":              "input",
+					},
+				},
+			},
+		})
+		widgetSequence++
+	}
+
+	windowSensors, _, err := client.NewClient().AssetsAPI.
+		GetAssets(client.AuthenticationContext()).
+		AssetTypeName("abb_free_at_home_window_sensor").
+		ProjectId(projectId).
+		Execute()
+	if err != nil {
+		return api.Dashboard{}, fmt.Errorf("fetching windowSensors: %v", err)
+	}
+
+	for _, windowSensor := range windowSensors {
+		dashboard.Widgets = append(dashboard.Widgets, api.Widget{
+			WidgetTypeName: "ABB Window sensor",
+			AssetId:        windowSensor.Id,
+			Sequence:       nullableInt32(6),
+			Details: map[string]interface{}{
+				"size":     1,
+				"timespan": 7,
+				"2007": map[string]interface{}{
+					"tilesConfig": []map[string]interface{}{
+						{
+							"defaultColorIndex": 7,
+							"progressBar":       nil,
+							"valueMapping":      []interface{}{},
+						},
+					},
+				},
+				"2008": map[string]interface{}{
+					"colors": []string{"#656565"},
+				},
+			},
+			Data: []api.WidgetData{
+				{
+					ElementSequence: nullableInt32(1),
+					AssetId:         windowSensor.Id,
+					Data: map[string]interface{}{
 						"aggregatedDataType": "heap",
-						"attribute":          "current_temperature",
-						"description":        "Current temperature",
+						"attribute":          "position",
+						"description":        "Window sensor",
 						"key":                "",
 						"seq":                0,
 						"subtype":            "input",
 					},
 				},
 				{
-					ElementSequence: nullableInt32(3),
-					AssetId:         rtc.Id,
+					ElementSequence: nullableInt32(2),
+					AssetId:         windowSensor.Id,
 					Data: map[string]interface{}{
-						"aggregatedDataType": "heap",
-						"attribute":          "set_temperature_state",
-						"description":        "Set temperature",
-						"key":                "",
-						"seq":                1,
-						"subtype":            "input",
+						"aggregatedDataField":  nil,
+						"aggregatedDataRaster": nil,
+						"aggregatedDataType":   "heap",
+						"attribute":            "position",
+						"description":          "Window sensor",
+						"key":                  "",
+						"seq":                  0,
+						"subtype":              "input",
 					},
 				},
 			},
 		})
-		sequence++
+		widgetSequence++
 	}
+
+	doorSensors, _, err := client.NewClient().AssetsAPI.
+		GetAssets(client.AuthenticationContext()).
+		AssetTypeName("abb_free_at_home_door_sensor").
+		ProjectId(projectId).
+		Execute()
+	if err != nil {
+		return api.Dashboard{}, fmt.Errorf("fetching doorSensors: %v", err)
+	}
+
+	for _, doorSensor := range doorSensors {
+		dashboard.Widgets = append(dashboard.Widgets, api.Widget{
+			WidgetTypeName: "ABB Binary trend",
+			AssetId:        doorSensor.Id,
+			Sequence:       nullableInt32(7),
+			Details: map[string]interface{}{
+				"size":     1,
+				"timespan": 7,
+				"2001": map[string]interface{}{
+					"tilesConfig": []map[string]interface{}{
+						{
+							"defaultColorIndex": 7,
+							"progressBar":       nil,
+							"valueMapping":      []interface{}{},
+						},
+					},
+				},
+				"2002": map[string]interface{}{
+					"colors": []string{"#656565"},
+				},
+			},
+			Data: []api.WidgetData{
+				{
+					ElementSequence: nullableInt32(1),
+					AssetId:         doorSensor.Id,
+					Data: map[string]interface{}{
+						"aggregatedDataType": "heap",
+						"attribute":          "position",
+						"description":        "Door/window contact ",
+						"key":                "",
+						"seq":                0,
+						"subtype":            "input",
+					},
+				},
+				{
+					ElementSequence: nullableInt32(2),
+					AssetId:         doorSensor.Id,
+					Data: map[string]interface{}{
+						"aggregatedDataField":  nil,
+						"aggregatedDataRaster": nil,
+						"aggregatedDataType":   "heap",
+						"attribute":            "position",
+						"description":          "Door/window contact ",
+						"key":                  "",
+						"seq":                  0,
+						"subtype":              "input",
+					},
+				},
+			},
+		})
+		widgetSequence++
+	}
+
 	return dashboard, nil
 }
 

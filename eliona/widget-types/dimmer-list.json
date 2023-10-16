@@ -1,0 +1,24 @@
+{
+	"id": 2205,
+	"name": "ABB Dimmer list",
+	"custom": true,
+	"translation": {
+		"de": "ABB Dimmer Liste",
+		"en": "ABB Dimmer list"
+	},
+	"icon": "widgetSlider",
+	"withAlarm": true,
+	"withTimespan": true,
+	"elements": [
+		{
+			"id": 1996,
+			"category": "input",
+			"sequence": 1,
+			"config": {
+				"description": "",
+				"resetTime": 2,
+				"type": "switchAndSlider"
+			}
+		}
+	]
+}

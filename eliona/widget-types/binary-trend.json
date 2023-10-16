@@ -1,0 +1,39 @@
+{
+	"id": 2211,
+	"name": "ABB Binary trend",
+	"custom": true,
+	"translation": {
+		"de": "ABB Binärer Trend",
+		"en": "ABB Binary Trend"
+	},
+	"icon": "widgetDigitalTrend",
+	"withAlarm": true,
+	"withTimespan": true,
+	"elements": [
+		{
+			"id": 2001,
+			"category": "value",
+			"sequence": 1,
+			"config": {
+				"description": "",
+				"variant": "tiles"
+			}
+		},
+		{
+			"id": 2002,
+			"category": "trend",
+			"sequence": 2,
+			"config": {
+				"barValues": [],
+				"description": "",
+				"guideline": "",
+				"multipleYAxes": false,
+				"overlap": true,
+				"showCurrent": true,
+				"type": "digital",
+				"variant": "line",
+				"yAxisLabels": ""
+			}
+		}
+	]
+}
