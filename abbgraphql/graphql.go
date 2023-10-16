@@ -2,6 +2,7 @@ package abbgraphql
 
 import (
 	"abb-free-at-home/appdb"
+	"abb-free-at-home/model"
 	"context"
 	"fmt"
 	"math"
@@ -81,8 +82,7 @@ type SystemsQuery struct {
 						} `graphql:"Name"`
 					} `graphql:"value"`
 				} `graphql:"inputs"`
-			} `graphql:"Channels(selective:false)"`
-			//} `graphql:"Channels(find:$channelFind, selective:false)"`
+			} `graphql:"Channels(find:$channelFind, selective:false)"`
 		} `graphql:"Assets"`
 	} `graphql:"ISystemFH"`
 }
@@ -92,8 +92,7 @@ func GetSystems(httpClient *http.Client, orgUUID string) (SystemsQuery, error) {
 	var query SystemsQuery
 	variables := map[string]interface{}{
 		// Fetch only supported devices.
-		// TODO: This is currently blocked by ABB's firewall. Once  they fix it, re-enable this variable (along with change in SystemsQuery).
-		// "channelFind": graphql.String(fmt.Sprintf("{'functionId': {'$in': %s}}", formatSlice(model.GetFunctionIDsList()))),
+		"channelFind": graphql.String(fmt.Sprintf("{'functionId': {'$in': %s}}", formatSlice(model.GetFunctionIDsList()))),
 	}
 	if err := client.Query(context.Background(), &query, variables); err != nil {
 		return SystemsQuery{}, err
