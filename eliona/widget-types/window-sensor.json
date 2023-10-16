@@ -1,0 +1,39 @@
+{
+	"id": 2213,
+	"name": "ABB Window sensor",
+	"custom": true,
+	"translation": {
+		"de": "ABB Fenstersensor",
+		"en": "ABB Window sensor"
+	},
+	"icon": "widgetBar",
+	"withAlarm": true,
+	"withTimespan": true,
+	"elements": [
+		{
+			"id": 2007,
+			"category": "value",
+			"sequence": 1,
+			"config": {
+				"description": "",
+				"variant": "tiles"
+			}
+		},
+		{
+			"id": 2008,
+			"category": "trend",
+			"sequence": 2,
+			"config": {
+				"barValues": [],
+				"description": "",
+				"guideline": "",
+				"multipleYAxes": false,
+				"overlap": true,
+				"showCurrent": false,
+				"type": "analog",
+				"variant": "line",
+				"yAxisLabels": ""
+			}
+		}
+	]
+}

@@ -1,0 +1,59 @@
+{
+	"id": 2212,
+	"name": "ABB Temperature regulator",
+	"custom": true,
+	"translation": {
+		"de": "ABB Temperaturregler",
+		"en": "ABB Temperature regulator"
+	},
+	"icon": "widgetBar",
+	"withAlarm": true,
+	"withTimespan": true,
+	"elements": [
+		{
+			"id": 2005,
+			"category": "input",
+			"sequence": 3,
+			"config": {
+				"description": "",
+				"resetTime": 2,
+				"type": "input"
+			}
+		},
+		{
+			"id": 2003,
+			"category": "input",
+			"sequence": 1,
+			"config": {
+				"description": "",
+				"resetTime": 2,
+				"type": "switch"
+			}
+		},
+		{
+			"id": 2004,
+			"category": "value",
+			"sequence": 2,
+			"config": {
+				"description": "",
+				"variant": "big"
+			}
+		},
+		{
+			"id": 2006,
+			"category": "trend",
+			"sequence": 4,
+			"config": {
+				"barValues": [],
+				"description": "",
+				"guideline": "value",
+				"multipleYAxes": false,
+				"overlap": true,
+				"showCurrent": true,
+				"type": "analog",
+				"variant": "line",
+				"yAxisLabels": "mam"
+			}
+		}
+	]
+}
