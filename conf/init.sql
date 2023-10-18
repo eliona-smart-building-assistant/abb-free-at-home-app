@@ -48,7 +48,7 @@ create table if not exists abb_free_at_home.configuration
 create table if not exists abb_free_at_home.asset
 (
 	id               bigserial primary key,
-	configuration_id bigserial not null references abb_free_at_home.configuration(id),
+	configuration_id bigserial not null references abb_free_at_home.configuration(id) ON DELETE CASCADE,
 	project_id       text      not null,
 	global_asset_id  text      not null,
 	asset_type_name  text      not null,
@@ -58,7 +58,7 @@ create table if not exists abb_free_at_home.asset
 create table if not exists abb_free_at_home.datapoint
 (
 	id                 bigserial primary key,
-	asset_id           integer not null references abb_free_at_home.asset(asset_id),
+	asset_id           integer not null references abb_free_at_home.asset(asset_id) ON DELETE CASCADE,
 	system_id          text not null,
 	device_id          text not null,
 	channel_id         text not null,
@@ -72,7 +72,7 @@ create table if not exists abb_free_at_home.datapoint
 create table if not exists abb_free_at_home.datapoint_attribute
 (
 	id             bigserial primary key,
-	datapoint_id   bigserial not null references abb_free_at_home.datapoint(id),
+	datapoint_id   bigserial not null references abb_free_at_home.datapoint(id) ON DELETE CASCADE,
 	subtype        text not null,
 	attribute_name text not null
 );
