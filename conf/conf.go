@@ -88,7 +88,7 @@ func DeleteConfig(ctx context.Context, configID int64) error {
 	).DeleteAllG(ctx)
 	if err != nil {
 		log.Error("conf", "deleting config %v: %v", configID, err)
-		return fmt.Errorf("fetching config from database")
+		return fmt.Errorf("an error occured during deleting config from database")
 	}
 	if count > 1 {
 		return fmt.Errorf("shouldn't happen: deleted more (%v) configs by ID", count)
