@@ -108,22 +108,24 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 				if len(device.Channels) == 0 {
 					continue
 				}
+				locParentId := lookupLocationParent(config, projectId, device.Location)
+				deviceNamePrefix := ""
+				if locParentId != nil {
+					deviceNamePrefix = constructDeviceNamePrefix(locParentId)
+				} else {
+					locParentId = &systemAssetID
+				}
 				assetType := "abb_free_at_home_device"
 				ad := assetData{
 					config:                  config,
 					projectId:               projectId,
 					parentFunctionalAssetId: &systemAssetID,
+					parentLocationalAssetId: locParentId,
 					identifier:              fmt.Sprintf("%s_%s", assetType, device.GAI),
 					assetType:               assetType,
-					name:                    device.Name,
+					name:                    fmt.Sprintf("%s | %s", deviceNamePrefix, device.Name),
 					description:             fmt.Sprintf("%s (%v)", device.Name, device.GAI),
 				}
-
-				locParentId := lookupLocationParent(config, projectId, device.Location)
-				if locParentId == nil {
-					locParentId = &systemAssetID
-				}
-				ad.parentLocationalAssetId = locParentId
 
 				created, deviceAssetID, err := upsertAsset(ad)
 				if err != nil {
@@ -140,7 +142,7 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 						parentLocationalAssetId: &deviceAssetID,
 						identifier:              channel.GAI(),
 						assetType:               channel.AssetType(),
-						name:                    channel.Name(),
+						name:                    fmt.Sprintf("%s | %s", deviceNamePrefix, channel.Name()),
 						description:             fmt.Sprintf("%s (%v)", channel.Name(), channel.GAI()),
 					})
 					if err != nil {
@@ -188,6 +190,30 @@ func lookupLocationParent(config apiserver.Configuration, projectId string, loca
 		return nil
 	}
 	return parentId
+}
+
+func constructDeviceNamePrefix(roomId *int32) string {
+	prefix := ""
+	room, _, err := client.NewClient().AssetsAPI.
+		GetAssetById(client.AuthenticationContext(), *roomId).
+		Execute()
+	if err != nil {
+		log.Debug("client", "getting room %v from Eliona: %v", *roomId, err)
+		return prefix
+	}
+	prefix = fmt.Sprintf(room.GetName())
+	floorId := room.GetParentLocationalAssetId()
+	if floorId == 0 {
+		return prefix
+	}
+	floor, _, err := client.NewClient().AssetsAPI.
+		GetAssetById(client.AuthenticationContext(), floorId).
+		Execute()
+	if err != nil {
+		log.Debug("client", "getting floor %v from Eliona: %v", floorId, err)
+		return prefix
+	}
+	return fmt.Sprintf("%s | %s", floor.GetName(), prefix)
 }
 
 func upsertRootAsset(config apiserver.Configuration, projectId string) (int32, error) {
