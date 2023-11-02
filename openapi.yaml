@@ -21,7 +21,7 @@ info:
   description: API to access and configure the ABB Free@Home App
 externalDocs:
   description: Find out more about the ABB Free@Home App
-  url: https://github.com/eliona-smart-building-assistant/abb-free-at-home-app
+  url: https://doc.eliona.io/collection/v/eliona-english/eliona-apps/apps/abb-free-home
 servers:
   - url: http://abb-free-at-home/v1
 
