@@ -125,7 +125,7 @@ type setQuery struct {
 						SetDataPointMethod struct {
 							CallMethod struct {
 								Code    graphql.Int    `graphql:"code"`
-								Message graphql.String `graphql:"message"`
+								Message graphql.String `graphql:"details"`
 							} `graphql:"callMethod(value: $callValue)"`
 						} `graphql:"SetDataPointMethod"`
 					} `graphql:"DataPointService"`
@@ -145,7 +145,7 @@ type setQueryProService struct {
 						SetDataPointMethod struct {
 							CallMethod struct {
 								Code    graphql.Int    `graphql:"code"`
-								Message graphql.String `graphql:"message"`
+								Message graphql.String `graphql:"details"`
 							} `graphql:"callMethod(value: $callValue, setOrgUser: $orgUser)"`
 						} `graphql:"SetDataPointMethod"`
 					} `graphql:"DataPointService"`
@@ -169,6 +169,7 @@ func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber 
 	if isProService {
 		query := setQueryProService{}
 		variables["orgUser"] = graphql.String(proServiceUser)
+
 		if err := client.Query(context.Background(), &query, variables); err != nil {
 			return fmt.Errorf("querying: %v", err)
 		}
