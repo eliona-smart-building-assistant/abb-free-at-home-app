@@ -13,6 +13,8 @@ import (
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
+const ClientReference string = "template-app"
+
 func UpsertSystemsData(config apiserver.Configuration, systems []model.System) error {
 	for _, projectId := range *config.ProjectIDs {
 		for _, system := range systems {
@@ -28,8 +30,9 @@ func UpsertSystemsData(config apiserver.Configuration, systems []model.System) e
 					}
 
 					data := asset.Data{
-						AssetId: *assetId,
-						Data:    channel,
+						AssetId:         *assetId,
+						Data:            channel,
+						ClientReference: ClientReference,
 					}
 					if asset.UpsertAssetDataIfAssetExists(data); err != nil {
 						return fmt.Errorf("upserting data: %v", err)
@@ -64,11 +67,13 @@ func UpsertDatapointData(config apiserver.Configuration, datapoint appdb.Datapoi
 				attribute.AttributeName: value,
 			}
 
+			cr := ClientReference
 			apidata := api.Data{
-				AssetId:       *assetId,
-				Data:          data,
-				Subtype:       api.DataSubtype(attribute.Subtype),
-				AssetTypeName: *api.NewNullableString(&ast.AssetTypeName),
+				AssetId:         *assetId,
+				Data:            data,
+				Subtype:         api.DataSubtype(attribute.Subtype),
+				AssetTypeName:   *api.NewNullableString(&ast.AssetTypeName),
+				ClientReference: *api.NewNullableString(&cr),
 			}
 			if asset.UpsertDataIfAssetExists(apidata); err != nil {
 				return fmt.Errorf("upserting data: %v", err)
