@@ -29,6 +29,7 @@ import (
 	"sync"
 	"time"
 
+	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	utilshttp "github.com/eliona-smart-building-assistant/go-utils/http"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
@@ -189,6 +190,10 @@ func listenForOutputChanges() {
 			return
 		}
 		for output := range outputs {
+			if cr := eliona.ClientReference; output.ClientReference == *api.NewNullableString(&cr) {
+				// Just an echoed value this app sent.
+				continue
+			}
 			for _, function := range broker.Functions {
 				val, ok := output.Data[function]
 				if !ok {
@@ -222,7 +227,8 @@ func setAsset(assetID int32, function string, val float64) {
 		return
 	}
 	if input.LastWrittenValue.Valid && input.LastWrittenValue.Float64 == val {
-		log.Info("broker", "skipped setting value %v for function %v asset %v, same as last written", val, function, assetID)
+		// TODO: Remove! I left this check here to verify the output checking logic. This should happen only with specific user interactions.
+		log.Fatal("broker", "skipped setting value %v for function %v asset %v, same as last written", val, function, assetID)
 		return
 	}
 
@@ -230,7 +236,8 @@ func setAsset(assetID int32, function string, val float64) {
 		log.Error("conf", "fetching last asset write: %v", err)
 		return
 	} else if time.Since(lastAssetWrite).Seconds() < 3 {
-		log.Info("broker", "skipped setting value %v for function %v asset %v, to avoid overwriting dependent values", val, function, assetID)
+		// TODO: Remove! I left this check here to verify the output checking logic. This should happen only with specific user interactions.
+		log.Fatal("broker", "skipped setting value %v for function %v asset %v, to avoid overwriting dependent values", val, function, assetID)
 		return
 	}
 
