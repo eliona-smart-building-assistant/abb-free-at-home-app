@@ -150,6 +150,8 @@ func subscribeToDataChanges(config *apiserver.Configuration) {
 
 	dataPointChan := make(chan abbgraphql.DataPoint)
 	go func() {
+		defer close(dataPointChan)
+
 		if err := broker.ListenForDataChanges(config, datapoints, dataPointChan); err != nil {
 			log.Error("broker", "listen for data changes: %v", err)
 			return
