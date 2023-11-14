@@ -13,7 +13,7 @@ import (
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
-const ClientReference string = "template-app"
+const ClientReference string = "abb-free-at-home"
 
 func UpsertSystemsData(config apiserver.Configuration, systems []model.System) error {
 	for _, projectId := range *config.ProjectIDs {
