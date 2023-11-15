@@ -227,18 +227,6 @@ func setAsset(assetID int32, function string, val float64) {
 		log.Fatal("conf", "fetching input for assetID %v function %v: %v", assetID, function, err)
 		return
 	}
-	if input.LastWrittenValue.Valid && input.LastWrittenValue.Float64 == val {
-		log.Info("broker", "skipped setting value %v for function %v asset %v, same as last written", val, function, assetID)
-		return
-	}
-
-	if lastAssetWrite, err := conf.LastWriteToAsset(assetID); err != nil {
-		log.Error("conf", "fetching last asset write: %v", err)
-		return
-	} else if time.Since(lastAssetWrite).Seconds() < 3 {
-		log.Info("broker", "skipped setting value %v for function %v asset %v, to avoid overwriting dependent values", val, function, assetID)
-		return
-	}
 
 	config, err := conf.GetConfigForDatapoint(input)
 	if err != nil {

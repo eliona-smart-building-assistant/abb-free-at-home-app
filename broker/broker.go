@@ -57,8 +57,8 @@ const SET_TEMP_TWICE = function_set_temperature
 var Functions = []string{
 	function_status,
 	// Note: Depends on order.
-	function_dimmer,
 	function_switch,
+	function_dimmer,
 	function_measured_temperature,
 	function_set_temperature,
 	function_heating_flow,
