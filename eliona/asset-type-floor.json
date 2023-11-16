@@ -4,7 +4,7 @@
 			"enable": true,
 			"name": "level",
 			"subtype": "info",
-			"type": "inputs-and-switches",
+			"type": "level",
 			"translation": {
 				"de": "Stufe",
 				"en": "Level"
