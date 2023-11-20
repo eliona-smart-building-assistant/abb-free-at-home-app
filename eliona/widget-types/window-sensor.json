@@ -1,5 +1,4 @@
 {
-	"id": 2213,
 	"name": "ABB Window sensor",
 	"custom": true,
 	"translation": {
@@ -11,7 +10,6 @@
 	"withTimespan": true,
 	"elements": [
 		{
-			"id": 2007,
 			"category": "value",
 			"sequence": 1,
 			"config": {
@@ -20,7 +18,6 @@
 			}
 		},
 		{
-			"id": 2008,
 			"category": "trend",
 			"sequence": 2,
 			"config": {
