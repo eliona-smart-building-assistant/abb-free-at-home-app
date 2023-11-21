@@ -203,6 +203,23 @@ func convertToDataFormat(query abbgraphql.SystemsQuery) DataFormat {
 			var device Device
 			device.DisplayName = string(asset.Name.En)
 			device.Location = string(asset.IsLocated.DtId)
+			if string(asset.DeviceFHRF.BatteryStatus) != "" {
+				b, err := strconv.ParseInt(string(asset.DeviceFHRF.BatteryStatus), 16, 16)
+				if err != nil {
+					log.Printf("Error converting battery status %s from hex: %v", string(asset.DeviceFHRF.BatteryStatus), err)
+				}
+				b = b * 100 / 255 // Convert from byte to percent. "FF" is full, "00" is empty.
+				device.Battery = &b
+			}
+			if len(asset.DeviceFHRF.Attributes) > 0 {
+				attr := asset.DeviceFHRF.Attributes[0]
+				s, err := strconv.ParseInt(string(attr.Value), 10, 16)
+				if err != nil {
+					log.Printf("Error parsing signal strength %s: %v", string(attr.Value), err)
+				}
+				s = s * 10 // Convert from 0-10 to percent.
+				device.Signal = &s
+			}
 			device.Channels = make(map[string]Channel)
 			for _, ch := range asset.Channels {
 				var channel Channel

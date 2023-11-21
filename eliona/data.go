@@ -19,6 +19,23 @@ func UpsertSystemsData(config apiserver.Configuration, systems []model.System) e
 	for _, projectId := range *config.ProjectIDs {
 		for _, system := range systems {
 			for _, device := range system.Devices {
+				log.Debug("Eliona", "upserting data for device: config %d and device '%s'", config.Id, fmt.Sprintf("%s_%s", device.AssetType(), device.GAI))
+				assetId, err := conf.GetAssetId(context.Background(), config, projectId, fmt.Sprintf("%s_%s", device.AssetType(), device.GAI))
+				if err != nil {
+					return err
+				}
+				if assetId == nil {
+					continue
+				}
+
+				data := asset.Data{
+					AssetId:         *assetId,
+					Data:            device,
+					ClientReference: ClientReference,
+				}
+				if asset.UpsertAssetDataIfAssetExists(data); err != nil {
+					return fmt.Errorf("upserting data: %v", err)
+				}
 				for _, channel := range device.Channels {
 					log.Debug("Eliona", "upserting data for asset: config %d and asset '%v'", config.Id, channel.GAI())
 					assetId, err := conf.GetAssetId(context.Background(), config, projectId, channel.GAI())

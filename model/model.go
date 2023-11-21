@@ -49,7 +49,13 @@ type Device struct {
 	GAI      string
 	Name     string `eliona:"device_name,filterable"`
 	Location string
+	Battery  *int64 `eliona:"battery" subtype:"status"`
+	Signal   *int64 `eliona:"signal" subtype:"status"`
 	Channels []Asset
+}
+
+func (d Device) AssetType() string {
+	return "abb_free_at_home_device"
 }
 
 type Asset interface {

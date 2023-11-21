@@ -51,6 +51,12 @@ type SystemsQuery struct {
 			Name         struct {
 				En graphql.String `graphql:"en"`
 			} `graphql:"Name"`
+			DeviceFHRF struct {
+				BatteryStatus graphql.String `graphql:"batteryStatus"`
+				Attributes    []struct {
+					Value graphql.String `graphql:"value"`
+				} `graphql:"attributes(key:\"signalStrength\")"`
+			} `graphql:"... on IDeviceFHRF"`
 			Channels []struct {
 				ChannelNumber graphql.Int    `graphql:"channelNumber"`
 				FunctionId    graphql.String `graphql:"functionId"`
