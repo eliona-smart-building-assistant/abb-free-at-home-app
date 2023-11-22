@@ -316,7 +316,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 					Data: map[string]interface{}{
 						"aggregatedDataType": "heap",
 						"attribute":          "movement",
-						"description":        "Movement detector ",
+						"description":        "Movement detector",
 						"key":                "",
 						"seq":                0,
 						"subtype":            "input",
@@ -330,7 +330,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 						"aggregatedDataRaster": nil,
 						"aggregatedDataType":   "heap",
 						"attribute":            "movement",
-						"description":          "Movement detector ",
+						"description":          "Movement detector",
 						"key":                  "",
 						"seq":                  0,
 						"subtype":              "input",

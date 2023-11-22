@@ -625,7 +625,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 								Map: model.DatapointMap{
 									{
 										Subtype:       elionaapi.SUBTYPE_INPUT,
-										AttributeName: "position",
+										AttributeName: "movement",
 									},
 								},
 							}
