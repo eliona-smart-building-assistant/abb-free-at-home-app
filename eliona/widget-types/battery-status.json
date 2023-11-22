@@ -1,0 +1,21 @@
+{
+	"name": "ABB Battery status",
+	"custom": true,
+	"translation": {
+		"de": "ABB Batteriestatus",
+		"en": "ABB Battery status"
+	},
+	"icon": "battery",
+	"withAlarm": true,
+	"withTimespan": true,
+	"elements": [
+		{
+			"category": "value",
+			"sequence": 1,
+			"config": {
+				"description": "",
+				"variant": "tiles"
+			}
+		}
+	]
+}

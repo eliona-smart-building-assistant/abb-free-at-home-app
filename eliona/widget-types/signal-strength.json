@@ -1,0 +1,21 @@
+{
+	"name": "ABB Signal strength",
+	"custom": true,
+	"translation": {
+		"de": "ABB Signalstärke",
+		"en": "ABB Signal strength"
+	},
+	"icon": "rssi",
+	"withAlarm": true,
+	"withTimespan": true,
+	"elements": [
+		{
+			"category": "value",
+			"sequence": 1,
+			"config": {
+				"description": "",
+				"variant": "tiles"
+			}
+		}
+	]
+}
