@@ -127,14 +127,14 @@ func GetLocations(config *apiserver.Configuration) ([]model.Floor, error) {
 	for _, system := range abbLocations.ISystemFH {
 		for _, floor := range system.Locations {
 			f := model.Floor{
-				Id:    string(floor.DtId),
-				Name:  string(floor.Label),
-				Level: string(floor.Level),
+				Id:    floor.DtId,
+				Name:  floor.Label,
+				Level: floor.Level,
 			}
 			for _, room := range floor.Sublocations {
 				r := model.Room{
-					Id:   string(room.DtId),
-					Name: string(room.Label),
+					Id:   room.DtId,
+					Name: room.Label,
 				}
 				f.Rooms = append(f.Rooms, r)
 			}

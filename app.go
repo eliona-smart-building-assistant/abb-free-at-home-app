@@ -159,7 +159,7 @@ func subscribeToDataChanges(config *apiserver.Configuration) {
 		log.Info("broker", "ABB subscription exited")
 	}()
 	for dp := range dataPointChan {
-		datapoint, err := conf.FindDatapoint(string(dp.SerialNumber), string(dp.ChannelNumber), string(dp.DatapointId))
+		datapoint, err := conf.FindDatapoint(dp.SerialNumber, dp.ChannelNumber, dp.DatapointId)
 		if err != nil {
 			log.Error("conf", "finding datapoint %+v: %v", dp, err)
 			return
