@@ -7,6 +7,8 @@ import (
 	"abb-free-at-home/model"
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
 	"github.com/eliona-smart-building-assistant/go-eliona/asset"
@@ -61,7 +63,7 @@ func UpsertSystemsData(config apiserver.Configuration, systems []model.System) e
 	return nil
 }
 
-func UpsertDatapointData(config apiserver.Configuration, datapoint appdb.Datapoint, value any) error {
+func UpsertDatapointData(config apiserver.Configuration, datapoint appdb.Datapoint, value string) error {
 	attributes, err := datapoint.DatapointAttributes().AllG(context.Background())
 	if err != nil {
 		return fmt.Errorf("fetching datapoint attributes: %v", err)
@@ -81,7 +83,7 @@ func UpsertDatapointData(config apiserver.Configuration, datapoint appdb.Datapoi
 				return fmt.Errorf("unable to find asset ID")
 			}
 			data := map[string]interface{}{
-				attribute.AttributeName: value,
+				attribute.AttributeName: convertToNumber(value),
 			}
 
 			cr := ClientReference
@@ -98,4 +100,23 @@ func UpsertDatapointData(config apiserver.Configuration, datapoint appdb.Datapoi
 		}
 	}
 	return nil
+}
+
+// convertToNumber tries to convert a string to an integer or a float.
+// If conversion is not possible, it returns the original string.
+func convertToNumber(s string) any {
+	if strings.Contains(s, ".") {
+		// Try converting to float
+		val, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			return s
+		}
+		return val
+	}
+	// Try converting to integer
+	val, err := strconv.Atoi(s)
+	if err != nil {
+		return s
+	}
+	return val
 }
