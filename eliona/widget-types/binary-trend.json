@@ -1,5 +1,4 @@
 {
-	"id": 2211,
 	"name": "ABB Binary trend",
 	"custom": true,
 	"translation": {
@@ -11,7 +10,6 @@
 	"withTimespan": true,
 	"elements": [
 		{
-			"id": 2001,
 			"category": "value",
 			"sequence": 1,
 			"config": {
@@ -20,7 +18,6 @@
 			}
 		},
 		{
-			"id": 2002,
 			"category": "trend",
 			"sequence": 2,
 			"config": {

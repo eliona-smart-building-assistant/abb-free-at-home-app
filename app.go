@@ -29,7 +29,6 @@ import (
 	"sync"
 	"time"
 
-	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	utilshttp "github.com/eliona-smart-building-assistant/go-utils/http"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
@@ -151,6 +150,8 @@ func subscribeToDataChanges(config *apiserver.Configuration) {
 
 	dataPointChan := make(chan abbgraphql.DataPoint)
 	go func() {
+		defer close(dataPointChan)
+
 		if err := broker.ListenForDataChanges(config, datapoints, dataPointChan); err != nil {
 			log.Error("broker", "listen for data changes: %v", err)
 			return
@@ -158,7 +159,7 @@ func subscribeToDataChanges(config *apiserver.Configuration) {
 		log.Info("broker", "ABB subscription exited")
 	}()
 	for dp := range dataPointChan {
-		datapoint, err := conf.FindDatapoint(string(dp.SerialNumber), string(dp.ChannelNumber), string(dp.DatapointId))
+		datapoint, err := conf.FindDatapoint(dp.SerialNumber, dp.ChannelNumber, dp.DatapointId)
 		if err != nil {
 			log.Error("conf", "finding datapoint %+v: %v", dp, err)
 			return
@@ -190,7 +191,7 @@ func listenForOutputChanges() {
 			return
 		}
 		for output := range outputs {
-			if cr := eliona.ClientReference; output.ClientReference == *api.NewNullableString(&cr) {
+			if cr := output.ClientReference.Get(); cr != nil && *cr == eliona.ClientReference {
 				// Just an echoed value this app sent.
 				continue
 			}
@@ -224,18 +225,6 @@ func setAsset(assetID int32, function string, val float64) {
 	input, err := conf.FetchInput(assetID, function)
 	if err != nil {
 		log.Fatal("conf", "fetching input for assetID %v function %v: %v", assetID, function, err)
-		return
-	}
-	if input.LastWrittenValue.Valid && input.LastWrittenValue.Float64 == val {
-		log.Info("broker", "skipped setting value %v for function %v asset %v, same as last written", val, function, assetID)
-		return
-	}
-
-	if lastAssetWrite, err := conf.LastWriteToAsset(assetID); err != nil {
-		log.Error("conf", "fetching last asset write: %v", err)
-		return
-	} else if time.Since(lastAssetWrite).Seconds() < 3 {
-		log.Info("broker", "skipped setting value %v for function %v asset %v, to avoid overwriting dependent values", val, function, assetID)
 		return
 	}
 

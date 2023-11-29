@@ -1,5 +1,32 @@
 {
-	"attributes": [],
+	"attributes": [
+		{
+			"enable": true,
+			"name": "battery",
+			"subtype": "status",
+			"type": "battery-voltage",
+			"unit": "%",
+			"min": 0,
+			"max": 100,
+			"translation": {
+				"de": "Batteriestatus",
+				"en": "Battery status"
+			}
+		},
+		{
+			"enable": true,
+			"name": "signal",
+			"subtype": "status",
+			"type": "operating-status",
+			"unit": "%",
+			"min": 0,
+			"max": 100,
+			"translation": {
+				"de": "Signalstärke",
+				"en": "Signal strength"
+			}
+		}
+	],
 	"custom": false,
 	"icon": null,
 	"name": "abb_free_at_home_device",

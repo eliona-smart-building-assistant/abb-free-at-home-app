@@ -19,12 +19,12 @@ const proServiceUser = "eliona"
 type LocationsQuery struct {
 	ISystemFH []struct {
 		Locations []struct {
-			DtId         graphql.String `graphql:"dtId"`
-			Label        graphql.String `graphql:"label"`
-			Level        graphql.String `graphql:"level"`
+			DtId         string `graphql:"dtId"`
+			Label        string `graphql:"label"`
+			Level        string `graphql:"level"`
 			Sublocations []struct {
-				DtId  graphql.String `graphql:"dtId"`
-				Label graphql.String `graphql:"label"`
+				DtId  string `graphql:"dtId"`
+				Label string `graphql:"label"`
 			} `graphql:"Sublocations"`
 		} `graphql:"Locations"`
 	} `graphql:"ISystemFH"`
@@ -42,43 +42,49 @@ func GetLocations(httpClient *http.Client) (LocationsQuery, error) {
 
 type SystemsQuery struct {
 	Systems []struct {
-		DtId   graphql.String `graphql:"dtId"`
+		DtId   string `graphql:"dtId"`
 		Assets []struct {
 			IsLocated struct {
-				DtId graphql.String `graphql:"dtId"`
+				DtId string `graphql:"dtId"`
 			} `graphql:"IsLocated"`
-			SerialNumber graphql.String `graphql:"serialNumber"`
+			SerialNumber string `graphql:"serialNumber"`
 			Name         struct {
-				En graphql.String `graphql:"en"`
+				En string `graphql:"en"`
 			} `graphql:"Name"`
+			DeviceFHRF struct {
+				BatteryStatus string `graphql:"batteryStatus"`
+				Attributes    []struct {
+					Value string `graphql:"value"`
+				} `graphql:"attributes(key:\"signalStrength\")"`
+			} `graphql:"... on IDeviceFHRF"`
 			Channels []struct {
-				ChannelNumber graphql.Int    `graphql:"channelNumber"`
-				FunctionId    graphql.String `graphql:"functionId"`
+				ChannelNumber int    `graphql:"channelNumber"`
+				FunctionId    string `graphql:"functionId"`
 				Name          struct {
-					En graphql.String `graphql:"en"`
+					En string `graphql:"en"`
 				} `graphql:"Name"`
 				Outputs []struct {
-					Key   graphql.String `graphql:"key"`
+					Key   string `graphql:"key"`
 					Value struct {
-						PairingId graphql.String `graphql:"pairingId"`
+						PairingId string `graphql:"pairingId"`
 						Name      struct {
-							En graphql.String `graphql:"en"`
+							En string `graphql:"en"`
 						} `graphql:"Name"`
-						Dpt              graphql.String `graphql:"dpt"`
+						Dpt              string `graphql:"dpt"`
 						DataPointService struct {
 							RequestDataPointValue struct {
-								Value graphql.String `graphql:"value"`
-								Time  graphql.String `graphql:"time"`
+								Value string `graphql:"value"`
+								Time  string `graphql:"time"`
 							} `graphql:"RequestDataPointValue"`
 						} `graphql:"DataPointService"`
 					} `graphql:"value"`
 				} `graphql:"outputs"`
 				Inputs []struct {
-					Key   graphql.String `graphql:"key"`
+					Key   string `graphql:"key"`
 					Value struct {
-						PairingId graphql.String `graphql:"pairingId"`
+						PairingId string `graphql:"pairingId"`
 						Name      struct {
-							En graphql.String `graphql:"en"`
+							En string `graphql:"en"`
 						} `graphql:"Name"`
 					} `graphql:"value"`
 				} `graphql:"inputs"`
@@ -92,14 +98,14 @@ func GetSystems(httpClient *http.Client, orgUUID string) (SystemsQuery, error) {
 	var query SystemsQuery
 	variables := map[string]interface{}{
 		// Fetch only supported devices.
-		"channelFind": graphql.String(fmt.Sprintf("{'functionId': {'$in': %s}}", formatSlice(model.GetFunctionIDsList()))),
+		"channelFind": fmt.Sprintf("{'functionId': {'$in': %s}}", formatSlice(model.GetFunctionIDsList())),
 	}
 	if err := client.Query(context.Background(), &query, variables); err != nil {
 		return SystemsQuery{}, err
 	}
 	if orgUUID != "" {
 		for _, system := range query.Systems {
-			if err := createUserIfNotExists(client, orgUUID, string(system.DtId)); err != nil {
+			if err := createUserIfNotExists(client, orgUUID, system.DtId); err != nil {
 				return SystemsQuery{}, fmt.Errorf("creating user if not exists: %v", err)
 			}
 		}
@@ -118,14 +124,14 @@ func formatSlice(slice []string) string {
 type setQuery struct {
 	IDeviceFH []struct {
 		Channels []struct {
-			ChannelNumber graphql.Int `graphql:"channelNumber"`
+			ChannelNumber int `graphql:"channelNumber"`
 			Inputs        []struct {
 				Value struct {
 					DataPointService struct {
 						SetDataPointMethod struct {
 							CallMethod struct {
-								Code    graphql.Int    `graphql:"code"`
-								Message graphql.String `graphql:"details"`
+								Code    int    `graphql:"code"`
+								Message string `graphql:"details"`
 							} `graphql:"callMethod(value: $callValue)"`
 						} `graphql:"SetDataPointMethod"`
 					} `graphql:"DataPointService"`
@@ -138,14 +144,14 @@ type setQuery struct {
 type setQueryProService struct {
 	IDeviceFH []struct {
 		Channels []struct {
-			ChannelNumber graphql.Int `graphql:"channelNumber"`
+			ChannelNumber int `graphql:"channelNumber"`
 			Inputs        []struct {
 				Value struct {
 					DataPointService struct {
 						SetDataPointMethod struct {
 							CallMethod struct {
-								Code    graphql.Int    `graphql:"code"`
-								Message graphql.String `graphql:"details"`
+								Code    int    `graphql:"code"`
+								Message string `graphql:"details"`
 							} `graphql:"callMethod(value: $callValue, setOrgUser: $orgUser)"`
 						} `graphql:"SetDataPointMethod"`
 					} `graphql:"DataPointService"`
@@ -159,16 +165,16 @@ func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber 
 	client := getClient(httpClient)
 	val := formatFloat(value)
 	variables := map[string]interface{}{
-		"deviceFind":  graphql.String(fmt.Sprintf("{'serialNumber': '%s'}", serialNumber)),
-		"channelFind": graphql.String(fmt.Sprintf("{'channelNumber': %d}", channel)),
-		"inputKey":    graphql.String(datapoint),
-		"callValue":   graphql.String(val),
+		"deviceFind":  fmt.Sprintf("{'serialNumber': '%s'}", serialNumber),
+		"channelFind": fmt.Sprintf("{'channelNumber': %d}", channel),
+		"inputKey":    datapoint,
+		"callValue":   val,
 	}
 
 	// TODO: This is ugly, but doesn't work with type casting. We should find a nicer solution.
 	if isProService {
 		query := setQueryProService{}
-		variables["orgUser"] = graphql.String(proServiceUser)
+		variables["orgUser"] = proServiceUser
 
 		if err := client.Query(context.Background(), &query, variables); err != nil {
 			return fmt.Errorf("querying: %v", err)
@@ -215,10 +221,10 @@ func formatFloat(f float64) string {
 }
 
 type DataPoint struct {
-	Value         graphql.String `graphql:"value"`
-	SerialNumber  graphql.String `graphql:"serialNumber"`
-	ChannelNumber graphql.String `graphql:"channelNumber"`
-	DatapointId   graphql.String `graphql:"datapointId"`
+	Value         string `graphql:"value"`
+	SerialNumber  string `graphql:"serialNumber"`
+	ChannelNumber string `graphql:"channelNumber"`
+	DatapointId   string `graphql:"datapointId"`
 }
 
 type DataPointsSubscription struct {
@@ -286,7 +292,7 @@ func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<
 
 // type systemsSimpleQuery struct {
 // 	Systems []struct {
-// 		DtId graphql.String `graphql:"dtId"`
+// 		DtId string `graphql:"dtId"`
 // 	} `graphql:"ISystemFH"`
 // }
 
@@ -298,7 +304,7 @@ func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<
 // 		return fmt.Errorf("fetching list of systems: %v", err)
 // 	}
 // 	for _, system := range systems.Systems {
-// 		if err := createUserIfNotExists(client, string(system.DtId)); err != nil {
+// 		if err := createUserIfNotExists(client, system.DtId); err != nil {
 // 			return fmt.Errorf("creatíng user if not exists: %v", err)
 // 		}
 // 	}
@@ -310,8 +316,8 @@ type createUserMutation struct {
 		DeviceManagement struct {
 			RPCCreateUserWithPermissionsMethod struct {
 				CallMethod struct {
-					Code    graphql.Int
-					Details graphql.String
+					Code    int
+					Details string
 				} `graphql:"callMethod(displayName: $displayName, user: $user, scopes: $scopes)"`
 			} `graphql:"RPCCreateUserWithPermissionsMethod"`
 		} `graphql:"DeviceManagement"`
@@ -328,10 +334,10 @@ func createUserIfNotExists(client *graphql.Client, orgUUID, dtId string) error {
 
 	var mutation createUserMutation
 	variables := map[string]interface{}{
-		"dtId":        []graphql.String{graphql.String(dtId)},
-		"displayName": graphql.String("Eliona ProService"),
-		"user":        graphql.String(username),
-		"scopes":      []graphql.String{graphql.String("RemoteControl")},
+		"dtId":        []string{dtId},
+		"displayName": "Eliona ProService",
+		"user":        username,
+		"scopes":      []string{"RemoteControl"},
 	}
 
 	if err := client.Query(context.Background(), &mutation, variables); err != nil {
@@ -352,7 +358,7 @@ func createUserIfNotExists(client *graphql.Client, orgUUID, dtId string) error {
 type usersQuery struct {
 	ISystemFH []struct {
 		Users []struct {
-			UserName graphql.String
+			UserName string
 		} `graphql:"Users"`
 	} `graphql:"ISystemFH(dtId: $dtId)"`
 }
@@ -360,7 +366,7 @@ type usersQuery struct {
 func userExists(client *graphql.Client, dtId string, userName string) (bool, error) {
 	var query usersQuery
 	variables := map[string]interface{}{
-		"dtId": []graphql.String{graphql.String(dtId)},
+		"dtId": []string{dtId},
 	}
 
 	if err := client.Query(context.Background(), &query, variables); err != nil {
@@ -369,7 +375,7 @@ func userExists(client *graphql.Client, dtId string, userName string) (bool, err
 
 	for _, system := range query.ISystemFH {
 		for _, user := range system.Users {
-			if string(user.UserName) == userName {
+			if user.UserName == userName {
 				return true, nil
 			}
 		}

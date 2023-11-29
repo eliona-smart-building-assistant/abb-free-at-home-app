@@ -57,8 +57,8 @@ const SET_TEMP_TWICE = function_set_temperature
 var Functions = []string{
 	function_status,
 	// Note: Depends on order.
-	function_dimmer,
 	function_switch,
+	function_dimmer,
 	function_measured_temperature,
 	function_set_temperature,
 	function_heating_flow,
@@ -127,14 +127,14 @@ func GetLocations(config *apiserver.Configuration) ([]model.Floor, error) {
 	for _, system := range abbLocations.ISystemFH {
 		for _, floor := range system.Locations {
 			f := model.Floor{
-				Id:    string(floor.DtId),
-				Name:  string(floor.Label),
-				Level: string(floor.Level),
+				Id:    floor.DtId,
+				Name:  floor.Label,
+				Level: floor.Level,
 			}
 			for _, room := range floor.Sublocations {
 				r := model.Room{
-					Id:   string(room.DtId),
-					Name: string(room.Label),
+					Id:   room.DtId,
+					Name: room.Label,
 				}
 				f.Rooms = append(f.Rooms, r)
 			}
@@ -177,6 +177,8 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 				GAI:      s.GAI + "_" + id,
 				Name:     device.DisplayName.(string),
 				Location: device.Location,
+				Battery:  device.Battery,
+				Signal:   device.Signal,
 			}
 			for id, channel := range device.Channels {
 				if channel.FunctionId == "" {
@@ -623,7 +625,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 								Map: model.DatapointMap{
 									{
 										Subtype:       elionaapi.SUBTYPE_INPUT,
-										AttributeName: "position",
+										AttributeName: "movement",
 									},
 								},
 							}

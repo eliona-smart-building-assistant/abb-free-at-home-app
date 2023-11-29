@@ -1,5 +1,4 @@
 {
-	"id": 2210,
 	"name": "ABB Philips Hue",
 	"custom": true,
 	"translation": {
@@ -11,7 +10,6 @@
 	"withTimespan": true,
 	"elements": [
 		{
-			"id": 1999,
 			"category": "input",
 			"sequence": 1,
 			"config": {
@@ -21,7 +19,6 @@
 			}
 		},
 		{
-			"id": 2000,
 			"category": "input",
 			"sequence": 2,
 			"config": {

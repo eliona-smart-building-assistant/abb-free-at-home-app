@@ -7,18 +7,37 @@ import (
 	"abb-free-at-home/model"
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
 	"github.com/eliona-smart-building-assistant/go-eliona/asset"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
-const ClientReference string = "template-app"
+const ClientReference string = "abb-free-at-home"
 
 func UpsertSystemsData(config apiserver.Configuration, systems []model.System) error {
 	for _, projectId := range *config.ProjectIDs {
 		for _, system := range systems {
 			for _, device := range system.Devices {
+				log.Debug("Eliona", "upserting data for device: config %d and device '%s'", config.Id, fmt.Sprintf("%s_%s", device.AssetType(), device.GAI))
+				assetId, err := conf.GetAssetId(context.Background(), config, projectId, fmt.Sprintf("%s_%s", device.AssetType(), device.GAI))
+				if err != nil {
+					return err
+				}
+				if assetId == nil {
+					continue
+				}
+
+				data := asset.Data{
+					AssetId:         *assetId,
+					Data:            device,
+					ClientReference: ClientReference,
+				}
+				if asset.UpsertAssetDataIfAssetExists(data); err != nil {
+					return fmt.Errorf("upserting data: %v", err)
+				}
 				for _, channel := range device.Channels {
 					log.Debug("Eliona", "upserting data for asset: config %d and asset '%v'", config.Id, channel.GAI())
 					assetId, err := conf.GetAssetId(context.Background(), config, projectId, channel.GAI())
@@ -44,7 +63,7 @@ func UpsertSystemsData(config apiserver.Configuration, systems []model.System) e
 	return nil
 }
 
-func UpsertDatapointData(config apiserver.Configuration, datapoint appdb.Datapoint, value any) error {
+func UpsertDatapointData(config apiserver.Configuration, datapoint appdb.Datapoint, value string) error {
 	attributes, err := datapoint.DatapointAttributes().AllG(context.Background())
 	if err != nil {
 		return fmt.Errorf("fetching datapoint attributes: %v", err)
@@ -64,7 +83,7 @@ func UpsertDatapointData(config apiserver.Configuration, datapoint appdb.Datapoi
 				return fmt.Errorf("unable to find asset ID")
 			}
 			data := map[string]interface{}{
-				attribute.AttributeName: value,
+				attribute.AttributeName: convertToNumber(value),
 			}
 
 			cr := ClientReference
@@ -81,4 +100,23 @@ func UpsertDatapointData(config apiserver.Configuration, datapoint appdb.Datapoi
 		}
 	}
 	return nil
+}
+
+// convertToNumber tries to convert a string to an integer or a float.
+// If conversion is not possible, it returns the original string.
+func convertToNumber(s string) any {
+	if strings.Contains(s, ".") {
+		// Try converting to float
+		val, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			return s
+		}
+		return val
+	}
+	// Try converting to integer
+	val, err := strconv.Atoi(s)
+	if err != nil {
+		return s
+	}
+	return val
 }

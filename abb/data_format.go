@@ -54,6 +54,8 @@ type Device struct {
 	Floor       interface{}        `json:"floor"`
 	Interface   interface{}        `json:"interface"`
 	Room        interface{}        `json:"room"`
+	Battery     *int64
+	Signal      *int64
 	Location    string
 }
 type System struct {
