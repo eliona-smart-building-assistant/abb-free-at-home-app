@@ -52,10 +52,11 @@ type SystemsQuery struct {
 				En string `graphql:"en"`
 			} `graphql:"Name"`
 			DeviceFHRF struct {
-				BatteryStatus string `graphql:"batteryStatus"`
-				Attributes    []struct {
-					Value string `graphql:"value"`
-				} `graphql:"attributes(key:\"signalStrength\")"`
+				BatteryStatus     string `graphql:"batteryStatus"`
+				AttributesService struct {
+					// TODO: Might use "connectivity" as well, but that doesn't give numeric values.
+					SignalStrength string `graphql:"get(key:\"signalStrength\")"`
+				} `graphql:"AttributesService"`
 			} `graphql:"... on IDeviceFHRF"`
 			Channels []struct {
 				ChannelNumber int    `graphql:"channelNumber"`
