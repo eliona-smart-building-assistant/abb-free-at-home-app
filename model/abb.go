@@ -92,7 +92,7 @@ func GetFunctionIDsList() []string {
 
 	hexStrings := make([]string, len(constants))
 	for i, constant := range constants {
-		hexStrings[i] = fmt.Sprintf("%04X", constant)
+		hexStrings[i] = fmt.Sprintf("%04x", constant)
 	}
 	return hexStrings
 }
