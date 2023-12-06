@@ -15,15 +15,12 @@
 		},
 		{
 			"enable": true,
-			"name": "signal",
+			"name": "connectivity",
 			"subtype": "status",
 			"type": "operating-status",
-			"unit": "%",
-			"min": 0,
-			"max": 100,
 			"translation": {
-				"de": "Signalstärke",
-				"en": "Signal strength"
+				"de": "Konnektivität",
+				"en": "Connectivity"
 			}
 		}
 	],

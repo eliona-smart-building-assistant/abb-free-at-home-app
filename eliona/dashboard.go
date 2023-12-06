@@ -688,7 +688,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 	}
 
 	var batteryDevices []api.Asset
-	var signalDevices []api.Asset
+	var connectivityDevices []api.Asset
 	for _, device := range devices {
 		data, _, err := client.NewClient().DataAPI.
 			GetData(client.AuthenticationContext()).
@@ -706,8 +706,8 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 		if b, ok := d.Data["battery"]; ok && b != nil {
 			batteryDevices = append(batteryDevices, device)
 		}
-		if s, ok := d.Data["signal"]; ok && s != nil {
-			signalDevices = append(signalDevices, device)
+		if s, ok := d.Data["connectivity"]; ok && s != nil && s != "" {
+			connectivityDevices = append(connectivityDevices, device)
 		}
 	}
 
@@ -769,14 +769,14 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 	widgetSequence++
 	dashboard.Widgets = append(dashboard.Widgets, widget)
 
-	var signalData []api.WidgetData
-	for i, sd := range signalDevices {
-		signalData = append(signalData, api.WidgetData{
+	var connectivityData []api.WidgetData
+	for i, sd := range connectivityDevices {
+		connectivityData = append(connectivityData, api.WidgetData{
 			ElementSequence: nullableInt32(1),
 			AssetId:         sd.Id,
 			Data: map[string]interface{}{
 				"aggregatedDataType": "heap",
-				"attribute":          "signal",
+				"attribute":          "connectivity",
 				"description":        sd.Name,
 				"key":                "",
 				"seq":                i,
@@ -785,14 +785,14 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 		})
 	}
 	widget = api.Widget{
-		WidgetTypeName: "ABB Signal strength",
+		WidgetTypeName: "ABB Connectivity",
 		AssetId:        rootAsset.Id,
 		Sequence:       nullableInt32(widgetSequence),
 		Details: map[string]any{
 			"size":     1,
 			"timespan": 7,
 		},
-		Data: signalData,
+		Data: connectivityData,
 	}
 	widgetSequence++
 	dashboard.Widgets = append(dashboard.Widgets, widget)
