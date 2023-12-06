@@ -173,12 +173,12 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 		}
 		for id, device := range system.Devices {
 			d := model.Device{
-				ID:       id,
-				GAI:      s.GAI + "_" + id,
-				Name:     device.DisplayName.(string),
-				Location: device.Location,
-				Battery:  device.Battery,
-				Signal:   device.Signal,
+				ID:           id,
+				GAI:          s.GAI + "_" + id,
+				Name:         device.DisplayName.(string),
+				Location:     device.Location,
+				Battery:      device.Battery,
+				Connectivity: device.Connectivity,
 			}
 			for id, channel := range device.Channels {
 				if channel.FunctionId == "" {

@@ -1,9 +1,9 @@
 {
-	"name": "ABB Signal strength",
+	"name": "ABB Connectivity",
 	"custom": true,
 	"translation": {
-		"de": "ABB Signalstärke",
-		"en": "ABB Signal strength"
+		"de": "ABB Konnektivität",
+		"en": "ABB Connectivity"
 	},
 	"icon": "rssi",
 	"withAlarm": true,

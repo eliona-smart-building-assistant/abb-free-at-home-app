@@ -211,14 +211,8 @@ func convertToDataFormat(query abbgraphql.SystemsQuery) DataFormat {
 				b = b * 100 / 255 // Convert from byte to percent. "FF" is full, "00" is empty.
 				device.Battery = &b
 			}
-			if signalStrength := asset.DeviceFHRF.AttributesService.SignalStrength; signalStrength != "" {
-				s, err := strconv.ParseInt(signalStrength, 10, 16)
-				if err != nil {
-					log.Printf("Error parsing signal strength %s: %v", signalStrength, err)
-				}
-				s = s * 10 // Convert from 0-10 to percent.
-				device.Signal = &s
-			}
+			device.Connectivity = asset.DeviceFHRF.AttributesService.Connectivity
+
 			device.Channels = make(map[string]Channel)
 			for _, ch := range asset.Channels {
 				var channel Channel

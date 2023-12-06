@@ -45,13 +45,13 @@ type System struct {
 }
 
 type Device struct {
-	ID       string `eliona:"device_id,filterable"`
-	GAI      string
-	Name     string `eliona:"device_name,filterable"`
-	Location string
-	Battery  *int64 `eliona:"battery" subtype:"status"`
-	Signal   *int64 `eliona:"signal" subtype:"status"`
-	Channels []Asset
+	ID           string `eliona:"device_id,filterable"`
+	GAI          string
+	Name         string `eliona:"device_name,filterable"`
+	Location     string
+	Battery      *int64 `eliona:"battery" subtype:"status"`
+	Connectivity string `eliona:"connectivity" subtype:"status"`
+	Channels     []Asset
 }
 
 func (d Device) AssetType() string {
