@@ -2,26 +2,6 @@
 	"attributes": [
 		{
 			"enable": true,
-			"name": "switch_state",
-			"subtype": "input",
-			"type": "inputs-and-switches",
-			"translation": {
-				"de": "Schalterzustand",
-				"en": "Switch state"
-			},
-			"map": [
-				{
-					"value": 0,
-					"text": "OFF"
-				},
-				{
-					"value": 1,
-					"text": "ON"
-				}
-			]
-		},
-		{
-			"enable": true,
 			"name": "current_temperature",
 			"subtype": "input",
 			"type": "temperature",
@@ -29,19 +9,6 @@
 			"translation": {
 				"de": "Aktuelle Temperatur",
 				"en": "Current temperature"
-			}
-		},
-		{
-			"enable": true,
-			"name": "set_temperature_state",
-			"subtype": "input",
-			"type": "temperature",
-			"unit": "˚C",
-			"min": 7,
-			"max": 35,
-			"translation": {
-				"de": "Eingestellte Temperatur",
-				"en": "Set temperature"
 			}
 		},
 		{

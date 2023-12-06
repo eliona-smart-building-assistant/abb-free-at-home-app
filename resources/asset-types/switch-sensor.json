@@ -2,26 +2,6 @@
 	"attributes": [
 		{
 			"enable": true,
-			"name": "switch_state",
-			"subtype": "input",
-			"type": "inputs-and-switches",
-			"translation": {
-				"de": "Schalterzustand",
-				"en": "Switch state"
-			},
-			"map": [
-				{
-					"value": 0,
-					"text": "OFF"
-				},
-				{
-					"value": 1,
-					"text": "ON"
-				}
-			]
-		},
-		{
-			"enable": true,
 			"name": "switch",
 			"subtype": "output",
 			"type": "inputs-and-switches",

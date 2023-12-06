@@ -224,7 +224,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 					ElementSequence: nullableInt32(2),
 					AssetId:         hueLight.Id,
 					Data: map[string]interface{}{
-						"attribute":   "hsv_state",
+						"attribute":   "hsv",
 						"description": "Hue",
 						"key":         "_CURRENT",
 						"seq":         2,
@@ -279,7 +279,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 					ElementSequence: nullableInt32(2),
 					AssetId:         hueLight.Id,
 					Data: map[string]interface{}{
-						"attribute":   "switch_state",
+						"attribute":   "switch",
 						"description": "Value",
 						"key":         "_CURRENT",
 						"seq":         4,
