@@ -190,6 +190,7 @@ func listenForOutputChanges() {
 			log.Error("eliona", "listening for output changes: %v", err)
 			return
 		}
+		log.Debug("eliona", "started websocket listener")
 		for output := range outputs {
 			if cr := output.ClientReference.Get(); cr != nil && *cr == eliona.ClientReference {
 				// Just an echoed value this app sent.
@@ -217,6 +218,7 @@ func listenForOutputChanges() {
 				setAsset(output.AssetId, function, value)
 			}
 		}
+		log.Warn("Eliona", "Websocket connection broke. Restarting in 5 seconds.")
 		time.Sleep(time.Second * 5) // Give the server a little break.
 	}
 }
