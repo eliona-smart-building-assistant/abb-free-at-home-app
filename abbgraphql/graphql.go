@@ -48,6 +48,7 @@ type SystemsQuery struct {
 				DtId string `graphql:"dtId"`
 			} `graphql:"IsLocated"`
 			SerialNumber string `graphql:"serialNumber"`
+			Label        string `graphql:"label"` // Custom name set on sysAP
 			Name         struct {
 				En string `graphql:"en"`
 			} `graphql:"Name"`
@@ -58,18 +59,16 @@ type SystemsQuery struct {
 				} `graphql:"AttributesService"`
 			} `graphql:"... on IDeviceFHRF"`
 			Channels []struct {
-				ChannelNumber int    `graphql:"channelNumber"`
-				FunctionId    string `graphql:"functionId"`
-				Name          struct {
+				ChannelNumber int      `graphql:"channelNumber"`
+				FunctionId    string   `graphql:"functionId"`
+				Label         string   `graphql:"label"` // Custom name set on sysAP
+				Name          struct { // Static name, based on channel type
 					En string `graphql:"en"`
 				} `graphql:"Name"`
 				Outputs []struct {
 					Key   string `graphql:"key"`
 					Value struct {
-						PairingId string `graphql:"pairingId"`
-						Name      struct {
-							En string `graphql:"en"`
-						} `graphql:"Name"`
+						PairingId        string `graphql:"pairingId"`
 						Dpt              string `graphql:"dpt"`
 						DataPointService struct {
 							RequestDataPointValue struct {
@@ -83,9 +82,6 @@ type SystemsQuery struct {
 					Key   string `graphql:"key"`
 					Value struct {
 						PairingId string `graphql:"pairingId"`
-						Name      struct {
-							En string `graphql:"en"`
-						} `graphql:"Name"`
 					} `graphql:"value"`
 				} `graphql:"inputs"`
 			} `graphql:"Channels(find:$channelFind, selective:false)"`
