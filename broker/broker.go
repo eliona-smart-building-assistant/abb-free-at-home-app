@@ -194,7 +194,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 				assetBase := model.AssetBase{
 					IDBase:   id,
 					GAIBase:  d.GAI + "_" + id,
-					NameBase: channel.DisplayName.(string) + " " + id,
+					NameBase: channel.DisplayName.(string),
 				}
 				switch fid {
 				case model.FID_SWITCH_ACTUATOR:
