@@ -202,6 +202,9 @@ func convertToDataFormat(query abbgraphql.SystemsQuery) DataFormat {
 		for _, asset := range systemQuery.Assets {
 			var device Device
 			device.DisplayName = asset.Name.En
+			if asset.Label != "" {
+				device.DisplayName = asset.Label
+			}
 			device.Location = asset.IsLocated.DtId
 			if asset.DeviceFHRF.BatteryStatus != "" {
 				b, err := strconv.ParseInt(asset.DeviceFHRF.BatteryStatus, 16, 16)
@@ -217,6 +220,9 @@ func convertToDataFormat(query abbgraphql.SystemsQuery) DataFormat {
 			for _, ch := range asset.Channels {
 				var channel Channel
 				channel.DisplayName = ch.Name.En
+				if ch.Label != "" {
+					channel.DisplayName = ch.Label
+				}
 				channel.FunctionId = ch.FunctionId
 				channel.Outputs = make(map[string]Output)
 				channel.Inputs = make(map[string]Input)

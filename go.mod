@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/eliona-smart-building-assistant/app-integration-tests v1.0.1
 	github.com/eliona-smart-building-assistant/go-eliona v1.9.23
-	github.com/eliona-smart-building-assistant/go-utils v1.0.48
+	github.com/eliona-smart-building-assistant/go-utils v1.0.50
 	github.com/friendsofgo/errors v0.9.2
 	github.com/gorilla/mux v1.8.1
 	github.com/hasura/go-graphql-client v0.10.1
@@ -17,7 +17,7 @@ require (
 
 require (
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/uuid v1.4.0 // indirect
+	github.com/google/uuid v1.5.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
@@ -49,7 +49,7 @@ require (
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/volatiletech/inflect v0.0.1 // indirect
 	github.com/volatiletech/randomize v0.0.1 // indirect
-	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/oauth2 v0.15.0
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
