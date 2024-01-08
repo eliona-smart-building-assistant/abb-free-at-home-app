@@ -1,5 +1,26 @@
 {
-	"attributes": [],
+	"attributes": [
+		{
+			"enable": true,
+			"name": "connection_status",
+			"subtype": "status",
+			"type": "device-status",
+			"translation": {
+				"de": "Verbindungszustand",
+				"en": "Connection Status"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "Disconnected"
+				},
+				{
+					"value": 1,
+					"text": "Connected"
+				}
+			]
+		}
+	],
 	"custom": false,
 	"icon": null,
 	"name": "abb_free_at_home_system",

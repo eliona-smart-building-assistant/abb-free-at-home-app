@@ -59,10 +59,10 @@ type Device struct {
 	Location     string
 }
 type System struct {
-	ConnectionState string            `json:"connectionState"`
-	Devices         map[string]Device `json:"devices"`
-	SysApName       string            `json:"sysapName"`
-	Floorplan       Floors            `json:"floorplan"`
+	ConnectionOK bool
+	Devices      map[string]Device `json:"devices"`
+	SysApName    string            `json:"sysapName"`
+	Floorplan    Floors            `json:"floorplan"`
 }
 type Floors struct {
 	Floors map[string]Floor `json:"floors"`

@@ -15,6 +15,7 @@ import (
 )
 
 const proServiceUser = "eliona"
+const wsURL = "wss://apps.eu.mybuildings.abb.com/adtg-ws/graphql"
 
 type LocationsQuery struct {
 	ISystemFH []struct {
@@ -42,6 +43,11 @@ func GetLocations(httpClient *http.Client) (LocationsQuery, error) {
 
 type SystemsQuery struct {
 	Systems []struct {
+		ConnectionStatusService struct {
+			IoTHub struct {
+				Value bool `graphql:"value"`
+			} `graphql:"IoTHub"`
+		} `graphql:"ConnectionStatusService"`
 		DtId   string `graphql:"dtId"`
 		Assets []struct {
 			IsLocated struct {
@@ -228,14 +234,14 @@ type DataPointsSubscription struct {
 }
 
 func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<- DataPoint) error {
-	client := graphql.NewSubscriptionClient("wss://apps.eu.mybuildings.abb.com/adtg-ws/graphql").
+	client := graphql.NewSubscriptionClient(wsURL).
 		WithConnectionParams(map[string]interface{}{
 			"authorization": auth,
 		}).
 		WithProtocol(graphql.GraphQLWS).
 		OnError(func(sc *graphql.SubscriptionClient, err error) error {
 			// Cancels the subscription if returns non-nil error.
-			return fmt.Errorf("subscription client error: %v", err)
+			return fmt.Errorf("datapoint subscription client error: %v", err)
 		})
 	defer client.Close()
 
@@ -267,16 +273,72 @@ func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<
 
 	if _, err := client.Subscribe(&sub, variables, func(message []byte, err error) error {
 		if err != nil {
-			return fmt.Errorf("subscribe: %v", err)
+			return fmt.Errorf("subscribe datapoint: %v", err)
 		}
 		data := DataPointsSubscription{}
 		if err := jsonutil.UnmarshalGraphQL(message, &data); err != nil {
-			return fmt.Errorf("unmarshalling subscription response: %v", err)
+			return fmt.Errorf("unmarshalling datapoint subscription response: %v", err)
 		}
 		ch <- data.DataPointsSubscription
 		return nil
 	}); err != nil {
-		return fmt.Errorf("establishing subscription: %v", err)
+		return fmt.Errorf("establishing datapoint subscription: %v", err)
+	}
+
+	if err := client.Run(); err != nil {
+		return fmt.Errorf("running client: %v", err)
+	}
+	close(ch)
+	return nil
+}
+
+type ConnectionStatus struct {
+	DtId      string `graphql:"dtId"`
+	Connected bool   `graphql:"connected"`
+}
+
+type ConnectionStatusSubscription struct {
+	// Info from Johannes Schmidt (ABB) why we should filter connection status by "IOT" type:
+	//
+	// Sysaps have two connections to the backend: XMPP (a kind of legacy concept which is still in
+	// use also in order to handle the amount of messages in a cost-efficient way) and
+	// IOT (Microsoft IOT-Hub connection - new concept used for integration with the new SmartHome API).
+	//
+	// As both connections are built up and down almost in the same way/point-in-time you could rely on just one of both.
+	//
+	// Stepwise we are about to migrate towards IOT-Hub - so better to take this one.
+	ConnectionStatusSubscription ConnectionStatus `graphql:"ConnectionStatusSubscription(dtIds: $dtIds, type: \"IOT\")"`
+}
+
+func SubscribeConnectionStatus(auth string, dtIDs []string, ch chan<- ConnectionStatus) error {
+	client := graphql.NewSubscriptionClient(wsURL).
+		WithConnectionParams(map[string]interface{}{
+			"authorization": auth,
+		}).
+		WithProtocol(graphql.GraphQLWS).
+		OnError(func(sc *graphql.SubscriptionClient, err error) error {
+			// Cancels the subscription if returns non-nil error.
+			return fmt.Errorf("connnection status subscription client error: %v", err)
+		})
+	defer client.Close()
+	var sub ConnectionStatusSubscription
+
+	variables := map[string]interface{}{
+		"dtIds": dtIDs,
+	}
+
+	if _, err := client.Subscribe(&sub, variables, func(message []byte, err error) error {
+		if err != nil {
+			return fmt.Errorf("subscribe connection status: %v", err)
+		}
+		data := ConnectionStatusSubscription{}
+		if err := jsonutil.UnmarshalGraphQL(message, &data); err != nil {
+			return fmt.Errorf("unmarshalling connection status subscription response: %v", err)
+		}
+		ch <- data.ConnectionStatusSubscription
+		return nil
+	}); err != nil {
+		return fmt.Errorf("establishing connection status subscription: %v", err)
 	}
 
 	if err := client.Run(); err != nil {

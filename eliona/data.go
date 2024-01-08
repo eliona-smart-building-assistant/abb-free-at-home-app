@@ -20,6 +20,23 @@ const ClientReference string = "abb-free-at-home"
 func UpsertSystemsData(config apiserver.Configuration, systems []model.System) error {
 	for _, projectId := range *config.ProjectIDs {
 		for _, system := range systems {
+			log.Debug("Eliona", "upserting data for system: config %d and system '%s'", config.Id, fmt.Sprintf("%s_%s", system.AssetType(), system.GAI))
+			assetId, err := conf.GetAssetId(context.Background(), config, projectId, fmt.Sprintf("%s_%s", system.AssetType(), system.GAI))
+			if err != nil {
+				return err
+			}
+			if assetId == nil {
+				continue
+			}
+
+			data := asset.Data{
+				AssetId:         *assetId,
+				Data:            system,
+				ClientReference: ClientReference,
+			}
+			if asset.UpsertAssetDataIfAssetExists(data); err != nil {
+				return fmt.Errorf("upserting data: %v", err)
+			}
 			for _, device := range system.Devices {
 				log.Debug("Eliona", "upserting data for device: config %d and device '%s'", config.Id, fmt.Sprintf("%s_%s", device.AssetType(), device.GAI))
 				assetId, err := conf.GetAssetId(context.Background(), config, projectId, fmt.Sprintf("%s_%s", device.AssetType(), device.GAI))
@@ -97,6 +114,35 @@ func UpsertDatapointData(config apiserver.Configuration, datapoint appdb.Datapoi
 			if asset.UpsertDataIfAssetExists(apidata); err != nil {
 				return fmt.Errorf("upserting data: %v", err)
 			}
+		}
+	}
+	return nil
+}
+
+func UpsertSystemStatus(config apiserver.Configuration, system appdb.Asset, status int8) error {
+	for _, projectId := range *config.ProjectIDs {
+		log.Debug("Eliona", "upserting status for system: config %d and asset '%v'", config.Id, system.GlobalAssetID)
+		assetId, err := conf.GetAssetId(context.Background(), config, projectId, system.GlobalAssetID)
+		if err != nil {
+			return err
+		}
+		if assetId == nil {
+			return fmt.Errorf("unable to find asset ID")
+		}
+		data := map[string]interface{}{
+			"connection_status": status,
+		}
+
+		cr := ClientReference
+		apidata := api.Data{
+			AssetId:         *assetId,
+			Data:            data,
+			Subtype:         api.DataSubtype(api.SUBTYPE_STATUS),
+			AssetTypeName:   *api.NewNullableString(&system.AssetTypeName),
+			ClientReference: *api.NewNullableString(&cr),
+		}
+		if asset.UpsertDataIfAssetExists(apidata); err != nil {
+			return fmt.Errorf("upserting data: %v", err)
 		}
 	}
 	return nil

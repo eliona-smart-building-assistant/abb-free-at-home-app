@@ -161,10 +161,15 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 
 	var systems []model.System
 	for id, system := range abbConfiguration.Systems {
+		connectionStatus := int8(0)
+		if system.ConnectionOK {
+			connectionStatus = 1
+		}
 		s := model.System{
-			ID:   id,
-			GAI:  id,
-			Name: system.SysApName,
+			ID:               id,
+			GAI:              id,
+			Name:             system.SysApName,
+			ConnectionStatus: connectionStatus,
 		}
 		if adheres, err := s.AdheresToFilter(config.AssetFilter); err != nil {
 			return nil, fmt.Errorf("determining whether system adheres to a filter: %v", err)
@@ -694,6 +699,22 @@ func ListenForDataChanges(config *apiserver.Configuration, datapoints []appdb.Da
 		}
 	} else if err != nil {
 		return fmt.Errorf("listen for graphQL subscriptions: %v", err)
+	}
+	return nil
+}
+
+func ListenForSystemStatusChanges(config *apiserver.Configuration, dtIDs []string, ch chan<- abbgraphql.ConnectionStatus) error {
+	api, err := getAPI(config)
+	if err != nil {
+		return fmt.Errorf("getting API instance: %v", err)
+	}
+	err = api.ListenGraphQLSystemStatus(dtIDs, ch)
+	if err != nil && strings.Contains(err.Error(), "JsonWebTokenError") {
+		if _, err := conf.InvalidateAuthorization(*config); err != nil {
+			return fmt.Errorf("invalidating authorization: %v", err)
+		}
+	} else if err != nil {
+		return fmt.Errorf("listen for system status changes: %v", err)
 	}
 	return nil
 }
