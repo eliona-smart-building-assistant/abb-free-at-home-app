@@ -91,6 +91,12 @@ func collectAndStartSubscription(config apiserver.Configuration) {
 			log.Info("main", "Subscription %d exited. Restarting ...", *config.Id)
 			triggerResynchronize()
 		}, config, fmt.Sprintf("subscription_%v", *config.Id))
+		common.RunOnceWithParam(func(config apiserver.Configuration) {
+			log.Info("main", "Status subscription %d started.", *config.Id)
+			subscribeToSystemStatus(&config)
+			log.Info("main", "Status subscription %d exited. Restarting ...", *config.Id)
+			triggerResynchronize()
+		}, config, fmt.Sprintf("status_subscription_%v", *config.Id))
 		for {
 			// Wait for the time duration or a trigger
 			select {
@@ -166,6 +172,46 @@ func subscribeToDataChanges(config *apiserver.Configuration) {
 		}
 		if err := eliona.UpsertDatapointData(*config, datapoint, dp.Value); err != nil {
 			log.Error("eliona", "upserting datapoint data %+v: %v", dp, err)
+			return
+		}
+	}
+}
+
+func subscribeToSystemStatus(config *apiserver.Configuration) {
+	systems, err := conf.GetSystems(context.Background(), *config)
+	if err != nil {
+		log.Error("conf", "fetching all systems: %v", err)
+		return
+	}
+
+	var dtIDs []string
+	for _, s := range systems {
+		dtIDs = append(dtIDs, s.ProviderID)
+	}
+
+	connectionStatusChan := make(chan abbgraphql.ConnectionStatus)
+	go func() {
+		defer close(connectionStatusChan)
+
+		if err := broker.ListenForSystemStatusChanges(config, dtIDs, connectionStatusChan); err != nil {
+			log.Error("broker", "listen for system status changes: %v", err)
+			return
+		}
+		log.Info("broker", "ABB subscription exited")
+	}()
+	for status := range connectionStatusChan {
+		log.Debug("broker", "status received: %v", status)
+		system, err := conf.FindAssetByProviderID(context.Background(), *config, status.DtId)
+		if err != nil {
+			log.Error("conf", "finding system %+v: %v", status.DtId, err)
+			return
+		}
+		connected := int8(0)
+		if status.Connected {
+			connected = 1
+		}
+		if err := eliona.UpsertSystemStatus(*config, *system, connected); err != nil {
+			log.Error("eliona", "upserting system data %+v: %v", status.Connected, err)
 			return
 		}
 	}

@@ -38,10 +38,15 @@ func (r Room) GAI() string {
 }
 
 type System struct {
-	ID      string `eliona:"system_id,filterable"`
-	GAI     string `eliona:"system_id,filterable"`
-	Name    string `eliona:"system_name,filterable"`
-	Devices []Device
+	ID               string `eliona:"system_id,filterable"`
+	GAI              string `eliona:"system_id,filterable"`
+	Name             string `eliona:"system_name,filterable"`
+	ConnectionStatus int8   `eliona:"connection_status" subtype:"status"`
+	Devices          []Device
+}
+
+func (s System) AssetType() string {
+	return "abb_free_at_home_system"
 }
 
 type Device struct {

@@ -48,6 +48,7 @@ func CreateLocationAssetsIfNecessary(config apiserver.Configuration, locations [
 				parentFunctionalAssetId: &rootAssetID,
 				parentLocationalAssetId: &rootAssetID,
 				identifier:              floor.GAI(),
+				providerID:              floor.Id,
 				assetType:               assetType,
 				name:                    floor.Name,
 				description:             fmt.Sprintf("%s (%v)", floor.Name, floor.GAI()),
@@ -63,6 +64,7 @@ func CreateLocationAssetsIfNecessary(config apiserver.Configuration, locations [
 					parentFunctionalAssetId: &floorAssetID,
 					parentLocationalAssetId: &floorAssetID,
 					identifier:              room.GAI(),
+					providerID:              room.Id,
 					assetType:               assetType,
 					name:                    room.Name,
 					description:             fmt.Sprintf("%s (%v)", room.Name, room.GAI()),
@@ -94,6 +96,7 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 				parentFunctionalAssetId: &rootAssetID,
 				parentLocationalAssetId: &rootAssetID,
 				identifier:              fmt.Sprintf("%s_%s", assetType, system.GAI),
+				providerID:              system.ID,
 				assetType:               assetType,
 				name:                    system.Name,
 				description:             fmt.Sprintf("%s (%v)", system.Name, system.GAI),
@@ -122,6 +125,7 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 					parentFunctionalAssetId: &systemAssetID,
 					parentLocationalAssetId: locParentId,
 					identifier:              fmt.Sprintf("%s_%s", assetType, device.GAI),
+					providerID:              device.ID,
 					assetType:               assetType,
 					name:                    fmt.Sprintf("%s | %s", deviceNamePrefix, device.Name),
 					description:             fmt.Sprintf("%s (%v)", device.Name, device.GAI),
@@ -141,6 +145,7 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 						parentFunctionalAssetId: &deviceAssetID,
 						parentLocationalAssetId: &deviceAssetID,
 						identifier:              channel.GAI(),
+						providerID:              channel.Id(),
 						assetType:               channel.AssetType(),
 						name:                    fmt.Sprintf("%s | %s", deviceNamePrefix, channel.Name()),
 						description:             fmt.Sprintf("%s (%v)", channel.Name(), channel.GAI()),
@@ -235,6 +240,7 @@ type assetData struct {
 	parentFunctionalAssetId *int32
 	parentLocationalAssetId *int32
 	identifier              string
+	providerID              string
 	assetType               string
 	name                    string
 	description             string
@@ -268,7 +274,7 @@ func upsertAsset(d assetData) (created bool, assetID int32, err error) {
 		return false, 0, fmt.Errorf("cannot create asset %s", d.name)
 	}
 
-	if err := conf.InsertAsset(context.Background(), d.config, d.projectId, d.identifier, d.assetType, *newID); err != nil {
+	if err := conf.InsertAsset(context.Background(), d.config, d.projectId, d.identifier, d.assetType, d.providerID, *newID); err != nil {
 		return false, 0, fmt.Errorf("inserting asset to config db: %v", err)
 	}
 
