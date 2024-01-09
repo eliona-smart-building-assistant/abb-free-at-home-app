@@ -144,6 +144,8 @@ func GetLocations(config *apiserver.Configuration) ([]model.Floor, error) {
 	return floors, nil
 }
 
+// GetSystems gets systems according to the configuration passed.
+// The systems are then converted to a model.System type and the datapoints are mapped here.
 func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 	api, err := getAPI(config)
 	if err != nil {
@@ -592,6 +594,28 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					c = model.MovementSensor{
 						AssetBase: assetBase,
 						Movement:  movement,
+					}
+				case model.FID_DES_LEVEL_CALL_SENSOR:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, input := range channel.Outputs {
+						if input.PairingId == model.PID_TIMED_START_STOP {
+							outputs[function_status] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "floor_call",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					floorCall := parseInt8(channel.FindOutputValueByPairingID(model.PID_TIMED_START_STOP))
+					c = model.FloorCallButton{
+						AssetBase: assetBase,
+						FloorCall: floorCall,
 					}
 				case model.FID_HEATING_ACTUATOR:
 					outputs := make(map[string]model.Datapoint)

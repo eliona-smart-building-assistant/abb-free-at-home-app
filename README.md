@@ -36,6 +36,13 @@ The app requires configuration data that remains in the database. To do this, th
 
 **Generation**: to generate access method to database see Generation section below.
 
+### Adding devices support ###
+
+To add new devices, define:
+- Asset type in `/resources/asset-types`
+- Struct in `model.go`
+- Case in `broker.go:GetSystems()` (map functions and datapoints)
+- Supported function ID in `model.GetFunctionIDsList()` (the query requests only supported function IDs)
 
 ## References
 

@@ -245,6 +245,19 @@ func (c MovementSensor) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
 }
 
+type FloorCallButton struct {
+	AssetBase
+	FloorCall int8 `eliona:"floor_call" subtype:"input"`
+}
+
+func (c FloorCallButton) AssetType() string {
+	return "abb_free_at_home_floor_call_button"
+}
+
+func (c FloorCallButton) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
 type Scene struct {
 	AssetBase
 	SwitchState int8 `eliona:"switch_state" subtype:"input"`

@@ -1,0 +1,33 @@
+{
+	"attributes": [
+		{
+			"enable": true,
+			"name": "floor_call",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Etagenruf",
+				"en": "Floor call"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
+		}
+	],
+	"custom": false,
+	"icon": null,
+	"name": "abb_free_at_home_floor_call_button",
+	"translation": {
+		"de": "ABB-free@home Etagenruftaster",
+		"en": "ABB-free@home Floor call button"
+	},
+	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
+	"vendor": "ABB"
+}
