@@ -269,22 +269,11 @@ func listenForOutputChanges() {
 	}
 }
 
-var assetWrites = make(map[int32]time.Time)
-
 func setAsset(assetID int32, function string, val float64) {
 	input, err := conf.FetchInput(assetID, function)
 	if err != nil {
 		log.Fatal("conf", "fetching input for assetID %v function %v: %v", assetID, function, err)
 		return
-	}
-
-	if lastAssetWrite, ok := assetWrites[assetID]; ok {
-		if time.Since(lastAssetWrite).Seconds() < 1 {
-			log.Info("broker", "skipped setting value %v for function %v asset %v, to avoid overwriting dependent values", val, function, assetID)
-			return
-		} else {
-			fmt.Println(time.Since(lastAssetWrite).Seconds())
-		}
 	}
 
 	config, err := conf.GetConfigForDatapoint(input)
@@ -297,7 +286,6 @@ func setAsset(assetID int32, function string, val float64) {
 		log.Error("broker", "setting value for asset %v: %v", assetID, err)
 		return
 	}
-	assetWrites[assetID] = time.Now()
 	input.LastWrittenValue.Float64 = val
 	input.LastWrittenValue.Valid = true
 	input.LastWrittenTime.Time = time.Now()
