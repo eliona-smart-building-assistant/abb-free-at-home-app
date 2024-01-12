@@ -50,9 +50,11 @@ const (
 	function_hsv_value             = "hsv_value"
 	function_color_mode            = "color_mode"
 	function_color_temperature     = "color_temperature"
+	function_set_scene             = "set_scene"
 )
 
 const SET_TEMP_TWICE = function_set_temperature
+const SET_SCENE_RETURN_TO_ZERO = function_set_scene
 
 var Functions = []string{
 	function_status,
@@ -74,6 +76,7 @@ var Functions = []string{
 	function_hsv_value,
 	function_color_mode,
 	function_color_temperature,
+	function_set_scene,
 }
 
 func getAPI(config *apiserver.Configuration) (*abb.Api, error) {
@@ -653,15 +656,18 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						ActuatorFlow: actuatorFlow,
 					}
 				case model.FID_SCENE, model.FID_SPECIAL_SCENE_PANIC, model.FID_SPECIAL_SCENE_ALL_OFF, model.FID_SPECIAL_SCENE_ALL_BLINDS_UP, model.FID_SPECIAL_SCENE_ALL_BLINDS_DOWN:
+					// Scenes are stateless, therefore we cannot read their state. We can only control them.
+					// But we need to simulate this state in Eliona, to allow a "trigger" UX on the attribute.
+					// That's why we need to specify the outputs as well.
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {
 						if input.PairingId == model.PID_AL_SCENE_CONTROL {
-							outputs[function_switch] = model.Datapoint{
+							outputs[function_set_scene] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
 									{
-										Subtype:       elionaapi.SUBTYPE_INPUT,
-										AttributeName: "switch_state",
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "set_scene",
 									},
 								},
 							}
@@ -669,10 +675,16 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.OutputsBase = outputs
 
-					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_AL_SCENE_CONTROL))
+					// We can control scenes only via output datapoint. Don't ask me why, they don't have
+					// any input ones.
+					inputs := make(map[string]string)
+					inputs[function_set_scene] = "odp0000" // Yes, this is really a setable output.
+					assetBase.InputsBase = inputs
+
+					switchState := int8(0) // Scenes are stateless. It's always zero.
 					c = model.Scene{
-						AssetBase:   assetBase,
-						SwitchState: switchState,
+						AssetBase: assetBase,
+						Switch:    switchState,
 					}
 				default:
 					continue // Don't create any asset if user cannot work with it.

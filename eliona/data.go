@@ -91,7 +91,7 @@ func UpsertDatapointData(config apiserver.Configuration, datapoint appdb.Datapoi
 	}
 	for _, projectId := range *config.ProjectIDs {
 		for _, attribute := range attributes {
-			log.Debug("Eliona", "upserting data for datapoint: config %d and asset '%v'", config.Id, ast.GlobalAssetID)
+			log.Debug("Eliona", "upserting data %v for datapoint: config %d and asset '%v'", value, config.Id, ast.GlobalAssetID)
 			assetId, err := conf.GetAssetId(context.Background(), config, projectId, ast.GlobalAssetID)
 			if err != nil {
 				return err

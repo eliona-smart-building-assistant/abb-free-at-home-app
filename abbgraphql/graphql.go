@@ -163,6 +163,27 @@ type setQueryProService struct {
 	} `graphql:"IDeviceFH(find: $deviceFind)"`
 }
 
+// This is a hack for scene control. It really is an output that is setable.
+type setQueryOutputProService struct {
+	IDeviceFH []struct {
+		Channels []struct {
+			ChannelNumber int `graphql:"channelNumber"`
+			Inputs        []struct {
+				Value struct {
+					DataPointService struct {
+						SetDataPointMethod struct {
+							CallMethod struct {
+								Code    int    `graphql:"code"`
+								Message string `graphql:"details"`
+							} `graphql:"callMethod(value: $callValue, setOrgUser: $orgUser)"`
+						} `graphql:"SetDataPointMethod"`
+					} `graphql:"DataPointService"`
+				} `graphql:"value"`
+			} `graphql:"outputs(key: $inputKey)"`
+		} `graphql:"Channels(find: $channelFind)"`
+	} `graphql:"IDeviceFH(find: $deviceFind)"`
+}
+
 func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber string, channel int, datapoint string, value float64) error {
 	client := getClient(httpClient)
 	val := formatFloat(value)
@@ -173,8 +194,36 @@ func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber 
 		"callValue":   val,
 	}
 
-	// TODO: This is ugly, but doesn't work with type casting. We should find a nicer solution.
-	if isProService {
+	// TODO: This is ugly, but accessing field tags doesn't work with type casting. We should find a nicer solution.
+	if isProService && datapoint[0] == 'o' {
+		query := setQueryOutputProService{}
+		variables["orgUser"] = proServiceUser
+
+		if err := client.Query(context.Background(), &query, variables); err != nil {
+			return fmt.Errorf("querying: %v", err)
+		}
+
+		// Check for errors
+		if len(query.IDeviceFH) != 1 {
+			return fmt.Errorf("setting data point value %s on device %v channel %v output %v: affected %v != 1 devices", val, serialNumber, channel, datapoint, len(query.IDeviceFH))
+		}
+		for _, device := range query.IDeviceFH {
+			if len(device.Channels) != 1 {
+				return fmt.Errorf("setting data point value %s on device %v channel %v output %v: affected %v != 1 channels", val, serialNumber, channel, datapoint, len(device.Channels))
+			}
+			for _, channel := range device.Channels {
+				if len(channel.Inputs) != 1 {
+					return fmt.Errorf("setting data point value %s on device %v channel %v output %v: affected %v != 1 inputs", val, serialNumber, channel, datapoint, len(channel.Inputs))
+				}
+				for _, input := range channel.Inputs {
+					methodCall := input.Value.DataPointService.SetDataPointMethod.CallMethod
+					if methodCall.Code >= 300 {
+						return fmt.Errorf("setting data point value %s on device %v channel %v output %v: %v (%v)", val, serialNumber, channel, datapoint, methodCall.Code, methodCall.Message)
+					}
+				}
+			}
+		}
+	} else if isProService {
 		query := setQueryProService{}
 		variables["orgUser"] = proServiceUser
 
@@ -183,8 +232,17 @@ func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber 
 		}
 
 		// Check for errors
+		if len(query.IDeviceFH) != 1 {
+			return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 devices", val, serialNumber, channel, datapoint, len(query.IDeviceFH))
+		}
 		for _, device := range query.IDeviceFH {
+			if len(device.Channels) != 1 {
+				return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 channels", val, serialNumber, channel, datapoint, len(device.Channels))
+			}
 			for _, channel := range device.Channels {
+				if len(channel.Inputs) != 1 {
+					return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 inputs", val, serialNumber, channel, datapoint, len(channel.Inputs))
+				}
 				for _, input := range channel.Inputs {
 					methodCall := input.Value.DataPointService.SetDataPointMethod.CallMethod
 					if methodCall.Code >= 300 {
@@ -200,8 +258,17 @@ func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber 
 		}
 
 		// Check for errors
+		if len(query.IDeviceFH) != 1 {
+			return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 devices", val, serialNumber, channel, datapoint, len(query.IDeviceFH))
+		}
 		for _, device := range query.IDeviceFH {
+			if len(device.Channels) != 1 {
+				return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 channels", val, serialNumber, channel, datapoint, len(device.Channels))
+			}
 			for _, channel := range device.Channels {
+				if len(channel.Inputs) != 1 {
+					return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 inputs", val, serialNumber, channel, datapoint, len(channel.Inputs))
+				}
 				for _, input := range channel.Inputs {
 					methodCall := input.Value.DataPointService.SetDataPointMethod.CallMethod
 					if methodCall.Code >= 300 {

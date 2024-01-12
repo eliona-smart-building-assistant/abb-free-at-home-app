@@ -260,7 +260,7 @@ func (c FloorCallButton) GAI() string {
 
 type Scene struct {
 	AssetBase
-	SwitchState int8 `eliona:"switch_state" subtype:"input"`
+	Switch int8 `eliona:"set_scene" subtype:"output"`
 }
 
 func (c Scene) AssetType() string {

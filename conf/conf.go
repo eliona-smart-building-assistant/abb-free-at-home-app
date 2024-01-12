@@ -393,7 +393,7 @@ func UpdateDatapoint(datapoint appdb.Datapoint) error {
 	return err
 }
 
-func FindDatapoint(serialNumber, channelNumber, datapointId string) (appdb.Datapoint, error) {
+func FindOutputDatapoint(serialNumber, channelNumber, datapointId string) (appdb.Datapoint, error) {
 	datapoint, err := appdb.Datapoints(
 		appdb.DatapointWhere.IsInput.EQ(false),
 		appdb.DatapointWhere.DeviceID.EQ(serialNumber),

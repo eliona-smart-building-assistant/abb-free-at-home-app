@@ -165,7 +165,7 @@ func subscribeToDataChanges(config *apiserver.Configuration) {
 		log.Info("broker", "ABB subscription exited")
 	}()
 	for dp := range dataPointChan {
-		datapoint, err := conf.FindDatapoint(dp.SerialNumber, dp.ChannelNumber, dp.DatapointId)
+		datapoint, err := conf.FindOutputDatapoint(dp.SerialNumber, dp.ChannelNumber, dp.DatapointId)
 		if err != nil {
 			log.Error("conf", "finding datapoint %+v: %v", dp, err)
 			return
@@ -313,6 +313,21 @@ func setAsset(assetID int32, function string, val float64) {
 	if function == broker.SET_TEMP_TWICE {
 		if err := conf.UpdateDatapoint(input); err != nil {
 			log.Error("conf", "updating input second time: %v", err)
+			return
+		}
+	}
+
+	// This hack is to enable "triggger" functionality in Eliona. The user
+	// triggers the attribute by setting it to "1", then the app immediately
+	// sets it back to "0".
+	if function == broker.SET_SCENE_RETURN_TO_ZERO {
+		output, err := conf.FindOutputDatapoint(input.DeviceID, input.ChannelID, input.Datapoint)
+		if err != nil {
+			log.Error("conf", "finding datapoint corresponding to %v: %v", input, err)
+			return
+		}
+		if err := eliona.UpsertDatapointData(config, output, "0"); err != nil {
+			log.Error("eliona", "returning scene trigger back to zero: %v", err)
 			return
 		}
 	}
