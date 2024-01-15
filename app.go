@@ -299,8 +299,9 @@ func setAsset(assetID int32, function string, val float64) {
 	// call turns off the eco mode (and highens the temperature), second call
 	// really sets the temperature.
 	if function == broker.SET_TEMP_TWICE {
-		if err := conf.UpdateDatapoint(input); err != nil {
-			log.Error("conf", "updating input second time: %v", err)
+		log.Info("broker", "setting value %v second time for asset %v function %v", val, assetID, function)
+		if err := broker.SetInput(&config, input, val); err != nil {
+			log.Error("broker", "setting value for asset %v: %v", assetID, err)
 			return
 		}
 	}
