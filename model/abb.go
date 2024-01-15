@@ -157,4 +157,5 @@ const (
 	PID_COLOR_MODE_GET                             = 0x011D
 	PID_COLOR_TEMPERATURE_GET                      = 0x0118
 	PID_COLOR_TEMPERATURE_SET                      = 0x0016
+	PID_FIRE_ALARM_ACTIVE                          = 0x02C3
 )

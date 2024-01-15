@@ -598,6 +598,29 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						AssetBase: assetBase,
 						Movement:  movement,
 					}
+				case model.FID_SMOKE_DETECTOR:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, input := range channel.Outputs {
+						if input.PairingId == model.PID_FIRE_ALARM_ACTIVE {
+							outputs[function_status] = model.Datapoint{
+
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "fire",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					fire := parseInt8(channel.FindOutputValueByPairingID(model.PID_FIRE_ALARM_ACTIVE))
+					c = model.SmokeDetector{
+						AssetBase: assetBase,
+						Fire:      fire,
+					}
 				case model.FID_DES_LEVEL_CALL_SENSOR:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, input := range channel.Outputs {

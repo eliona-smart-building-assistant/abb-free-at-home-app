@@ -245,6 +245,19 @@ func (c MovementSensor) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
 }
 
+type SmokeDetector struct {
+	AssetBase
+	Fire int8 `eliona:"fire" subtype:"input"`
+}
+
+func (c SmokeDetector) AssetType() string {
+	return "abb_free_at_home_smoke_detector"
+}
+
+func (c SmokeDetector) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
 type FloorCallButton struct {
 	AssetBase
 	FloorCall int8 `eliona:"floor_call" subtype:"input"`
