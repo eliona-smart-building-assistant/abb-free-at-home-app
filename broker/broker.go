@@ -210,8 +210,8 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 				case model.FID_SWITCH_ACTUATOR:
 					// Used for ABB -> Eliona
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_ON_OFF_INFO_GET {
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_ON_OFF_INFO_GET {
 							outputs[function_switch] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -534,8 +534,8 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 				case model.FID_WINDOW_DOOR_SENSOR:
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_AL_WINDOW_DOOR {
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_AL_WINDOW_DOOR {
 							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -556,8 +556,8 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 				case model.FID_WINDOW_DOOR_POSITION_SENSOR:
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_AL_WINDOW_DOOR_POSITION {
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_AL_WINDOW_DOOR_POSITION {
 							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -578,8 +578,8 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 				case model.FID_MOVEMENT_DETECTOR:
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_MOVEMENT_UNDER_CONSIDERATION_OF_BRIGHTNESS {
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_MOVEMENT_UNDER_CONSIDERATION_OF_BRIGHTNESS {
 							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -600,8 +600,8 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 				case model.FID_SMOKE_DETECTOR:
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_FIRE_ALARM_ACTIVE {
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_FIRE_ALARM_ACTIVE {
 							outputs[function_status] = model.Datapoint{
 
 								Name: datapoint,
@@ -623,8 +623,8 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 				case model.FID_DES_LEVEL_CALL_SENSOR:
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_TIMED_START_STOP {
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_TIMED_START_STOP {
 							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -645,8 +645,8 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 				case model.FID_HEATING_ACTUATOR:
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_AL_INFO_VALUE_HEATING {
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_AL_INFO_VALUE_HEATING {
 							outputs[function_heating_flow] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -657,7 +657,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 								},
 							}
 						}
-						if input.PairingId == model.PID_ACTUATING_VALUE_HEATING {
+						if output.PairingId == model.PID_ACTUATING_VALUE_HEATING {
 							outputs[function_actuator_heating_flow] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -683,8 +683,8 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					// But we need to simulate this state in Eliona, to allow a "trigger" UX on the attribute.
 					// That's why we need to specify the outputs as well.
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_AL_SCENE_CONTROL {
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_AL_SCENE_CONTROL {
 							outputs[function_set_scene] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
