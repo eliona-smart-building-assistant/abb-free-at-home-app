@@ -49,18 +49,20 @@ type Channel struct {
 	Room        interface{}       `json:"room"`
 }
 type Device struct {
-	Channels    map[string]Channel `json:"channels"`
-	DisplayName interface{}        `json:"displayName"`
-	Floor       interface{}        `json:"floor"`
-	Interface   interface{}        `json:"interface"`
-	Room        interface{}        `json:"room"`
-	Location    string
+	Channels     map[string]Channel `json:"channels"`
+	DisplayName  interface{}        `json:"displayName"`
+	Floor        interface{}        `json:"floor"`
+	Interface    interface{}        `json:"interface"`
+	Room         interface{}        `json:"room"`
+	Battery      *int64
+	Connectivity string
+	Location     string
 }
 type System struct {
-	ConnectionState string            `json:"connectionState"`
-	Devices         map[string]Device `json:"devices"`
-	SysApName       string            `json:"sysapName"`
-	Floorplan       Floors            `json:"floorplan"`
+	ConnectionOK bool
+	Devices      map[string]Device `json:"devices"`
+	SysApName    string            `json:"sysapName"`
+	Floorplan    Floors            `json:"floorplan"`
 }
 type Floors struct {
 	Floors map[string]Floor `json:"floors"`

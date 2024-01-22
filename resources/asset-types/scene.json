@@ -2,21 +2,21 @@
 	"attributes": [
 		{
 			"enable": true,
-			"name": "switch_state",
-			"subtype": "input",
+			"name": "set_scene",
+			"subtype": "output",
 			"type": "inputs-and-switches",
 			"translation": {
-				"de": "Szenezustand",
-				"en": "Scene state"
+				"de": "Szenenauslöser",
+				"en": "Scene trigger"
 			},
 			"map": [
 				{
 					"value": 0,
-					"text": "OFF"
+					"text": "No operation"
 				},
 				{
 					"value": 1,
-					"text": "ON"
+					"text": "Trigger"
 				}
 			]
 		}

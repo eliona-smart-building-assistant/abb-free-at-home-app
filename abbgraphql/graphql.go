@@ -15,16 +15,17 @@ import (
 )
 
 const proServiceUser = "eliona"
+const wsURL = "wss://apps.eu.mybuildings.abb.com/adtg-ws/graphql"
 
 type LocationsQuery struct {
 	ISystemFH []struct {
 		Locations []struct {
-			DtId         graphql.String `graphql:"dtId"`
-			Label        graphql.String `graphql:"label"`
-			Level        graphql.String `graphql:"level"`
+			DtId         string `graphql:"dtId"`
+			Label        string `graphql:"label"`
+			Level        string `graphql:"level"`
 			Sublocations []struct {
-				DtId  graphql.String `graphql:"dtId"`
-				Label graphql.String `graphql:"label"`
+				DtId  string `graphql:"dtId"`
+				Label string `graphql:"label"`
 			} `graphql:"Sublocations"`
 		} `graphql:"Locations"`
 	} `graphql:"ISystemFH"`
@@ -42,44 +43,51 @@ func GetLocations(httpClient *http.Client) (LocationsQuery, error) {
 
 type SystemsQuery struct {
 	Systems []struct {
-		DtId   graphql.String `graphql:"dtId"`
+		ConnectionStatusService struct {
+			IoTHub struct {
+				Value bool `graphql:"value"`
+			} `graphql:"IoTHub"`
+		} `graphql:"ConnectionStatusService"`
+		DtId   string `graphql:"dtId"`
 		Assets []struct {
 			IsLocated struct {
-				DtId graphql.String `graphql:"dtId"`
+				DtId string `graphql:"dtId"`
 			} `graphql:"IsLocated"`
-			SerialNumber graphql.String `graphql:"serialNumber"`
+			SerialNumber string `graphql:"serialNumber"`
+			Label        string `graphql:"label"` // Custom name set on sysAP
 			Name         struct {
-				En graphql.String `graphql:"en"`
+				En string `graphql:"en"`
 			} `graphql:"Name"`
+			DeviceFHRF struct {
+				BatteryStatus     string `graphql:"batteryStatus"`
+				AttributesService struct {
+					Connectivity string `graphql:"get(key:\"connectivity\")"`
+				} `graphql:"AttributesService"`
+			} `graphql:"... on IDeviceFHRF"`
 			Channels []struct {
-				ChannelNumber graphql.Int    `graphql:"channelNumber"`
-				FunctionId    graphql.String `graphql:"functionId"`
-				Name          struct {
-					En graphql.String `graphql:"en"`
+				ChannelNumber int      `graphql:"channelNumber"`
+				FunctionId    string   `graphql:"functionId"`
+				Label         string   `graphql:"label"` // Custom name set on sysAP
+				Name          struct { // Static name, based on channel type
+					En string `graphql:"en"`
 				} `graphql:"Name"`
 				Outputs []struct {
-					Key   graphql.String `graphql:"key"`
+					Key   string `graphql:"key"`
 					Value struct {
-						PairingId graphql.String `graphql:"pairingId"`
-						Name      struct {
-							En graphql.String `graphql:"en"`
-						} `graphql:"Name"`
-						Dpt              graphql.String `graphql:"dpt"`
+						PairingId        string `graphql:"pairingId"`
+						Dpt              string `graphql:"dpt"`
 						DataPointService struct {
 							RequestDataPointValue struct {
-								Value graphql.String `graphql:"value"`
-								Time  graphql.String `graphql:"time"`
+								Value string `graphql:"value"`
+								Time  string `graphql:"time"`
 							} `graphql:"RequestDataPointValue"`
 						} `graphql:"DataPointService"`
 					} `graphql:"value"`
 				} `graphql:"outputs"`
 				Inputs []struct {
-					Key   graphql.String `graphql:"key"`
+					Key   string `graphql:"key"`
 					Value struct {
-						PairingId graphql.String `graphql:"pairingId"`
-						Name      struct {
-							En graphql.String `graphql:"en"`
-						} `graphql:"Name"`
+						PairingId string `graphql:"pairingId"`
 					} `graphql:"value"`
 				} `graphql:"inputs"`
 			} `graphql:"Channels(find:$channelFind, selective:false)"`
@@ -92,14 +100,14 @@ func GetSystems(httpClient *http.Client, orgUUID string) (SystemsQuery, error) {
 	var query SystemsQuery
 	variables := map[string]interface{}{
 		// Fetch only supported devices.
-		"channelFind": graphql.String(fmt.Sprintf("{'functionId': {'$in': %s}}", formatSlice(model.GetFunctionIDsList()))),
+		"channelFind": fmt.Sprintf("{'functionId': {'$in': %s}}", formatSlice(model.GetFunctionIDsList())),
 	}
 	if err := client.Query(context.Background(), &query, variables); err != nil {
 		return SystemsQuery{}, err
 	}
 	if orgUUID != "" {
 		for _, system := range query.Systems {
-			if err := createUserIfNotExists(client, orgUUID, string(system.DtId)); err != nil {
+			if err := createUserIfNotExists(client, orgUUID, system.DtId); err != nil {
 				return SystemsQuery{}, fmt.Errorf("creating user if not exists: %v", err)
 			}
 		}
@@ -118,14 +126,14 @@ func formatSlice(slice []string) string {
 type setQuery struct {
 	IDeviceFH []struct {
 		Channels []struct {
-			ChannelNumber graphql.Int `graphql:"channelNumber"`
+			ChannelNumber int `graphql:"channelNumber"`
 			Inputs        []struct {
 				Value struct {
 					DataPointService struct {
 						SetDataPointMethod struct {
 							CallMethod struct {
-								Code    graphql.Int    `graphql:"code"`
-								Message graphql.String `graphql:"message"`
+								Code    int    `graphql:"code"`
+								Message string `graphql:"details"`
 							} `graphql:"callMethod(value: $callValue)"`
 						} `graphql:"SetDataPointMethod"`
 					} `graphql:"DataPointService"`
@@ -138,14 +146,14 @@ type setQuery struct {
 type setQueryProService struct {
 	IDeviceFH []struct {
 		Channels []struct {
-			ChannelNumber graphql.Int `graphql:"channelNumber"`
+			ChannelNumber int `graphql:"channelNumber"`
 			Inputs        []struct {
 				Value struct {
 					DataPointService struct {
 						SetDataPointMethod struct {
 							CallMethod struct {
-								Code    graphql.Int    `graphql:"code"`
-								Message graphql.String `graphql:"message"`
+								Code    int    `graphql:"code"`
+								Message string `graphql:"details"`
 							} `graphql:"callMethod(value: $callValue, setOrgUser: $orgUser)"`
 						} `graphql:"SetDataPointMethod"`
 					} `graphql:"DataPointService"`
@@ -155,27 +163,86 @@ type setQueryProService struct {
 	} `graphql:"IDeviceFH(find: $deviceFind)"`
 }
 
+// This is a hack for scene control. It really is an output that is setable.
+type setQueryOutputProService struct {
+	IDeviceFH []struct {
+		Channels []struct {
+			ChannelNumber int `graphql:"channelNumber"`
+			Inputs        []struct {
+				Value struct {
+					DataPointService struct {
+						SetDataPointMethod struct {
+							CallMethod struct {
+								Code    int    `graphql:"code"`
+								Message string `graphql:"details"`
+							} `graphql:"callMethod(value: $callValue, setOrgUser: $orgUser)"`
+						} `graphql:"SetDataPointMethod"`
+					} `graphql:"DataPointService"`
+				} `graphql:"value"`
+			} `graphql:"outputs(key: $inputKey)"`
+		} `graphql:"Channels(find: $channelFind)"`
+	} `graphql:"IDeviceFH(find: $deviceFind)"`
+}
+
 func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber string, channel int, datapoint string, value float64) error {
 	client := getClient(httpClient)
 	val := formatFloat(value)
 	variables := map[string]interface{}{
-		"deviceFind":  graphql.String(fmt.Sprintf("{'serialNumber': '%s'}", serialNumber)),
-		"channelFind": graphql.String(fmt.Sprintf("{'channelNumber': %d}", channel)),
-		"inputKey":    graphql.String(datapoint),
-		"callValue":   graphql.String(val),
+		"deviceFind":  fmt.Sprintf("{'serialNumber': '%s'}", serialNumber),
+		"channelFind": fmt.Sprintf("{'channelNumber': %d}", channel),
+		"inputKey":    datapoint,
+		"callValue":   val,
 	}
 
-	// TODO: This is ugly, but doesn't work with type casting. We should find a nicer solution.
-	if isProService {
-		query := setQueryProService{}
-		variables["orgUser"] = graphql.String(proServiceUser)
+	// TODO: This is ugly, but accessing field tags doesn't work with type casting. We should find a nicer solution.
+	if isProService && datapoint[0] == 'o' {
+		query := setQueryOutputProService{}
+		variables["orgUser"] = proServiceUser
+
 		if err := client.Query(context.Background(), &query, variables); err != nil {
 			return fmt.Errorf("querying: %v", err)
 		}
 
 		// Check for errors
+		if len(query.IDeviceFH) != 1 {
+			return fmt.Errorf("setting data point value %s on device %v channel %v output %v: affected %v != 1 devices", val, serialNumber, channel, datapoint, len(query.IDeviceFH))
+		}
 		for _, device := range query.IDeviceFH {
+			if len(device.Channels) != 1 {
+				return fmt.Errorf("setting data point value %s on device %v channel %v output %v: affected %v != 1 channels", val, serialNumber, channel, datapoint, len(device.Channels))
+			}
 			for _, channel := range device.Channels {
+				if len(channel.Inputs) != 1 {
+					return fmt.Errorf("setting data point value %s on device %v channel %v output %v: affected %v != 1 inputs", val, serialNumber, channel, datapoint, len(channel.Inputs))
+				}
+				for _, input := range channel.Inputs {
+					methodCall := input.Value.DataPointService.SetDataPointMethod.CallMethod
+					if methodCall.Code >= 300 {
+						return fmt.Errorf("setting data point value %s on device %v channel %v output %v: %v (%v)", val, serialNumber, channel, datapoint, methodCall.Code, methodCall.Message)
+					}
+				}
+			}
+		}
+	} else if isProService {
+		query := setQueryProService{}
+		variables["orgUser"] = proServiceUser
+
+		if err := client.Query(context.Background(), &query, variables); err != nil {
+			return fmt.Errorf("querying: %v", err)
+		}
+
+		// Check for errors
+		if len(query.IDeviceFH) != 1 {
+			return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 devices", val, serialNumber, channel, datapoint, len(query.IDeviceFH))
+		}
+		for _, device := range query.IDeviceFH {
+			if len(device.Channels) != 1 {
+				return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 channels", val, serialNumber, channel, datapoint, len(device.Channels))
+			}
+			for _, channel := range device.Channels {
+				if len(channel.Inputs) != 1 {
+					return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 inputs", val, serialNumber, channel, datapoint, len(channel.Inputs))
+				}
 				for _, input := range channel.Inputs {
 					methodCall := input.Value.DataPointService.SetDataPointMethod.CallMethod
 					if methodCall.Code >= 300 {
@@ -191,8 +258,17 @@ func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber 
 		}
 
 		// Check for errors
+		if len(query.IDeviceFH) != 1 {
+			return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 devices", val, serialNumber, channel, datapoint, len(query.IDeviceFH))
+		}
 		for _, device := range query.IDeviceFH {
+			if len(device.Channels) != 1 {
+				return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 channels", val, serialNumber, channel, datapoint, len(device.Channels))
+			}
 			for _, channel := range device.Channels {
+				if len(channel.Inputs) != 1 {
+					return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 inputs", val, serialNumber, channel, datapoint, len(channel.Inputs))
+				}
 				for _, input := range channel.Inputs {
 					methodCall := input.Value.DataPointService.SetDataPointMethod.CallMethod
 					if methodCall.Code >= 300 {
@@ -214,10 +290,10 @@ func formatFloat(f float64) string {
 }
 
 type DataPoint struct {
-	Value         graphql.String `graphql:"value"`
-	SerialNumber  graphql.String `graphql:"serialNumber"`
-	ChannelNumber graphql.String `graphql:"channelNumber"`
-	DatapointId   graphql.String `graphql:"datapointId"`
+	Value         string `graphql:"value"`
+	SerialNumber  string `graphql:"serialNumber"`
+	ChannelNumber string `graphql:"channelNumber"`
+	DatapointId   string `graphql:"datapointId"`
 }
 
 type DataPointsSubscription struct {
@@ -225,14 +301,14 @@ type DataPointsSubscription struct {
 }
 
 func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<- DataPoint) error {
-	client := graphql.NewSubscriptionClient("wss://apps.eu.mybuildings.abb.com/adtg-ws/graphql").
+	client := graphql.NewSubscriptionClient(wsURL).
 		WithConnectionParams(map[string]interface{}{
 			"authorization": auth,
 		}).
 		WithProtocol(graphql.GraphQLWS).
 		OnError(func(sc *graphql.SubscriptionClient, err error) error {
 			// Cancels the subscription if returns non-nil error.
-			return fmt.Errorf("subscription client error: %v", err)
+			return fmt.Errorf("datapoint subscription client error: %v", err)
 		})
 	defer client.Close()
 
@@ -264,16 +340,72 @@ func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<
 
 	if _, err := client.Subscribe(&sub, variables, func(message []byte, err error) error {
 		if err != nil {
-			return fmt.Errorf("subscribe: %v", err)
+			return fmt.Errorf("subscribe datapoint: %v", err)
 		}
 		data := DataPointsSubscription{}
 		if err := jsonutil.UnmarshalGraphQL(message, &data); err != nil {
-			return fmt.Errorf("unmarshalling subscription response: %v", err)
+			return fmt.Errorf("unmarshalling datapoint subscription response: %v", err)
 		}
 		ch <- data.DataPointsSubscription
 		return nil
 	}); err != nil {
-		return fmt.Errorf("establishing subscription: %v", err)
+		return fmt.Errorf("establishing datapoint subscription: %v", err)
+	}
+
+	if err := client.Run(); err != nil {
+		return fmt.Errorf("running client: %v", err)
+	}
+	close(ch)
+	return nil
+}
+
+type ConnectionStatus struct {
+	DtId      string `graphql:"dtId"`
+	Connected bool   `graphql:"connected"`
+}
+
+type ConnectionStatusSubscription struct {
+	// Info from Johannes Schmidt (ABB) why we should filter connection status by "IOT" type:
+	//
+	// Sysaps have two connections to the backend: XMPP (a kind of legacy concept which is still in
+	// use also in order to handle the amount of messages in a cost-efficient way) and
+	// IOT (Microsoft IOT-Hub connection - new concept used for integration with the new SmartHome API).
+	//
+	// As both connections are built up and down almost in the same way/point-in-time you could rely on just one of both.
+	//
+	// Stepwise we are about to migrate towards IOT-Hub - so better to take this one.
+	ConnectionStatusSubscription ConnectionStatus `graphql:"ConnectionStatusSubscription(dtIds: $dtIds, type: \"IOT\")"`
+}
+
+func SubscribeConnectionStatus(auth string, dtIDs []string, ch chan<- ConnectionStatus) error {
+	client := graphql.NewSubscriptionClient(wsURL).
+		WithConnectionParams(map[string]interface{}{
+			"authorization": auth,
+		}).
+		WithProtocol(graphql.GraphQLWS).
+		OnError(func(sc *graphql.SubscriptionClient, err error) error {
+			// Cancels the subscription if returns non-nil error.
+			return fmt.Errorf("connnection status subscription client error: %v", err)
+		})
+	defer client.Close()
+	var sub ConnectionStatusSubscription
+
+	variables := map[string]interface{}{
+		"dtIds": dtIDs,
+	}
+
+	if _, err := client.Subscribe(&sub, variables, func(message []byte, err error) error {
+		if err != nil {
+			return fmt.Errorf("subscribe connection status: %v", err)
+		}
+		data := ConnectionStatusSubscription{}
+		if err := jsonutil.UnmarshalGraphQL(message, &data); err != nil {
+			return fmt.Errorf("unmarshalling connection status subscription response: %v", err)
+		}
+		ch <- data.ConnectionStatusSubscription
+		return nil
+	}); err != nil {
+		return fmt.Errorf("establishing connection status subscription: %v", err)
 	}
 
 	if err := client.Run(); err != nil {
@@ -285,7 +417,7 @@ func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<
 
 // type systemsSimpleQuery struct {
 // 	Systems []struct {
-// 		DtId graphql.String `graphql:"dtId"`
+// 		DtId string `graphql:"dtId"`
 // 	} `graphql:"ISystemFH"`
 // }
 
@@ -297,7 +429,7 @@ func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<
 // 		return fmt.Errorf("fetching list of systems: %v", err)
 // 	}
 // 	for _, system := range systems.Systems {
-// 		if err := createUserIfNotExists(client, string(system.DtId)); err != nil {
+// 		if err := createUserIfNotExists(client, system.DtId); err != nil {
 // 			return fmt.Errorf("creatíng user if not exists: %v", err)
 // 		}
 // 	}
@@ -309,8 +441,8 @@ type createUserMutation struct {
 		DeviceManagement struct {
 			RPCCreateUserWithPermissionsMethod struct {
 				CallMethod struct {
-					Code    graphql.Int
-					Details graphql.String
+					Code    int
+					Details string
 				} `graphql:"callMethod(displayName: $displayName, user: $user, scopes: $scopes)"`
 			} `graphql:"RPCCreateUserWithPermissionsMethod"`
 		} `graphql:"DeviceManagement"`
@@ -327,10 +459,10 @@ func createUserIfNotExists(client *graphql.Client, orgUUID, dtId string) error {
 
 	var mutation createUserMutation
 	variables := map[string]interface{}{
-		"dtId":        []graphql.String{graphql.String(dtId)},
-		"displayName": graphql.String("Eliona ProService"),
-		"user":        graphql.String(username),
-		"scopes":      []graphql.String{graphql.String("RemoteControl")},
+		"dtId":        []string{dtId},
+		"displayName": "Eliona ProService",
+		"user":        username,
+		"scopes":      []string{"RemoteControl"},
 	}
 
 	if err := client.Query(context.Background(), &mutation, variables); err != nil {
@@ -351,7 +483,7 @@ func createUserIfNotExists(client *graphql.Client, orgUUID, dtId string) error {
 type usersQuery struct {
 	ISystemFH []struct {
 		Users []struct {
-			UserName graphql.String
+			UserName string
 		} `graphql:"Users"`
 	} `graphql:"ISystemFH(dtId: $dtId)"`
 }
@@ -359,7 +491,7 @@ type usersQuery struct {
 func userExists(client *graphql.Client, dtId string, userName string) (bool, error) {
 	var query usersQuery
 	variables := map[string]interface{}{
-		"dtId": []graphql.String{graphql.String(dtId)},
+		"dtId": []string{dtId},
 	}
 
 	if err := client.Query(context.Background(), &query, variables); err != nil {
@@ -368,7 +500,7 @@ func userExists(client *graphql.Client, dtId string, userName string) (bool, err
 
 	for _, system := range query.ISystemFH {
 		for _, user := range system.Users {
-			if string(user.UserName) == userName {
+			if user.UserName == userName {
 				return true, nil
 			}
 		}

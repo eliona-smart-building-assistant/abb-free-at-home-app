@@ -1,0 +1,21 @@
+{
+	"name": "ABB Connectivity",
+	"custom": true,
+	"translation": {
+		"de": "ABB Konnektivität",
+		"en": "ABB Connectivity"
+	},
+	"icon": "rssi",
+	"withAlarm": true,
+	"withTimespan": true,
+	"elements": [
+		{
+			"category": "value",
+			"sequence": 1,
+			"config": {
+				"description": "",
+				"variant": "tiles"
+			}
+		}
+	]
+}

@@ -224,7 +224,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 					ElementSequence: nullableInt32(2),
 					AssetId:         hueLight.Id,
 					Data: map[string]interface{}{
-						"attribute":   "hsv_state",
+						"attribute":   "hsv",
 						"description": "Hue",
 						"key":         "_CURRENT",
 						"seq":         2,
@@ -279,7 +279,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 					ElementSequence: nullableInt32(2),
 					AssetId:         hueLight.Id,
 					Data: map[string]interface{}{
-						"attribute":   "switch_state",
+						"attribute":   "switch",
 						"description": "Value",
 						"key":         "_CURRENT",
 						"seq":         4,
@@ -316,7 +316,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 					Data: map[string]interface{}{
 						"aggregatedDataType": "heap",
 						"attribute":          "movement",
-						"description":        "Movement detector ",
+						"description":        "Movement detector",
 						"key":                "",
 						"seq":                0,
 						"subtype":            "input",
@@ -330,7 +330,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 						"aggregatedDataRaster": nil,
 						"aggregatedDataType":   "heap",
 						"attribute":            "movement",
-						"description":          "Movement detector ",
+						"description":          "Movement detector",
 						"key":                  "",
 						"seq":                  0,
 						"subtype":              "input",
@@ -677,6 +677,125 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 		})
 		widgetSequence++
 	}
+
+	devices, _, err := client.NewClient().AssetsAPI.
+		GetAssets(client.AuthenticationContext()).
+		AssetTypeName("abb_free_at_home_device").
+		ProjectId(projectId).
+		Execute()
+	if err != nil {
+		return api.Dashboard{}, fmt.Errorf("fetching devices: %v", err)
+	}
+
+	var batteryDevices []api.Asset
+	var connectivityDevices []api.Asset
+	for _, device := range devices {
+		data, _, err := client.NewClient().DataAPI.
+			GetData(client.AuthenticationContext()).
+			AssetId(device.GetId()).
+			DataSubtype(string(api.SUBTYPE_STATUS)).
+			Execute()
+		if err != nil {
+			return api.Dashboard{}, fmt.Errorf("getting device data: %v", err)
+		}
+		if len(data) == 0 {
+			continue
+		}
+		d := data[0]
+
+		if b, ok := d.Data["battery"]; ok && b != nil {
+			batteryDevices = append(batteryDevices, device)
+		}
+		if s, ok := d.Data["connectivity"]; ok && s != nil && s != "" {
+			connectivityDevices = append(connectivityDevices, device)
+		}
+	}
+
+	var batteriesData []api.WidgetData
+	for i, bd := range batteryDevices {
+		batteriesData = append(batteriesData, api.WidgetData{
+			ElementSequence: nullableInt32(1),
+			AssetId:         bd.Id,
+			Data: map[string]interface{}{
+				"aggregatedDataType": "heap",
+				"attribute":          "battery",
+				"description":        bd.Name,
+				"key":                "",
+				"seq":                i,
+				"subtype":            "status",
+			},
+		})
+	}
+	widget = api.Widget{
+		WidgetTypeName: "ABB Battery status",
+		AssetId:        rootAsset.Id,
+		Sequence:       nullableInt32(widgetSequence),
+		Details: map[string]any{
+			"size":     1,
+			"timespan": 7,
+			"0": map[string]any{ // TODO: Would be nice, but not works. See discussion in daily-team-two channel for progress.
+				"tilesConfig": []map[string]any{
+					{
+						"defaultColorIndex": 0,
+						"progressBar": map[string]any{
+							"divider": "/",
+							"max":     "100",
+							"min":     "0",
+							"type":    "absolute",
+						},
+						"valueMapping": [][]string{
+							{
+								"20",
+								"",
+								"#9E003D",
+							},
+							{
+								"50",
+								"",
+								"#EE9D4C",
+							},
+							{
+								"100",
+								"",
+								"#007305",
+							},
+						},
+					},
+				},
+			},
+		},
+		Data: batteriesData,
+	}
+	widgetSequence++
+	dashboard.Widgets = append(dashboard.Widgets, widget)
+
+	var connectivityData []api.WidgetData
+	for i, sd := range connectivityDevices {
+		connectivityData = append(connectivityData, api.WidgetData{
+			ElementSequence: nullableInt32(1),
+			AssetId:         sd.Id,
+			Data: map[string]interface{}{
+				"aggregatedDataType": "heap",
+				"attribute":          "connectivity",
+				"description":        sd.Name,
+				"key":                "",
+				"seq":                i,
+				"subtype":            "status",
+			},
+		})
+	}
+	widget = api.Widget{
+		WidgetTypeName: "ABB Connectivity",
+		AssetId:        rootAsset.Id,
+		Sequence:       nullableInt32(widgetSequence),
+		Details: map[string]any{
+			"size":     1,
+			"timespan": 7,
+		},
+		Data: connectivityData,
+	}
+	widgetSequence++
+	dashboard.Widgets = append(dashboard.Widgets, widget)
 
 	return dashboard, nil
 }

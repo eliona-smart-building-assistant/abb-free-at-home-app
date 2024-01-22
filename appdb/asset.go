@@ -29,6 +29,7 @@ type Asset struct {
 	ProjectID       string     `boil:"project_id" json:"project_id" toml:"project_id" yaml:"project_id"`
 	GlobalAssetID   string     `boil:"global_asset_id" json:"global_asset_id" toml:"global_asset_id" yaml:"global_asset_id"`
 	AssetTypeName   string     `boil:"asset_type_name" json:"asset_type_name" toml:"asset_type_name" yaml:"asset_type_name"`
+	ProviderID      string     `boil:"provider_id" json:"provider_id" toml:"provider_id" yaml:"provider_id"`
 	AssetID         null.Int32 `boil:"asset_id" json:"asset_id,omitempty" toml:"asset_id" yaml:"asset_id,omitempty"`
 
 	R *assetR `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -41,6 +42,7 @@ var AssetColumns = struct {
 	ProjectID       string
 	GlobalAssetID   string
 	AssetTypeName   string
+	ProviderID      string
 	AssetID         string
 }{
 	ID:              "id",
@@ -48,6 +50,7 @@ var AssetColumns = struct {
 	ProjectID:       "project_id",
 	GlobalAssetID:   "global_asset_id",
 	AssetTypeName:   "asset_type_name",
+	ProviderID:      "provider_id",
 	AssetID:         "asset_id",
 }
 
@@ -57,6 +60,7 @@ var AssetTableColumns = struct {
 	ProjectID       string
 	GlobalAssetID   string
 	AssetTypeName   string
+	ProviderID      string
 	AssetID         string
 }{
 	ID:              "asset.id",
@@ -64,6 +68,7 @@ var AssetTableColumns = struct {
 	ProjectID:       "asset.project_id",
 	GlobalAssetID:   "asset.global_asset_id",
 	AssetTypeName:   "asset.asset_type_name",
+	ProviderID:      "asset.provider_id",
 	AssetID:         "asset.asset_id",
 }
 
@@ -163,6 +168,7 @@ var AssetWhere = struct {
 	ProjectID       whereHelperstring
 	GlobalAssetID   whereHelperstring
 	AssetTypeName   whereHelperstring
+	ProviderID      whereHelperstring
 	AssetID         whereHelpernull_Int32
 }{
 	ID:              whereHelperint64{field: "\"abb_free_at_home\".\"asset\".\"id\""},
@@ -170,6 +176,7 @@ var AssetWhere = struct {
 	ProjectID:       whereHelperstring{field: "\"abb_free_at_home\".\"asset\".\"project_id\""},
 	GlobalAssetID:   whereHelperstring{field: "\"abb_free_at_home\".\"asset\".\"global_asset_id\""},
 	AssetTypeName:   whereHelperstring{field: "\"abb_free_at_home\".\"asset\".\"asset_type_name\""},
+	ProviderID:      whereHelperstring{field: "\"abb_free_at_home\".\"asset\".\"provider_id\""},
 	AssetID:         whereHelpernull_Int32{field: "\"abb_free_at_home\".\"asset\".\"asset_id\""},
 }
 
@@ -211,8 +218,8 @@ func (r *assetR) GetDatapoints() DatapointSlice {
 type assetL struct{}
 
 var (
-	assetAllColumns            = []string{"id", "configuration_id", "project_id", "global_asset_id", "asset_type_name", "asset_id"}
-	assetColumnsWithoutDefault = []string{"project_id", "global_asset_id", "asset_type_name"}
+	assetAllColumns            = []string{"id", "configuration_id", "project_id", "global_asset_id", "asset_type_name", "provider_id", "asset_id"}
+	assetColumnsWithoutDefault = []string{"project_id", "global_asset_id", "asset_type_name", "provider_id"}
 	assetColumnsWithDefault    = []string{"id", "configuration_id", "asset_id"}
 	assetPrimaryKeyColumns     = []string{"id"}
 	assetGeneratedColumns      = []string{}

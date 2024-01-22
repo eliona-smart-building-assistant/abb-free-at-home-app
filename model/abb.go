@@ -92,7 +92,7 @@ func GetFunctionIDsList() []string {
 
 	hexStrings := make([]string, len(constants))
 	for i, constant := range constants {
-		hexStrings[i] = fmt.Sprintf("%04X", constant)
+		hexStrings[i] = fmt.Sprintf("%04x", constant)
 	}
 	return hexStrings
 }
@@ -157,4 +157,5 @@ const (
 	PID_COLOR_MODE_GET                             = 0x011D
 	PID_COLOR_TEMPERATURE_GET                      = 0x0118
 	PID_COLOR_TEMPERATURE_SET                      = 0x0016
+	PID_FIRE_ALARM_ACTIVE                          = 0x02C3
 )

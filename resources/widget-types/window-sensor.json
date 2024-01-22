@@ -1,17 +1,15 @@
 {
-	"id": 2211,
-	"name": "ABB Binary trend",
+	"name": "ABB Window sensor",
 	"custom": true,
 	"translation": {
-		"de": "ABB Binärer Trend",
-		"en": "ABB Binary Trend"
+		"de": "ABB Fenstersensor",
+		"en": "ABB Window sensor"
 	},
-	"icon": "widgetDigitalTrend",
+	"icon": "widgetBar",
 	"withAlarm": true,
 	"withTimespan": true,
 	"elements": [
 		{
-			"id": 2001,
 			"category": "value",
 			"sequence": 1,
 			"config": {
@@ -20,7 +18,6 @@
 			}
 		},
 		{
-			"id": 2002,
 			"category": "trend",
 			"sequence": 2,
 			"config": {
@@ -29,8 +26,8 @@
 				"guideline": "",
 				"multipleYAxes": false,
 				"overlap": true,
-				"showCurrent": true,
-				"type": "digital",
+				"showCurrent": false,
+				"type": "analog",
 				"variant": "line",
 				"yAxisLabels": ""
 			}
