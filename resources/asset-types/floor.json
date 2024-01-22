@@ -1,0 +1,23 @@
+{
+	"attributes": [
+		{
+			"enable": true,
+			"name": "level",
+			"subtype": "info",
+			"type": "level",
+			"translation": {
+				"de": "Stufe",
+				"en": "Level"
+			}
+		}
+	],
+	"custom": false,
+	"icon": null,
+	"name": "abb_free_at_home_floor",
+	"translation": {
+		"de": "ABB-free@home Stock",
+		"en": "ABB-free@home Floor"
+	},
+	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
+	"vendor": "ABB"
+}

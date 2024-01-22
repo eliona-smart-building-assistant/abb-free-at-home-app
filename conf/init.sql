@@ -52,6 +52,7 @@ create table if not exists abb_free_at_home.asset
 	project_id       text      not null,
 	global_asset_id  text      not null,
 	asset_type_name  text      not null,
+	provider_id      text      not null,
 	asset_id         integer   unique
 );
 

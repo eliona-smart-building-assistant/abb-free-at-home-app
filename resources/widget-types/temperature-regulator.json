@@ -1,5 +1,4 @@
 {
-	"id": 2212,
 	"name": "ABB Temperature regulator",
 	"custom": true,
 	"translation": {
@@ -11,7 +10,6 @@
 	"withTimespan": true,
 	"elements": [
 		{
-			"id": 2005,
 			"category": "input",
 			"sequence": 3,
 			"config": {
@@ -21,7 +19,6 @@
 			}
 		},
 		{
-			"id": 2003,
 			"category": "input",
 			"sequence": 1,
 			"config": {
@@ -31,7 +28,6 @@
 			}
 		},
 		{
-			"id": 2004,
 			"category": "value",
 			"sequence": 2,
 			"config": {
@@ -40,7 +36,6 @@
 			}
 		},
 		{
-			"id": 2006,
 			"category": "trend",
 			"sequence": 4,
 			"config": {

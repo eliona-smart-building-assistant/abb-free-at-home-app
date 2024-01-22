@@ -1,5 +1,4 @@
 {
-	"id": 2201,
 	"name": "ABB Switch list",
 	"custom": true,
 	"translation": {
@@ -11,7 +10,6 @@
 	"withTimespan": true,
 	"elements": [
 		{
-			"id": 1991,
 			"category": "input",
 			"sequence": 1,
 			"config": {
@@ -21,7 +19,6 @@
 			}
 		},
 		{
-			"id": 1992,
 			"category": "value",
 			"sequence": 2,
 			"config": {

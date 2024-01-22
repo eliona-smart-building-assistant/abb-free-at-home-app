@@ -12,7 +12,7 @@ import (
 // ListenForOutputChanges on assets (only output attributes). Returns a channel with all changes.
 func ListenForOutputChanges() (chan api.Data, error) {
 	outputs := make(chan api.Data)
-	go http.ListenWebSocketWithReconnect(newWebsocket, time.Duration(0), outputs)
+	go http.ListenWebSocketWithReconnectAlways(newWebsocket, time.Duration(0), outputs)
 	return outputs, nil
 }
 

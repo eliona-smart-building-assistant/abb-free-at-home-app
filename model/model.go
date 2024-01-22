@@ -38,18 +38,29 @@ func (r Room) GAI() string {
 }
 
 type System struct {
-	ID      string `eliona:"system_id,filterable"`
-	GAI     string `eliona:"system_id,filterable"`
-	Name    string `eliona:"system_name,filterable"`
-	Devices []Device
+	ID               string `eliona:"system_id,filterable"`
+	GAI              string `eliona:"system_id,filterable"`
+	Name             string `eliona:"system_name,filterable"`
+	ConnectionStatus int8   `eliona:"connection_status" subtype:"status"`
+	Devices          []Device
+}
+
+func (s System) AssetType() string {
+	return "abb_free_at_home_system"
 }
 
 type Device struct {
-	ID       string `eliona:"device_id,filterable"`
-	GAI      string
-	Name     string `eliona:"device_name,filterable"`
-	Location string
-	Channels []Asset
+	ID           string `eliona:"device_id,filterable"`
+	GAI          string
+	Name         string `eliona:"device_name,filterable"`
+	Location     string
+	Battery      *int64 `eliona:"battery" subtype:"status"`
+	Connectivity string `eliona:"connectivity" subtype:"status"`
+	Channels     []Asset
+}
+
+func (d Device) AssetType() string {
+	return "abb_free_at_home_device"
 }
 
 type Asset interface {
@@ -99,8 +110,7 @@ func (c Channel) GAI() string {
 
 type Switch struct {
 	AssetBase
-	SwitchState int8 `eliona:"switch_state" subtype:"input"`
-	Switch      int8 `eliona:"switch" subtype:"output"`
+	Switch int8 `eliona:"switch" subtype:"output"`
 }
 
 func (c Switch) AssetType() string {
@@ -113,10 +123,8 @@ func (c Switch) GAI() string {
 
 type Dimmer struct {
 	AssetBase
-	SwitchState int8 `eliona:"switch_state" subtype:"input"`
-	DimmerState int8 `eliona:"dimmer_state" subtype:"input"`
-	Switch      int8 `eliona:"switch" subtype:"output"`
-	Dimmer      int8 `eliona:"dimmer" subtype:"output"`
+	Switch int8 `eliona:"switch" subtype:"output"`
+	Dimmer int8 `eliona:"dimmer" subtype:"output"`
 }
 
 func (c Dimmer) AssetType() string {
@@ -129,17 +137,14 @@ func (c Dimmer) GAI() string {
 
 type HueActuator struct {
 	AssetBase
-	SwitchState           int8   `eliona:"switch_state" subtype:"input"`
-	DimmerState           int8   `eliona:"dimmer_state" subtype:"input"`
-	HSVState              string `eliona:"hsv_state" subtype:"input"`
-	ColorModeState        string `eliona:"color_mode_state" subtype:"input"`
-	ColorTemperatureState int8   `eliona:"color_temperature_state" subtype:"input"`
-	Switch                int8   `eliona:"switch" subtype:"output"`
-	Dimmer                int8   `eliona:"dimmer" subtype:"output"`
-	HSVHue                int16  `eliona:"hsv_hue" subtype:"output"`
-	HSVSaturation         int8   `eliona:"hsv_saturation" subtype:"output"`
-	HSVValue              int8   `eliona:"hsv_value" subtype:"output"`
-	ColorTemperature      int8   `eliona:"color_temperature" subtype:"output"`
+	HSVState         string `eliona:"hsv_state" subtype:"input"`
+	ColorModeState   string `eliona:"color_mode_state" subtype:"input"`
+	Switch           int8   `eliona:"switch" subtype:"output"`
+	Dimmer           int8   `eliona:"dimmer" subtype:"output"`
+	HSVHue           int16  `eliona:"hsv_hue" subtype:"output"`
+	HSVSaturation    int8   `eliona:"hsv_saturation" subtype:"output"`
+	HSVValue         int8   `eliona:"hsv_value" subtype:"output"`
+	ColorTemperature int8   `eliona:"color_temperature" subtype:"output"`
 }
 
 func (c HueActuator) AssetType() string {
@@ -153,9 +158,7 @@ func (c HueActuator) GAI() string {
 type RTC struct {
 	AssetBase
 
-	SwitchState  int8    `eliona:"switch_state" subtype:"input"`
-	CurrentTemp  float32 `eliona:"current_temperature" subtype:"input"`
-	SetTempState float32 `eliona:"set_temperature_state" subtype:"input"`
+	CurrentTemp float32 `eliona:"current_temperature" subtype:"input"`
 
 	Switch  int8    `eliona:"switch" subtype:"output"`
 	SetTemp float32 `eliona:"set_temperature" subtype:"output"`
@@ -172,9 +175,7 @@ func (rtc RTC) GAI() string {
 type RadiatorThermostat struct {
 	AssetBase
 
-	SwitchState      int8    `eliona:"switch_state" subtype:"input"`
 	CurrentTemp      float32 `eliona:"current_temperature" subtype:"input"`
-	SetTempState     float32 `eliona:"set_temperature_state" subtype:"input"`
 	StatusIndication int8    `eliona:"status_indication" subtype:"input"`
 	HeatingActive    int8    `eliona:"heating_active" subtype:"input"`
 	HeatingValue     int8    `eliona:"heating_value" subtype:"input"`
@@ -244,9 +245,35 @@ func (c MovementSensor) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
 }
 
+type SmokeDetector struct {
+	AssetBase
+	Fire int8 `eliona:"fire" subtype:"input"`
+}
+
+func (c SmokeDetector) AssetType() string {
+	return "abb_free_at_home_smoke_detector"
+}
+
+func (c SmokeDetector) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
+type FloorCallButton struct {
+	AssetBase
+	FloorCall int8 `eliona:"floor_call" subtype:"input"`
+}
+
+func (c FloorCallButton) AssetType() string {
+	return "abb_free_at_home_floor_call_button"
+}
+
+func (c FloorCallButton) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
 type Scene struct {
 	AssetBase
-	SwitchState int8 `eliona:"switch_state" subtype:"input"`
+	Switch int8 `eliona:"set_scene" subtype:"output"`
 }
 
 func (c Scene) AssetType() string {

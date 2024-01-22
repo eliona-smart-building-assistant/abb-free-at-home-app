@@ -169,6 +169,13 @@ func (api *Api) ListenGraphQLSubscriptions(datapoints []appdb.Datapoint, ch chan
 	return abbgraphql.SubscribeDataPointValue("digest "+api.Credentials.ApiKey, datapoints, ch)
 }
 
+func (api *Api) ListenGraphQLSystemStatus(dtIDs []string, ch chan<- abbgraphql.ConnectionStatus) error {
+	if api.Credentials.OAuth {
+		return abbgraphql.SubscribeConnectionStatus("Bearer "+api.token.AccessToken, dtIDs, ch)
+	}
+	return abbgraphql.SubscribeConnectionStatus("digest "+api.Credentials.ApiKey, dtIDs, ch)
+}
+
 func (api *Api) GetLocations() (abbgraphql.LocationsQuery, error) {
 	if api.Auth.AuthorizedClient == nil {
 		return abbgraphql.LocationsQuery{}, errors.New("Fetching locations not implemented for legacy API")
@@ -197,43 +204,60 @@ func convertToDataFormat(query abbgraphql.SystemsQuery) DataFormat {
 	dataFormat.Systems = make(map[string]System)
 	for _, systemQuery := range query.Systems {
 		var system System
-		system.SysApName = string(systemQuery.DtId)
+		system.SysApName = systemQuery.DtId
+		system.ConnectionOK = systemQuery.ConnectionStatusService.IoTHub.Value
 		system.Devices = make(map[string]Device)
 		for _, asset := range systemQuery.Assets {
 			var device Device
-			device.DisplayName = string(asset.Name.En)
-			device.Location = string(asset.IsLocated.DtId)
+			device.DisplayName = asset.Name.En
+			if asset.Label != "" {
+				device.DisplayName = asset.Label
+			}
+			device.Location = asset.IsLocated.DtId
+			if asset.DeviceFHRF.BatteryStatus != "" {
+				b, err := strconv.ParseInt(asset.DeviceFHRF.BatteryStatus, 16, 16)
+				if err != nil {
+					log.Printf("Error converting battery status %s from hex: %v", asset.DeviceFHRF.BatteryStatus, err)
+				}
+				b = b * 100 / 255 // Convert from byte to percent. "FF" is full, "00" is empty.
+				device.Battery = &b
+			}
+			device.Connectivity = asset.DeviceFHRF.AttributesService.Connectivity
+
 			device.Channels = make(map[string]Channel)
 			for _, ch := range asset.Channels {
 				var channel Channel
-				channel.DisplayName = string(ch.Name.En)
-				channel.FunctionId = string(ch.FunctionId)
+				channel.DisplayName = ch.Name.En
+				if ch.Label != "" {
+					channel.DisplayName = ch.Label
+				}
+				channel.FunctionId = ch.FunctionId
 				channel.Outputs = make(map[string]Output)
 				channel.Inputs = make(map[string]Input)
 				for _, output := range ch.Outputs {
 					var out Output
-					pairingId, err := strconv.ParseInt(string(output.Value.PairingId), 16, 32)
+					pairingId, err := strconv.ParseInt(output.Value.PairingId, 16, 32)
 					if err != nil {
 						log.Printf("Error converting pairingId from hex: %v", err)
 					}
 					out.PairingId = int(pairingId)
-					out.Value = string(output.Value.DataPointService.RequestDataPointValue.Value)
-					channel.Outputs[string(output.Key)] = out
+					out.Value = output.Value.DataPointService.RequestDataPointValue.Value
+					channel.Outputs[output.Key] = out
 				}
 				for _, input := range ch.Inputs {
 					var in Input
-					pairingId, err := strconv.ParseInt(string(input.Value.PairingId), 16, 32)
+					pairingId, err := strconv.ParseInt(input.Value.PairingId, 16, 32)
 					if err != nil {
 						log.Printf("Error converting pairingId from hex: %v", err)
 					}
 					in.PairingId = int(pairingId)
-					channel.Inputs[string(input.Key)] = in
+					channel.Inputs[input.Key] = in
 				}
-				device.Channels[strconv.Itoa(int(ch.ChannelNumber))] = channel
+				device.Channels[strconv.Itoa(ch.ChannelNumber)] = channel
 			}
-			system.Devices[string(asset.SerialNumber)] = device
+			system.Devices[asset.SerialNumber] = device
 		}
-		dataFormat.Systems[string(systemQuery.DtId)] = system
+		dataFormat.Systems[systemQuery.DtId] = system
 	}
 
 	return dataFormat
