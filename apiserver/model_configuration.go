@@ -69,6 +69,9 @@ type Configuration struct {
 
 	// List of Eliona project ids for which this device should collect data. For each project id all smart devices are automatically created as an asset in Eliona. The mapping between Eliona is stored as an asset mapping in the KentixONE app.
 	ProjectIDs *[]string `json:"projectIDs,omitempty"`
+
+	// ID of the last Eliona user who created or updated the configuration
+	UserId *string `json:"userId,omitempty"`
 }
 
 // AssertConfigurationRequired checks if the required fields are not zero-ed

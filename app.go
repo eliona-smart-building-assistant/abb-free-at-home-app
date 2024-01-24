@@ -29,6 +29,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/eliona-smart-building-assistant/go-eliona/frontend"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	utilshttp "github.com/eliona-smart-building-assistant/go-utils/http"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
@@ -219,12 +220,14 @@ func subscribeToSystemStatus(config *apiserver.Configuration) {
 
 // listenApi starts the API server and listen for requests
 func listenApi() {
-	err := http.ListenAndServe(":"+common.Getenv("API_SERVER_PORT", "3000"), utilshttp.NewCORSEnabledHandler(
-		apiserver.NewRouter(
-			apiserver.NewConfigurationAPIController(apiservices.NewConfigurationApiService()),
-			apiserver.NewVersionAPIController(apiservices.NewVersionApiService()),
-			apiserver.NewCustomizationAPIController(apiservices.NewCustomizationApiService()),
-		)))
+	err := http.ListenAndServe(":"+common.Getenv("API_SERVER_PORT", "3000"),
+		frontend.NewEnvironmentHandler(
+			utilshttp.NewCORSEnabledHandler(
+				apiserver.NewRouter(
+					apiserver.NewConfigurationAPIController(apiservices.NewConfigurationApiService()),
+					apiserver.NewVersionAPIController(apiservices.NewVersionApiService()),
+					apiserver.NewCustomizationAPIController(apiservices.NewCustomizationApiService()),
+				))))
 	log.Fatal("main", "API server: %v", err)
 }
 

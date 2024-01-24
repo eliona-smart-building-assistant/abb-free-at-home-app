@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/eliona-smart-building-assistant/app-integration-tests v1.1.0
-	github.com/eliona-smart-building-assistant/go-eliona v1.9.24
+	github.com/eliona-smart-building-assistant/go-eliona v1.9.25
 	github.com/eliona-smart-building-assistant/go-utils v1.0.53
 	github.com/friendsofgo/errors v0.9.2
 	github.com/gorilla/mux v1.8.0
@@ -16,6 +16,7 @@ require (
 )
 
 require (
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.4.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect

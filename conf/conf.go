@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/eliona-smart-building-assistant/go-eliona/frontend"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 	"github.com/volatiletech/null/v8"
@@ -41,7 +42,7 @@ const (
 )
 
 func InsertConfig(ctx context.Context, config apiserver.Configuration) (apiserver.Configuration, error) {
-	dbConfig, err := dbConfigFromApiConfig(config)
+	dbConfig, err := dbConfigFromApiConfig(ctx, config)
 	if err != nil {
 		return apiserver.Configuration{}, fmt.Errorf("creating DB config from API config: %v", err)
 	}
@@ -53,7 +54,7 @@ func InsertConfig(ctx context.Context, config apiserver.Configuration) (apiserve
 }
 
 func UpsertConfig(ctx context.Context, config apiserver.Configuration) (apiserver.Configuration, error) {
-	dbConfig, err := dbConfigFromApiConfig(config)
+	dbConfig, err := dbConfigFromApiConfig(ctx, config)
 	if err != nil {
 		return apiserver.Configuration{}, fmt.Errorf("creating DB config from API config: %v", err)
 	}
@@ -99,7 +100,7 @@ func DeleteConfig(ctx context.Context, configID int64) error {
 	return nil
 }
 
-func dbConfigFromApiConfig(apiConfig apiserver.Configuration) (dbConfig appdb.Configuration, err error) {
+func dbConfigFromApiConfig(ctx context.Context, apiConfig apiserver.Configuration) (dbConfig appdb.Configuration, err error) {
 	switch apiConfig.AbbConnectionType {
 	case ABB_LOCAL:
 		dbConfig.IsLocal = true
@@ -165,6 +166,11 @@ func dbConfigFromApiConfig(apiConfig apiserver.Configuration) (dbConfig appdb.Co
 		dbConfig.ProjectIds = *apiConfig.ProjectIDs
 	}
 
+	env := frontend.GetEnvironment(ctx)
+	if env != nil {
+		dbConfig.UserID = null.StringFrom(env.UserId)
+	}
+
 	return dbConfig, nil
 }
 
@@ -203,6 +209,7 @@ func apiConfigFromDbConfig(dbConfig *appdb.Configuration) (apiConfig apiserver.C
 	}
 	apiConfig.Active = dbConfig.Active.Ptr()
 	apiConfig.ProjectIDs = common.Ptr[[]string](dbConfig.ProjectIds)
+	apiConfig.UserId = dbConfig.UserID.Ptr()
 	return apiConfig, nil
 }
 

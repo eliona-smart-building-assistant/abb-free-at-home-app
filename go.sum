@@ -118,8 +118,8 @@ github.com/dnaeon/go-vcr v1.2.0/go.mod h1:R4UdLID7HZT3taECzJs4YgbbH6PIGXB6W/sc5O
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/eliona-smart-building-assistant/app-integration-tests v1.1.0 h1:nId5qhMuZCsfRCbeN1B+sB8Vx+Jmfkv5kKhNgv5LTN4=
 github.com/eliona-smart-building-assistant/app-integration-tests v1.1.0/go.mod h1:a9kmFOzamBjkFXMalPwo3YO3zVt9gY5iJ+eiTtl7QtY=
-github.com/eliona-smart-building-assistant/go-eliona v1.9.24 h1:W73+RHCrvfk0QXW2R1LNByv10CaSQa9CChtquhkJXCQ=
-github.com/eliona-smart-building-assistant/go-eliona v1.9.24/go.mod h1:PeNdp/rasUQr2GWqABiVOA/Moy6GD+cuIdWfnQsKmB4=
+github.com/eliona-smart-building-assistant/go-eliona v1.9.25 h1:SFp3e6tYDbezOjoLZi3LaJHhMfAF5jiFc9Fa26M6bVc=
+github.com/eliona-smart-building-assistant/go-eliona v1.9.25/go.mod h1:PeNdp/rasUQr2GWqABiVOA/Moy6GD+cuIdWfnQsKmB4=
 github.com/eliona-smart-building-assistant/go-eliona-api-client/v2 v2.5.10 h1:IrJFKeiuPjlR7V+tOuoz9Kd8pGA/1QwT6iwvW/q9F7c=
 github.com/eliona-smart-building-assistant/go-eliona-api-client/v2 v2.5.10/go.mod h1:aijgTMeuzXTTlUwiZF+nAETr/y5HSz1ZOtspP2ZZaG0=
 github.com/eliona-smart-building-assistant/go-utils v1.0.53 h1:wPXZ/aM/eT3CKyQVhl3shcRNstN+DjUbb3hf9Y+eYyM=
@@ -165,6 +165,7 @@ github.com/gofrs/uuid v4.4.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRx
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/gogo/protobuf v1.3.2/go.mod h1:P1XiOD3dCwIKUDQYPy72D8LYyHL2YPYrpS2s69NZV8Q=
 github.com/golang-jwt/jwt v3.2.1+incompatible/go.mod h1:8pz2t5EyA70fFQQSrl6XZXzqecmYZeUEB8OUGHkxJ+I=
+github.com/golang-jwt/jwt v3.2.2+incompatible h1:IfV12K8xAKAnZqdXVzCZ+TOjboZ2keLg81eXfW3O+oY=
 github.com/golang-jwt/jwt v3.2.2+incompatible/go.mod h1:8pz2t5EyA70fFQQSrl6XZXzqecmYZeUEB8OUGHkxJ+I=
 github.com/golang-jwt/jwt/v4 v4.2.0/go.mod h1:/xlHOz8bRuivTWchD4jCa+NbatV+wEUSzwAxVc6locg=
 github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe/go.mod h1:8vg3r2VgvsThLBIFL93Qb5yWzgyZWhEmBwUJWevAkK0=

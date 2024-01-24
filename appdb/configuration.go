@@ -45,6 +45,7 @@ type Configuration struct {
 	Active          null.Bool         `boil:"active" json:"active,omitempty" toml:"active" yaml:"active,omitempty"`
 	Enable          null.Bool         `boil:"enable" json:"enable,omitempty" toml:"enable" yaml:"enable,omitempty"`
 	ProjectIds      types.StringArray `boil:"project_ids" json:"project_ids,omitempty" toml:"project_ids" yaml:"project_ids,omitempty"`
+	UserID          null.String       `boil:"user_id" json:"user_id,omitempty" toml:"user_id" yaml:"user_id,omitempty"`
 
 	R *configurationR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L configurationL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -71,6 +72,7 @@ var ConfigurationColumns = struct {
 	Active          string
 	Enable          string
 	ProjectIds      string
+	UserID          string
 }{
 	ID:              "id",
 	IsLocal:         "is_local",
@@ -92,6 +94,7 @@ var ConfigurationColumns = struct {
 	Active:          "active",
 	Enable:          "enable",
 	ProjectIds:      "project_ids",
+	UserID:          "user_id",
 }
 
 var ConfigurationTableColumns = struct {
@@ -115,6 +118,7 @@ var ConfigurationTableColumns = struct {
 	Active          string
 	Enable          string
 	ProjectIds      string
+	UserID          string
 }{
 	ID:              "configuration.id",
 	IsLocal:         "configuration.is_local",
@@ -136,6 +140,7 @@ var ConfigurationTableColumns = struct {
 	Active:          "configuration.active",
 	Enable:          "configuration.enable",
 	ProjectIds:      "configuration.project_ids",
+	UserID:          "configuration.user_id",
 }
 
 // Generated where
@@ -341,6 +346,7 @@ var ConfigurationWhere = struct {
 	Active          whereHelpernull_Bool
 	Enable          whereHelpernull_Bool
 	ProjectIds      whereHelpertypes_StringArray
+	UserID          whereHelpernull_String
 }{
 	ID:              whereHelperint64{field: "\"abb_free_at_home\".\"configuration\".\"id\""},
 	IsLocal:         whereHelperbool{field: "\"abb_free_at_home\".\"configuration\".\"is_local\""},
@@ -362,6 +368,7 @@ var ConfigurationWhere = struct {
 	Active:          whereHelpernull_Bool{field: "\"abb_free_at_home\".\"configuration\".\"active\""},
 	Enable:          whereHelpernull_Bool{field: "\"abb_free_at_home\".\"configuration\".\"enable\""},
 	ProjectIds:      whereHelpertypes_StringArray{field: "\"abb_free_at_home\".\"configuration\".\"project_ids\""},
+	UserID:          whereHelpernull_String{field: "\"abb_free_at_home\".\"configuration\".\"user_id\""},
 }
 
 // ConfigurationRels is where relationship names are stored.
@@ -392,9 +399,9 @@ func (r *configurationR) GetAssets() AssetSlice {
 type configurationL struct{}
 
 var (
-	configurationAllColumns            = []string{"id", "is_local", "is_mybuildings", "is_proservice", "client_id", "client_secret", "access_token", "refresh_token", "expiry", "api_key", "org_uuid", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
+	configurationAllColumns            = []string{"id", "is_local", "is_mybuildings", "is_proservice", "client_id", "client_secret", "access_token", "refresh_token", "expiry", "api_key", "org_uuid", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids", "user_id"}
 	configurationColumnsWithoutDefault = []string{}
-	configurationColumnsWithDefault    = []string{"id", "is_local", "is_mybuildings", "is_proservice", "client_id", "client_secret", "access_token", "refresh_token", "expiry", "api_key", "org_uuid", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids"}
+	configurationColumnsWithDefault    = []string{"id", "is_local", "is_mybuildings", "is_proservice", "client_id", "client_secret", "access_token", "refresh_token", "expiry", "api_key", "org_uuid", "api_url", "api_username", "api_password", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids", "user_id"}
 	configurationPrimaryKeyColumns     = []string{"id"}
 	configurationGeneratedColumns      = []string{}
 )

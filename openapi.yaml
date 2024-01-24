@@ -314,6 +314,12 @@ components:
           example:
             - "42"
             - "99"
+        userId:
+          type: string
+          readOnly: true
+          description: ID of the last Eliona user who created or updated the configuration
+          nullable: true
+          example: "90"
 
     AssetFilter:
       type: array
