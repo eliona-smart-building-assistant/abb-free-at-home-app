@@ -29,7 +29,7 @@ type CustomizationApiService struct {
 }
 
 // NewCustomizationApiService creates a default api service
-func NewCustomizationApiService() apiserver.CustomizationApiServicer {
+func NewCustomizationApiService() apiserver.CustomizationAPIServicer {
 	return &CustomizationApiService{}
 }
 

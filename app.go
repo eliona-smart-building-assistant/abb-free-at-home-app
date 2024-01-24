@@ -221,9 +221,9 @@ func subscribeToSystemStatus(config *apiserver.Configuration) {
 func listenApi() {
 	err := http.ListenAndServe(":"+common.Getenv("API_SERVER_PORT", "3000"), utilshttp.NewCORSEnabledHandler(
 		apiserver.NewRouter(
-			apiserver.NewConfigurationApiController(apiservices.NewConfigurationApiService()),
-			apiserver.NewVersionApiController(apiservices.NewVersionApiService()),
-			apiserver.NewCustomizationApiController(apiservices.NewCustomizationApiService()),
+			apiserver.NewConfigurationAPIController(apiservices.NewConfigurationApiService()),
+			apiserver.NewVersionAPIController(apiservices.NewVersionApiService()),
+			apiserver.NewCustomizationAPIController(apiservices.NewCustomizationApiService()),
 		)))
 	log.Fatal("main", "API server: %v", err)
 }
