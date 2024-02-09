@@ -260,7 +260,7 @@ func (c SmokeDetector) GAI() string {
 
 type FloorCallButton struct {
 	AssetBase
-	FloorCall int8 `eliona:"floor_call" subtype:"input"`
+	FloorCall int8 `eliona:"floor_call" subtype:"output"`
 }
 
 func (c FloorCallButton) AssetType() string {

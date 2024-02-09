@@ -621,10 +621,10 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						AssetBase: assetBase,
 						Fire:      fire,
 					}
-				case model.FID_DES_LEVEL_CALL_SENSOR:
+				case model.FID_DES_LEVEL_CALL_ACTUATOR:
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {
-						if output.PairingId == model.PID_TIMED_START_STOP {
+						if output.PairingId == model.PID_ON_OFF_INFO_GET {
 							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -638,7 +638,15 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.OutputsBase = outputs
 
-					floorCall := parseInt8(channel.FindOutputValueByPairingID(model.PID_TIMED_START_STOP))
+					inputs := make(map[string]string)
+					for datapoint, input := range channel.Inputs {
+						if input.PairingId == model.PID_TIMED_START_STOP {
+							inputs[function_switch] = datapoint
+						}
+					}
+					assetBase.InputsBase = inputs
+
+					floorCall := parseInt8(channel.FindOutputValueByPairingID(model.PID_ON_OFF_INFO_GET))
 					c = model.FloorCallButton{
 						AssetBase: assetBase,
 						FloorCall: floorCall,

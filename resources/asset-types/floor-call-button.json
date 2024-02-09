@@ -3,7 +3,7 @@
 		{
 			"enable": true,
 			"name": "floor_call",
-			"subtype": "input",
+			"subtype": "output",
 			"type": "inputs-and-switches",
 			"translation": {
 				"de": "Etagenruf",
