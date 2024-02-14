@@ -271,6 +271,19 @@ func (c FloorCallButton) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
 }
 
+type MuteButton struct {
+	AssetBase
+	Mute int8 `eliona:"mute_button" subtype:"output"`
+}
+
+func (c MuteButton) AssetType() string {
+	return "abb_free_at_home_mute_button"
+}
+
+func (c MuteButton) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
 type Scene struct {
 	AssetBase
 	Switch int8 `eliona:"set_scene" subtype:"output"`

@@ -1,0 +1,33 @@
+{
+	"attributes": [
+		{
+			"enable": true,
+			"name": "mute_button",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Stumm",
+				"en": "Mute"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
+		}
+	],
+	"custom": false,
+	"icon": null,
+	"name": "abb_free_at_home_mute_button",
+	"translation": {
+		"de": "ABB-free@home Stummschaltung",
+		"en": "ABB-free@home Mute actuator"
+	},
+	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
+	"vendor": "ABB"
+}

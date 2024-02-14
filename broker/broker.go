@@ -31,6 +31,7 @@ import (
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
+// Needs to correspond to asset attribute names.
 const (
 	function_switch                = "switch"
 	function_status                = "status" // For simple abb outputs
@@ -51,6 +52,7 @@ const (
 	function_color_mode            = "color_mode"
 	function_color_temperature     = "color_temperature"
 	function_set_scene             = "set_scene"
+	function_mute_button           = "mute_button"
 )
 
 const SET_TEMP_TWICE = function_set_temperature
@@ -77,6 +79,7 @@ var Functions = []string{
 	function_color_mode,
 	function_color_temperature,
 	function_set_scene,
+	function_mute_button,
 }
 
 func getAPI(config *apiserver.Configuration) (*abb.Api, error) {
@@ -650,6 +653,36 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					c = model.FloorCallButton{
 						AssetBase: assetBase,
 						FloorCall: floorCall,
+					}
+				case model.FID_WELCOME_IP_MUTE_ACTUATOR:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_ON_OFF_INFO_GET {
+							outputs[function_switch] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "mute_button",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					inputs := make(map[string]string)
+					for datapoint, input := range channel.Inputs {
+						if input.PairingId == model.PID_SWITCH_ON_OFF_SET {
+							inputs[function_mute_button] = datapoint
+						}
+					}
+					assetBase.InputsBase = inputs
+
+					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_ON_OFF_INFO_GET))
+					c = model.MuteButton{
+						AssetBase: assetBase,
+						Mute:      switchState,
 					}
 				case model.FID_HEATING_ACTUATOR:
 					outputs := make(map[string]model.Datapoint)
