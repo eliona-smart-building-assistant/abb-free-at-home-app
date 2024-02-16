@@ -15,6 +15,7 @@ import (
 )
 
 const proServiceUser = "eliona"
+const wsURL = "wss://apps.eu.mybuildings.abb.com/adtg-ws/graphql"
 
 type LocationsQuery struct {
 	ISystemFH []struct {
@@ -42,6 +43,11 @@ func GetLocations(httpClient *http.Client) (LocationsQuery, error) {
 
 type SystemsQuery struct {
 	Systems []struct {
+		ConnectionStatusService struct {
+			IoTHub struct {
+				Value bool `graphql:"value"`
+			} `graphql:"IoTHub"`
+		} `graphql:"ConnectionStatusService"`
 		DtId   string `graphql:"dtId"`
 		Assets []struct {
 			IsLocated struct {
@@ -157,6 +163,27 @@ type setQueryProService struct {
 	} `graphql:"IDeviceFH(find: $deviceFind)"`
 }
 
+// This is a hack for scene control. It really is an output that is setable.
+type setQueryOutputProService struct {
+	IDeviceFH []struct {
+		Channels []struct {
+			ChannelNumber int `graphql:"channelNumber"`
+			Inputs        []struct {
+				Value struct {
+					DataPointService struct {
+						SetDataPointMethod struct {
+							CallMethod struct {
+								Code    int    `graphql:"code"`
+								Message string `graphql:"details"`
+							} `graphql:"callMethod(value: $callValue, setOrgUser: $orgUser)"`
+						} `graphql:"SetDataPointMethod"`
+					} `graphql:"DataPointService"`
+				} `graphql:"value"`
+			} `graphql:"outputs(key: $inputKey)"`
+		} `graphql:"Channels(find: $channelFind)"`
+	} `graphql:"IDeviceFH(find: $deviceFind)"`
+}
+
 func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber string, channel int, datapoint string, value float64) error {
 	client := getClient(httpClient)
 	val := formatFloat(value)
@@ -167,8 +194,36 @@ func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber 
 		"callValue":   val,
 	}
 
-	// TODO: This is ugly, but doesn't work with type casting. We should find a nicer solution.
-	if isProService {
+	// TODO: This is ugly, but accessing field tags doesn't work with type casting. We should find a nicer solution.
+	if isProService && datapoint[0] == 'o' {
+		query := setQueryOutputProService{}
+		variables["orgUser"] = proServiceUser
+
+		if err := client.Query(context.Background(), &query, variables); err != nil {
+			return fmt.Errorf("querying: %v", err)
+		}
+
+		// Check for errors
+		if len(query.IDeviceFH) != 1 {
+			return fmt.Errorf("setting data point value %s on device %v channel %v output %v: affected %v != 1 devices", val, serialNumber, channel, datapoint, len(query.IDeviceFH))
+		}
+		for _, device := range query.IDeviceFH {
+			if len(device.Channels) != 1 {
+				return fmt.Errorf("setting data point value %s on device %v channel %v output %v: affected %v != 1 channels", val, serialNumber, channel, datapoint, len(device.Channels))
+			}
+			for _, channel := range device.Channels {
+				if len(channel.Inputs) != 1 {
+					return fmt.Errorf("setting data point value %s on device %v channel %v output %v: affected %v != 1 inputs", val, serialNumber, channel, datapoint, len(channel.Inputs))
+				}
+				for _, input := range channel.Inputs {
+					methodCall := input.Value.DataPointService.SetDataPointMethod.CallMethod
+					if methodCall.Code >= 300 {
+						return fmt.Errorf("setting data point value %s on device %v channel %v output %v: %v (%v)", val, serialNumber, channel, datapoint, methodCall.Code, methodCall.Message)
+					}
+				}
+			}
+		}
+	} else if isProService {
 		query := setQueryProService{}
 		variables["orgUser"] = proServiceUser
 
@@ -177,8 +232,17 @@ func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber 
 		}
 
 		// Check for errors
+		if len(query.IDeviceFH) != 1 {
+			return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 devices", val, serialNumber, channel, datapoint, len(query.IDeviceFH))
+		}
 		for _, device := range query.IDeviceFH {
+			if len(device.Channels) != 1 {
+				return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 channels", val, serialNumber, channel, datapoint, len(device.Channels))
+			}
 			for _, channel := range device.Channels {
+				if len(channel.Inputs) != 1 {
+					return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 inputs", val, serialNumber, channel, datapoint, len(channel.Inputs))
+				}
 				for _, input := range channel.Inputs {
 					methodCall := input.Value.DataPointService.SetDataPointMethod.CallMethod
 					if methodCall.Code >= 300 {
@@ -194,8 +258,17 @@ func SetDataPointValue(httpClient *http.Client, isProService bool, serialNumber 
 		}
 
 		// Check for errors
+		if len(query.IDeviceFH) != 1 {
+			return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 devices", val, serialNumber, channel, datapoint, len(query.IDeviceFH))
+		}
 		for _, device := range query.IDeviceFH {
+			if len(device.Channels) != 1 {
+				return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 channels", val, serialNumber, channel, datapoint, len(device.Channels))
+			}
 			for _, channel := range device.Channels {
+				if len(channel.Inputs) != 1 {
+					return fmt.Errorf("setting data point value %s on device %v channel %v input %v: affected %v != 1 inputs", val, serialNumber, channel, datapoint, len(channel.Inputs))
+				}
 				for _, input := range channel.Inputs {
 					methodCall := input.Value.DataPointService.SetDataPointMethod.CallMethod
 					if methodCall.Code >= 300 {
@@ -228,14 +301,14 @@ type DataPointsSubscription struct {
 }
 
 func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<- DataPoint) error {
-	client := graphql.NewSubscriptionClient("wss://apps.eu.mybuildings.abb.com/adtg-ws/graphql").
+	client := graphql.NewSubscriptionClient(wsURL).
 		WithConnectionParams(map[string]interface{}{
 			"authorization": auth,
 		}).
 		WithProtocol(graphql.GraphQLWS).
 		OnError(func(sc *graphql.SubscriptionClient, err error) error {
 			// Cancels the subscription if returns non-nil error.
-			return fmt.Errorf("subscription client error: %v", err)
+			return fmt.Errorf("datapoint subscription client error: %v", err)
 		})
 	defer client.Close()
 
@@ -267,16 +340,72 @@ func SubscribeDataPointValue(auth string, datapoints []appdb.Datapoint, ch chan<
 
 	if _, err := client.Subscribe(&sub, variables, func(message []byte, err error) error {
 		if err != nil {
-			return fmt.Errorf("subscribe: %v", err)
+			return fmt.Errorf("subscribe datapoint: %v", err)
 		}
 		data := DataPointsSubscription{}
 		if err := jsonutil.UnmarshalGraphQL(message, &data); err != nil {
-			return fmt.Errorf("unmarshalling subscription response: %v", err)
+			return fmt.Errorf("unmarshalling datapoint subscription response: %v", err)
 		}
 		ch <- data.DataPointsSubscription
 		return nil
 	}); err != nil {
-		return fmt.Errorf("establishing subscription: %v", err)
+		return fmt.Errorf("establishing datapoint subscription: %v", err)
+	}
+
+	if err := client.Run(); err != nil {
+		return fmt.Errorf("running client: %v", err)
+	}
+	close(ch)
+	return nil
+}
+
+type ConnectionStatus struct {
+	DtId      string `graphql:"dtId"`
+	Connected bool   `graphql:"connected"`
+}
+
+type ConnectionStatusSubscription struct {
+	// Info from Johannes Schmidt (ABB) why we should filter connection status by "IOT" type:
+	//
+	// Sysaps have two connections to the backend: XMPP (a kind of legacy concept which is still in
+	// use also in order to handle the amount of messages in a cost-efficient way) and
+	// IOT (Microsoft IOT-Hub connection - new concept used for integration with the new SmartHome API).
+	//
+	// As both connections are built up and down almost in the same way/point-in-time you could rely on just one of both.
+	//
+	// Stepwise we are about to migrate towards IOT-Hub - so better to take this one.
+	ConnectionStatusSubscription ConnectionStatus `graphql:"ConnectionStatusSubscription(dtIds: $dtIds, type: \"IOT\")"`
+}
+
+func SubscribeConnectionStatus(auth string, dtIDs []string, ch chan<- ConnectionStatus) error {
+	client := graphql.NewSubscriptionClient(wsURL).
+		WithConnectionParams(map[string]interface{}{
+			"authorization": auth,
+		}).
+		WithProtocol(graphql.GraphQLWS).
+		OnError(func(sc *graphql.SubscriptionClient, err error) error {
+			// Cancels the subscription if returns non-nil error.
+			return fmt.Errorf("connnection status subscription client error: %v", err)
+		})
+	defer client.Close()
+	var sub ConnectionStatusSubscription
+
+	variables := map[string]interface{}{
+		"dtIds": dtIDs,
+	}
+
+	if _, err := client.Subscribe(&sub, variables, func(message []byte, err error) error {
+		if err != nil {
+			return fmt.Errorf("subscribe connection status: %v", err)
+		}
+		data := ConnectionStatusSubscription{}
+		if err := jsonutil.UnmarshalGraphQL(message, &data); err != nil {
+			return fmt.Errorf("unmarshalling connection status subscription response: %v", err)
+		}
+		ch <- data.ConnectionStatusSubscription
+		return nil
+	}); err != nil {
+		return fmt.Errorf("establishing connection status subscription: %v", err)
 	}
 
 	if err := client.Run(); err != nil {

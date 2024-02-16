@@ -48,6 +48,7 @@ func CreateLocationAssetsIfNecessary(config apiserver.Configuration, locations [
 				parentFunctionalAssetId: &rootAssetID,
 				parentLocationalAssetId: &rootAssetID,
 				identifier:              floor.GAI(),
+				providerID:              floor.Id,
 				assetType:               assetType,
 				name:                    floor.Name,
 				description:             fmt.Sprintf("%s (%v)", floor.Name, floor.GAI()),
@@ -63,6 +64,7 @@ func CreateLocationAssetsIfNecessary(config apiserver.Configuration, locations [
 					parentFunctionalAssetId: &floorAssetID,
 					parentLocationalAssetId: &floorAssetID,
 					identifier:              room.GAI(),
+					providerID:              room.Id,
 					assetType:               assetType,
 					name:                    room.Name,
 					description:             fmt.Sprintf("%s (%v)", room.Name, room.GAI()),
@@ -94,6 +96,7 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 				parentFunctionalAssetId: &rootAssetID,
 				parentLocationalAssetId: &rootAssetID,
 				identifier:              fmt.Sprintf("%s_%s", assetType, system.GAI),
+				providerID:              system.ID,
 				assetType:               assetType,
 				name:                    system.Name,
 				description:             fmt.Sprintf("%s (%v)", system.Name, system.GAI),
@@ -122,6 +125,7 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 					parentFunctionalAssetId: &systemAssetID,
 					parentLocationalAssetId: locParentId,
 					identifier:              fmt.Sprintf("%s_%s", assetType, device.GAI),
+					providerID:              device.ID,
 					assetType:               assetType,
 					name:                    fmt.Sprintf("%s | %s", deviceNamePrefix, device.Name),
 					description:             fmt.Sprintf("%s (%v)", device.Name, device.GAI),
@@ -141,6 +145,7 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 						parentFunctionalAssetId: &deviceAssetID,
 						parentLocationalAssetId: &deviceAssetID,
 						identifier:              channel.GAI(),
+						providerID:              channel.Id(),
 						assetType:               channel.AssetType(),
 						name:                    fmt.Sprintf("%s | %s", deviceNamePrefix, channel.Name()),
 						description:             fmt.Sprintf("%s (%v)", channel.Name(), channel.GAI()),
@@ -174,7 +179,7 @@ func CreateAssetsIfNecessary(config apiserver.Configuration, systems []model.Sys
 			}
 		}
 		if assetsCreated > 0 {
-			if err := notifyUsers(projectId, assetsCreated); err != nil {
+			if err := notifyUser(*config.UserId, projectId, assetsCreated); err != nil {
 				return fmt.Errorf("notifying users about CAC: %v", err)
 			}
 		}
@@ -235,6 +240,7 @@ type assetData struct {
 	parentFunctionalAssetId *int32
 	parentLocationalAssetId *int32
 	identifier              string
+	providerID              string
 	assetType               string
 	name                    string
 	description             string
@@ -246,8 +252,16 @@ func upsertAsset(d assetData) (created bool, assetID int32, err error) {
 	if err != nil {
 		return false, 0, fmt.Errorf("finding asset ID: %v", err)
 	}
-	if currentAssetID != nil {
-		return false, *currentAssetID, nil
+	existedInApp := currentAssetID != nil
+	if existedInApp {
+		existsInEliona, err := asset.ExistAsset(*currentAssetID)
+		if err != nil {
+			return false, 0, fmt.Errorf("looking up assset in Eliona: %v", err)
+		}
+		if !existsInEliona {
+			// Exists in app, not in Eliona -> it was deleted from Eliona. Ignore.
+			return false, *currentAssetID, nil
+		}
 	}
 
 	a := api.Asset{
@@ -267,38 +281,33 @@ func upsertAsset(d assetData) (created bool, assetID int32, err error) {
 	if newID == nil {
 		return false, 0, fmt.Errorf("cannot create asset %s", d.name)
 	}
-
-	if err := conf.InsertAsset(context.Background(), d.config, d.projectId, d.identifier, d.assetType, *newID); err != nil {
+	if err := conf.UpsertAsset(context.Background(), d.config, d.projectId, d.identifier, d.assetType, d.providerID, *newID); err != nil {
 		return false, 0, fmt.Errorf("inserting asset to config db: %v", err)
 	}
 
+	if existedInApp {
+		return false, *newID, nil
+	}
 	log.Debug("eliona", "Created new asset for project %s and device %s.", d.projectId, d.identifier)
-
 	return true, *newID, nil
 }
 
-func notifyUsers(projectId string, assetsCreated int) error {
-	users, _, err := client.NewClient().UsersAPI.GetUsers(client.AuthenticationContext()).Execute()
+func notifyUser(userId string, projectId string, assetsCreated int) error {
+	receipt, _, err := client.NewClient().CommunicationAPI.
+		PostNotification(client.AuthenticationContext()).
+		Notification(
+			api.Notification{
+				User:      userId,
+				ProjectId: *api.NewNullableString(&projectId),
+				Message: *api.NewNullableTranslation(&api.Translation{
+					De: api.PtrString(fmt.Sprintf("ABB-Free@home App hat %d neue Assets angelegt. Diese sind nun im Asset-Management verfügbar.", assetsCreated)),
+					En: api.PtrString(fmt.Sprintf("ABB-Free@home app added %v new assets. They are now available in Asset Management.", assetsCreated)),
+				}),
+			}).
+		Execute()
+	log.Debug("eliona", "posted notification about CAC: %v", receipt)
 	if err != nil {
-		return fmt.Errorf("fetching all users: %v", err)
-	}
-	for _, user := range users {
-		n := api.Notification{
-			User:      user.Email,
-			ProjectId: *api.NewNullableString(&projectId),
-			Message: *api.NewNullableTranslation(&api.Translation{
-				De: api.PtrString(fmt.Sprintf("Die kontinuierliche Asset-Erstellung für ABB-Free@home hat %v neue Assets hinzugefügt. Diese sind nun im Asset-Management verfügbar.", assetsCreated)),
-				En: api.PtrString(fmt.Sprintf("The Continuous Asset Creation for ABB-Free@home added %v new assets. They are now available in Asset Management.", assetsCreated)),
-			}),
-		}
-		receipt, _, err := client.NewClient().CommunicationAPI.
-			PostNotification(client.AuthenticationContext()).
-			Notification(n).
-			Execute()
-		log.Debug("eliona", "posted notification about CAC: %v", receipt)
-		if err != nil {
-			return fmt.Errorf("posting notification: %v", err)
-		}
+		return fmt.Errorf("posting CAC notification: %v", err)
 	}
 	return nil
 }

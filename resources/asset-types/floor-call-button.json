@@ -2,31 +2,31 @@
 	"attributes": [
 		{
 			"enable": true,
-			"name": "set_scene",
+			"name": "floor_call",
 			"subtype": "output",
 			"type": "inputs-and-switches",
 			"translation": {
-				"de": "Szenenauslöser",
-				"en": "Scene trigger"
+				"de": "Etagenruf",
+				"en": "Floor call"
 			},
 			"map": [
 				{
 					"value": 0,
-					"text": "No operation"
+					"text": "OFF"
 				},
 				{
 					"value": 1,
-					"text": "Trigger"
+					"text": "ON"
 				}
 			]
 		}
 	],
 	"custom": false,
 	"icon": null,
-	"name": "abb_free_at_home_scene",
+	"name": "abb_free_at_home_floor_call_button",
 	"translation": {
-		"de": "ABB-free@home Szene",
-		"en": "ABB-free@home Scene"
+		"de": "ABB-free@home Etagenruftaster",
+		"en": "ABB-free@home Floor call button"
 	},
 	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
 	"vendor": "ABB"

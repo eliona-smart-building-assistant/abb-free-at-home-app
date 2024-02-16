@@ -38,10 +38,15 @@ func (r Room) GAI() string {
 }
 
 type System struct {
-	ID      string `eliona:"system_id,filterable"`
-	GAI     string `eliona:"system_id,filterable"`
-	Name    string `eliona:"system_name,filterable"`
-	Devices []Device
+	ID               string `eliona:"system_id,filterable"`
+	GAI              string `eliona:"system_id,filterable"`
+	Name             string `eliona:"system_name,filterable"`
+	ConnectionStatus int8   `eliona:"connection_status" subtype:"status"`
+	Devices          []Device
+}
+
+func (s System) AssetType() string {
+	return "abb_free_at_home_system"
 }
 
 type Device struct {
@@ -240,9 +245,48 @@ func (c MovementSensor) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
 }
 
+type SmokeDetector struct {
+	AssetBase
+	Fire int8 `eliona:"fire" subtype:"input"`
+}
+
+func (c SmokeDetector) AssetType() string {
+	return "abb_free_at_home_smoke_detector"
+}
+
+func (c SmokeDetector) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
+type FloorCallButton struct {
+	AssetBase
+	FloorCall int8 `eliona:"floor_call" subtype:"output"`
+}
+
+func (c FloorCallButton) AssetType() string {
+	return "abb_free_at_home_floor_call_button"
+}
+
+func (c FloorCallButton) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
+type MuteButton struct {
+	AssetBase
+	Mute int8 `eliona:"mute_button" subtype:"output"`
+}
+
+func (c MuteButton) AssetType() string {
+	return "abb_free_at_home_mute_button"
+}
+
+func (c MuteButton) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
 type Scene struct {
 	AssetBase
-	SwitchState int8 `eliona:"switch_state" subtype:"input"`
+	Switch int8 `eliona:"set_scene" subtype:"output"`
 }
 
 func (c Scene) AssetType() string {

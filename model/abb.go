@@ -39,6 +39,7 @@ const (
 	FID_WINDOW_DOOR_SENSOR                             = 0x000F
 	FID_WINDOW_DOOR_POSITION_SENSOR                    = 0x0064
 	FID_HUE_ACTUATOR                                   = 0x002E
+	FID_WELCOME_IP_MUTE_ACTUATOR                       = 0x005D
 	FID_SCENE                                          = 0x4800
 	FID_SPECIAL_SCENE_PANIC                            = 0x4801
 	FID_SPECIAL_SCENE_ALL_OFF                          = 0x4802
@@ -83,6 +84,7 @@ func GetFunctionIDsList() []string {
 		FID_WINDOW_DOOR_SENSOR,
 		FID_WINDOW_DOOR_POSITION_SENSOR,
 		FID_HUE_ACTUATOR,
+		FID_WELCOME_IP_MUTE_ACTUATOR,
 		FID_SCENE,
 		FID_SPECIAL_SCENE_PANIC,
 		FID_SPECIAL_SCENE_ALL_OFF,
@@ -157,4 +159,5 @@ const (
 	PID_COLOR_MODE_GET                             = 0x011D
 	PID_COLOR_TEMPERATURE_GET                      = 0x0118
 	PID_COLOR_TEMPERATURE_SET                      = 0x0016
+	PID_FIRE_ALARM_ACTIVE                          = 0x02C3
 )

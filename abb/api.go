@@ -169,6 +169,13 @@ func (api *Api) ListenGraphQLSubscriptions(datapoints []appdb.Datapoint, ch chan
 	return abbgraphql.SubscribeDataPointValue("digest "+api.Credentials.ApiKey, datapoints, ch)
 }
 
+func (api *Api) ListenGraphQLSystemStatus(dtIDs []string, ch chan<- abbgraphql.ConnectionStatus) error {
+	if api.Credentials.OAuth {
+		return abbgraphql.SubscribeConnectionStatus("Bearer "+api.token.AccessToken, dtIDs, ch)
+	}
+	return abbgraphql.SubscribeConnectionStatus("digest "+api.Credentials.ApiKey, dtIDs, ch)
+}
+
 func (api *Api) GetLocations() (abbgraphql.LocationsQuery, error) {
 	if api.Auth.AuthorizedClient == nil {
 		return abbgraphql.LocationsQuery{}, errors.New("Fetching locations not implemented for legacy API")
@@ -198,6 +205,7 @@ func convertToDataFormat(query abbgraphql.SystemsQuery) DataFormat {
 	for _, systemQuery := range query.Systems {
 		var system System
 		system.SysApName = systemQuery.DtId
+		system.ConnectionOK = systemQuery.ConnectionStatusService.IoTHub.Value
 		system.Devices = make(map[string]Device)
 		for _, asset := range systemQuery.Assets {
 			var device Device

@@ -31,6 +31,7 @@ import (
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
+// Needs to correspond to asset attribute names.
 const (
 	function_switch                = "switch"
 	function_status                = "status" // For simple abb outputs
@@ -50,9 +51,12 @@ const (
 	function_hsv_value             = "hsv_value"
 	function_color_mode            = "color_mode"
 	function_color_temperature     = "color_temperature"
+	function_set_scene             = "set_scene"
+	function_mute_button           = "mute_button"
 )
 
 const SET_TEMP_TWICE = function_set_temperature
+const SET_SCENE_RETURN_TO_ZERO = function_set_scene
 
 var Functions = []string{
 	function_status,
@@ -74,6 +78,8 @@ var Functions = []string{
 	function_hsv_value,
 	function_color_mode,
 	function_color_temperature,
+	function_set_scene,
+	function_mute_button,
 }
 
 func getAPI(config *apiserver.Configuration) (*abb.Api, error) {
@@ -144,6 +150,8 @@ func GetLocations(config *apiserver.Configuration) ([]model.Floor, error) {
 	return floors, nil
 }
 
+// GetSystems gets systems according to the configuration passed.
+// The systems are then converted to a model.System type and the datapoints are mapped here.
 func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 	api, err := getAPI(config)
 	if err != nil {
@@ -161,10 +169,15 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 
 	var systems []model.System
 	for id, system := range abbConfiguration.Systems {
+		connectionStatus := int8(0)
+		if system.ConnectionOK {
+			connectionStatus = 1
+		}
 		s := model.System{
-			ID:   id,
-			GAI:  id,
-			Name: system.SysApName,
+			ID:               id,
+			GAI:              id,
+			Name:             system.SysApName,
+			ConnectionStatus: connectionStatus,
 		}
 		if adheres, err := s.AdheresToFilter(config.AssetFilter); err != nil {
 			return nil, fmt.Errorf("determining whether system adheres to a filter: %v", err)
@@ -194,14 +207,14 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 				assetBase := model.AssetBase{
 					IDBase:   id,
 					GAIBase:  d.GAI + "_" + id,
-					NameBase: channel.DisplayName.(string) + " " + id,
+					NameBase: channel.DisplayName.(string),
 				}
 				switch fid {
 				case model.FID_SWITCH_ACTUATOR:
 					// Used for ABB -> Eliona
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_ON_OFF_INFO_GET {
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_ON_OFF_INFO_GET {
 							outputs[function_switch] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -524,8 +537,8 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 				case model.FID_WINDOW_DOOR_SENSOR:
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_AL_WINDOW_DOOR {
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_AL_WINDOW_DOOR {
 							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -546,8 +559,8 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 				case model.FID_WINDOW_DOOR_POSITION_SENSOR:
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_AL_WINDOW_DOOR_POSITION {
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_AL_WINDOW_DOOR_POSITION {
 							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -568,8 +581,8 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 				case model.FID_MOVEMENT_DETECTOR:
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_MOVEMENT_UNDER_CONSIDERATION_OF_BRIGHTNESS {
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_MOVEMENT_UNDER_CONSIDERATION_OF_BRIGHTNESS {
 							outputs[function_status] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -588,10 +601,93 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						AssetBase: assetBase,
 						Movement:  movement,
 					}
+				case model.FID_SMOKE_DETECTOR:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_FIRE_ALARM_ACTIVE {
+							outputs[function_status] = model.Datapoint{
+
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "fire",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					fire := parseInt8(channel.FindOutputValueByPairingID(model.PID_FIRE_ALARM_ACTIVE))
+					c = model.SmokeDetector{
+						AssetBase: assetBase,
+						Fire:      fire,
+					}
+				case model.FID_DES_LEVEL_CALL_ACTUATOR:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_ON_OFF_INFO_GET {
+							outputs[function_status] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "floor_call",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					inputs := make(map[string]string)
+					for datapoint, input := range channel.Inputs {
+						if input.PairingId == model.PID_TIMED_START_STOP {
+							inputs[function_switch] = datapoint
+						}
+					}
+					assetBase.InputsBase = inputs
+
+					floorCall := parseInt8(channel.FindOutputValueByPairingID(model.PID_ON_OFF_INFO_GET))
+					c = model.FloorCallButton{
+						AssetBase: assetBase,
+						FloorCall: floorCall,
+					}
+				case model.FID_WELCOME_IP_MUTE_ACTUATOR:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_ON_OFF_INFO_GET {
+							outputs[function_switch] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "mute_button",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+
+					inputs := make(map[string]string)
+					for datapoint, input := range channel.Inputs {
+						if input.PairingId == model.PID_SWITCH_ON_OFF_SET {
+							inputs[function_mute_button] = datapoint
+						}
+					}
+					assetBase.InputsBase = inputs
+
+					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_ON_OFF_INFO_GET))
+					c = model.MuteButton{
+						AssetBase: assetBase,
+						Mute:      switchState,
+					}
 				case model.FID_HEATING_ACTUATOR:
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_AL_INFO_VALUE_HEATING {
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_AL_INFO_VALUE_HEATING {
 							outputs[function_heating_flow] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -602,7 +698,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 								},
 							}
 						}
-						if input.PairingId == model.PID_ACTUATING_VALUE_HEATING {
+						if output.PairingId == model.PID_ACTUATING_VALUE_HEATING {
 							outputs[function_actuator_heating_flow] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
@@ -624,15 +720,18 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						ActuatorFlow: actuatorFlow,
 					}
 				case model.FID_SCENE, model.FID_SPECIAL_SCENE_PANIC, model.FID_SPECIAL_SCENE_ALL_OFF, model.FID_SPECIAL_SCENE_ALL_BLINDS_UP, model.FID_SPECIAL_SCENE_ALL_BLINDS_DOWN:
+					// Scenes are stateless, therefore we cannot read their state. We can only control them.
+					// But we need to simulate this state in Eliona, to allow a "trigger" UX on the attribute.
+					// That's why we need to specify the outputs as well.
 					outputs := make(map[string]model.Datapoint)
-					for datapoint, input := range channel.Outputs {
-						if input.PairingId == model.PID_AL_SCENE_CONTROL {
-							outputs[function_switch] = model.Datapoint{
+					for datapoint, output := range channel.Outputs {
+						if output.PairingId == model.PID_AL_SCENE_CONTROL {
+							outputs[function_set_scene] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
 									{
-										Subtype:       elionaapi.SUBTYPE_INPUT,
-										AttributeName: "switch_state",
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "set_scene",
 									},
 								},
 							}
@@ -640,10 +739,16 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.OutputsBase = outputs
 
-					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_AL_SCENE_CONTROL))
+					// We can control scenes only via output datapoint. Don't ask me why, they don't have
+					// any input ones.
+					inputs := make(map[string]string)
+					inputs[function_set_scene] = "odp0000" // Yes, this is really a setable output.
+					assetBase.InputsBase = inputs
+
+					switchState := int8(0) // Scenes are stateless. It's always zero.
 					c = model.Scene{
-						AssetBase:   assetBase,
-						SwitchState: switchState,
+						AssetBase: assetBase,
+						Switch:    switchState,
 					}
 				default:
 					continue // Don't create any asset if user cannot work with it.
@@ -694,6 +799,22 @@ func ListenForDataChanges(config *apiserver.Configuration, datapoints []appdb.Da
 		}
 	} else if err != nil {
 		return fmt.Errorf("listen for graphQL subscriptions: %v", err)
+	}
+	return nil
+}
+
+func ListenForSystemStatusChanges(config *apiserver.Configuration, dtIDs []string, ch chan<- abbgraphql.ConnectionStatus) error {
+	api, err := getAPI(config)
+	if err != nil {
+		return fmt.Errorf("getting API instance: %v", err)
+	}
+	err = api.ListenGraphQLSystemStatus(dtIDs, ch)
+	if err != nil && strings.Contains(err.Error(), "JsonWebTokenError") {
+		if _, err := conf.InvalidateAuthorization(*config); err != nil {
+			return fmt.Errorf("invalidating authorization: %v", err)
+		}
+	} else if err != nil {
+		return fmt.Errorf("listen for system status changes: %v", err)
 	}
 	return nil
 }

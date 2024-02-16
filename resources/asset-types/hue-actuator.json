@@ -22,19 +22,6 @@
 		},
 		{
 			"enable": true,
-			"name": "color_temperature_state",
-			"subtype": "input",
-			"type": "inputs-and-switches",
-			"unit": "%",
-			"min": 0,
-			"max": 100,
-			"translation": {
-				"de": "Aktuell Farbtemperatur",
-				"en": "Current color temperature"
-			}
-		},
-		{
-			"enable": true,
 			"name": "switch",
 			"subtype": "output",
 			"type": "inputs-and-switches",

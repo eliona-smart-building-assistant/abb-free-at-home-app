@@ -1,0 +1,23 @@
+{
+	"attributes": [
+		{
+			"enable": true,
+			"name": "fire",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Feueralarm aktiv",
+				"en": "Fire alarm active"
+			}
+		}
+	],
+	"custom": false,
+	"icon": null,
+	"name": "abb_free_at_home_smoke_detector",
+	"translation": {
+		"de": "ABB-free@home Rauchmelder",
+		"en": "ABB-free@home Smoke Detector"
+	},
+	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
+	"vendor": "ABB"
+}

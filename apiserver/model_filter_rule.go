@@ -21,14 +21,7 @@ func AssertFilterRuleRequired(obj FilterRule) error {
 	return nil
 }
 
-// AssertRecurseFilterRuleRequired recursively checks if required fields are not zero-ed in a nested slice.
-// Accepts only nested slice of FilterRule (e.g. [][]FilterRule), otherwise ErrTypeAssertionError is thrown.
-func AssertRecurseFilterRuleRequired(objSlice interface{}) error {
-	return AssertRecurseInterfaceRequired(objSlice, func(obj interface{}) error {
-		aFilterRule, ok := obj.(FilterRule)
-		if !ok {
-			return ErrTypeAssertionError
-		}
-		return AssertFilterRuleRequired(aFilterRule)
-	})
+// AssertFilterRuleConstraints checks if the values respects the defined constraints
+func AssertFilterRuleConstraints(obj FilterRule) error {
+	return nil
 }

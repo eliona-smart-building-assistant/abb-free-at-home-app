@@ -42,7 +42,8 @@ create table if not exists abb_free_at_home.configuration
 	asset_filter     json,
 	active           boolean default false,
 	enable           boolean default false,
-	project_ids      text[]
+	project_ids      text[],
+	user_id          text
 );
 
 create table if not exists abb_free_at_home.asset
@@ -52,6 +53,7 @@ create table if not exists abb_free_at_home.asset
 	project_id       text      not null,
 	global_asset_id  text      not null,
 	asset_type_name  text      not null,
+	provider_id      text      not null,
 	asset_id         integer   unique
 );
 

@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/eliona-smart-building-assistant/go-eliona/frontend"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 	"github.com/volatiletech/null/v8"
@@ -41,7 +42,7 @@ const (
 )
 
 func InsertConfig(ctx context.Context, config apiserver.Configuration) (apiserver.Configuration, error) {
-	dbConfig, err := dbConfigFromApiConfig(config)
+	dbConfig, err := dbConfigFromApiConfig(ctx, config)
 	if err != nil {
 		return apiserver.Configuration{}, fmt.Errorf("creating DB config from API config: %v", err)
 	}
@@ -53,7 +54,7 @@ func InsertConfig(ctx context.Context, config apiserver.Configuration) (apiserve
 }
 
 func UpsertConfig(ctx context.Context, config apiserver.Configuration) (apiserver.Configuration, error) {
-	dbConfig, err := dbConfigFromApiConfig(config)
+	dbConfig, err := dbConfigFromApiConfig(ctx, config)
 	if err != nil {
 		return apiserver.Configuration{}, fmt.Errorf("creating DB config from API config: %v", err)
 	}
@@ -99,7 +100,7 @@ func DeleteConfig(ctx context.Context, configID int64) error {
 	return nil
 }
 
-func dbConfigFromApiConfig(apiConfig apiserver.Configuration) (dbConfig appdb.Configuration, err error) {
+func dbConfigFromApiConfig(ctx context.Context, apiConfig apiserver.Configuration) (dbConfig appdb.Configuration, err error) {
 	switch apiConfig.AbbConnectionType {
 	case ABB_LOCAL:
 		dbConfig.IsLocal = true
@@ -165,6 +166,11 @@ func dbConfigFromApiConfig(apiConfig apiserver.Configuration) (dbConfig appdb.Co
 		dbConfig.ProjectIds = *apiConfig.ProjectIDs
 	}
 
+	env := frontend.GetEnvironment(ctx)
+	if env != nil {
+		dbConfig.UserID = null.StringFrom(env.UserId)
+	}
+
 	return dbConfig, nil
 }
 
@@ -203,6 +209,7 @@ func apiConfigFromDbConfig(dbConfig *appdb.Configuration) (apiConfig apiserver.C
 	}
 	apiConfig.Active = dbConfig.Active.Ptr()
 	apiConfig.ProjectIDs = common.Ptr[[]string](dbConfig.ProjectIds)
+	apiConfig.UserId = dbConfig.UserID.Ptr()
 	return apiConfig, nil
 }
 
@@ -274,14 +281,15 @@ func InvalidateAuthorization(config apiserver.Configuration) (int64, error) {
 	})
 }
 
-func InsertAsset(ctx context.Context, config apiserver.Configuration, projId, globalAssetID, assetTypeName string, assetId int32) error {
+func UpsertAsset(ctx context.Context, config apiserver.Configuration, projId, globalAssetID, assetTypeName, providerID string, assetId int32) error {
 	var dbAsset appdb.Asset
 	dbAsset.ConfigurationID = null.Int64FromPtr(config.Id).Int64
 	dbAsset.ProjectID = projId
 	dbAsset.GlobalAssetID = globalAssetID
 	dbAsset.AssetTypeName = assetTypeName
+	dbAsset.ProviderID = providerID
 	dbAsset.AssetID = null.Int32From(assetId)
-	return dbAsset.InsertG(ctx, boil.Infer())
+	return dbAsset.UpsertG(ctx, true, []string{"asset_id"}, boil.Blacklist("asset_id"), boil.Infer())
 }
 
 func GetAssetId(ctx context.Context, config apiserver.Configuration, projId string, globalAssetID string) (*int32, error) {
@@ -294,6 +302,28 @@ func GetAssetId(ctx context.Context, config apiserver.Configuration, projId stri
 		return nil, err
 	}
 	return common.Ptr(dbAsset[0].AssetID.Int32), nil
+}
+
+func FindAssetByProviderID(ctx context.Context, config apiserver.Configuration, providerID string) (*appdb.Asset, error) {
+	dbAsset, err := appdb.Assets(
+		appdb.AssetWhere.ConfigurationID.EQ(null.Int64FromPtr(config.Id).Int64),
+		appdb.AssetWhere.ProviderID.EQ(providerID),
+	).OneG(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return dbAsset, nil
+}
+
+func GetSystems(ctx context.Context, config apiserver.Configuration) ([]*appdb.Asset, error) {
+	dbAssets, err := appdb.Assets(
+		appdb.AssetWhere.ConfigurationID.EQ(null.Int64FromPtr(config.Id).Int64),
+		appdb.AssetWhere.AssetTypeName.EQ("abb_free_at_home_system"),
+	).AllG(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return dbAssets, nil
 }
 
 func InsertOutput(assetId int32, systemId, deviceId, channelId, datapoint, function string) (int64, error) {
@@ -370,7 +400,7 @@ func UpdateDatapoint(datapoint appdb.Datapoint) error {
 	return err
 }
 
-func FindDatapoint(serialNumber, channelNumber, datapointId string) (appdb.Datapoint, error) {
+func FindOutputDatapoint(serialNumber, channelNumber, datapointId string) (appdb.Datapoint, error) {
 	datapoint, err := appdb.Datapoints(
 		appdb.DatapointWhere.IsInput.EQ(false),
 		appdb.DatapointWhere.DeviceID.EQ(serialNumber),

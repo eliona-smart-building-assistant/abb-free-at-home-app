@@ -29,6 +29,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/eliona-smart-building-assistant/go-eliona/frontend"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	utilshttp "github.com/eliona-smart-building-assistant/go-utils/http"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
@@ -91,6 +92,12 @@ func collectAndStartSubscription(config apiserver.Configuration) {
 			log.Info("main", "Subscription %d exited. Restarting ...", *config.Id)
 			triggerResynchronize()
 		}, config, fmt.Sprintf("subscription_%v", *config.Id))
+		common.RunOnceWithParam(func(config apiserver.Configuration) {
+			log.Info("main", "Status subscription %d started.", *config.Id)
+			subscribeToSystemStatus(&config)
+			log.Info("main", "Status subscription %d exited. Restarting ...", *config.Id)
+			triggerResynchronize()
+		}, config, fmt.Sprintf("status_subscription_%v", *config.Id))
 		for {
 			// Wait for the time duration or a trigger
 			select {
@@ -159,7 +166,7 @@ func subscribeToDataChanges(config *apiserver.Configuration) {
 		log.Info("broker", "ABB subscription exited")
 	}()
 	for dp := range dataPointChan {
-		datapoint, err := conf.FindDatapoint(dp.SerialNumber, dp.ChannelNumber, dp.DatapointId)
+		datapoint, err := conf.FindOutputDatapoint(dp.SerialNumber, dp.ChannelNumber, dp.DatapointId)
 		if err != nil {
 			log.Error("conf", "finding datapoint %+v: %v", dp, err)
 			return
@@ -171,14 +178,56 @@ func subscribeToDataChanges(config *apiserver.Configuration) {
 	}
 }
 
+func subscribeToSystemStatus(config *apiserver.Configuration) {
+	systems, err := conf.GetSystems(context.Background(), *config)
+	if err != nil {
+		log.Error("conf", "fetching all systems: %v", err)
+		return
+	}
+
+	var dtIDs []string
+	for _, s := range systems {
+		dtIDs = append(dtIDs, s.ProviderID)
+	}
+
+	connectionStatusChan := make(chan abbgraphql.ConnectionStatus)
+	go func() {
+		defer close(connectionStatusChan)
+
+		if err := broker.ListenForSystemStatusChanges(config, dtIDs, connectionStatusChan); err != nil {
+			log.Error("broker", "listen for system status changes: %v", err)
+			return
+		}
+		log.Info("broker", "ABB subscription exited")
+	}()
+	for status := range connectionStatusChan {
+		log.Debug("broker", "status received: %v", status)
+		system, err := conf.FindAssetByProviderID(context.Background(), *config, status.DtId)
+		if err != nil {
+			log.Error("conf", "finding system %+v: %v", status.DtId, err)
+			return
+		}
+		connected := int8(0)
+		if status.Connected {
+			connected = 1
+		}
+		if err := eliona.UpsertSystemStatus(*config, *system, connected); err != nil {
+			log.Error("eliona", "upserting system data %+v: %v", status.Connected, err)
+			return
+		}
+	}
+}
+
 // listenApi starts the API server and listen for requests
 func listenApi() {
-	err := http.ListenAndServe(":"+common.Getenv("API_SERVER_PORT", "3000"), utilshttp.NewCORSEnabledHandler(
-		apiserver.NewRouter(
-			apiserver.NewConfigurationApiController(apiservices.NewConfigurationApiService()),
-			apiserver.NewVersionApiController(apiservices.NewVersionApiService()),
-			apiserver.NewCustomizationApiController(apiservices.NewCustomizationApiService()),
-		)))
+	err := http.ListenAndServe(":"+common.Getenv("API_SERVER_PORT", "3000"),
+		frontend.NewEnvironmentHandler(
+			utilshttp.NewCORSEnabledHandler(
+				apiserver.NewRouter(
+					apiserver.NewConfigurationAPIController(apiservices.NewConfigurationApiService()),
+					apiserver.NewVersionAPIController(apiservices.NewVersionApiService()),
+					apiserver.NewCustomizationAPIController(apiservices.NewCustomizationApiService()),
+				))))
 	log.Fatal("main", "API server: %v", err)
 }
 
@@ -223,22 +272,11 @@ func listenForOutputChanges() {
 	}
 }
 
-var assetWrites = make(map[int32]time.Time)
-
 func setAsset(assetID int32, function string, val float64) {
 	input, err := conf.FetchInput(assetID, function)
 	if err != nil {
 		log.Fatal("conf", "fetching input for assetID %v function %v: %v", assetID, function, err)
 		return
-	}
-
-	if lastAssetWrite, ok := assetWrites[assetID]; ok {
-		if time.Since(lastAssetWrite).Seconds() < 1 {
-			log.Info("broker", "skipped setting value %v for function %v asset %v, to avoid overwriting dependent values", val, function, assetID)
-			return
-		} else {
-			fmt.Println(time.Since(lastAssetWrite).Seconds())
-		}
 	}
 
 	config, err := conf.GetConfigForDatapoint(input)
@@ -251,7 +289,6 @@ func setAsset(assetID int32, function string, val float64) {
 		log.Error("broker", "setting value for asset %v: %v", assetID, err)
 		return
 	}
-	assetWrites[assetID] = time.Now()
 	input.LastWrittenValue.Float64 = val
 	input.LastWrittenValue.Valid = true
 	input.LastWrittenTime.Time = time.Now()
@@ -265,8 +302,24 @@ func setAsset(assetID int32, function string, val float64) {
 	// call turns off the eco mode (and highens the temperature), second call
 	// really sets the temperature.
 	if function == broker.SET_TEMP_TWICE {
-		if err := conf.UpdateDatapoint(input); err != nil {
-			log.Error("conf", "updating input second time: %v", err)
+		log.Info("broker", "setting value %v second time for asset %v function %v", val, assetID, function)
+		if err := broker.SetInput(&config, input, val); err != nil {
+			log.Error("broker", "setting value for asset %v: %v", assetID, err)
+			return
+		}
+	}
+
+	// This hack is to enable "triggger" functionality in Eliona. The user
+	// triggers the attribute by setting it to "1", then the app immediately
+	// sets it back to "0".
+	if function == broker.SET_SCENE_RETURN_TO_ZERO {
+		output, err := conf.FindOutputDatapoint(input.DeviceID, input.ChannelID, input.Datapoint)
+		if err != nil {
+			log.Error("conf", "finding datapoint corresponding to %v: %v", input, err)
+			return
+		}
+		if err := eliona.UpsertDatapointData(config, output, "0"); err != nil {
+			log.Error("eliona", "returning scene trigger back to zero: %v", err)
 			return
 		}
 	}
