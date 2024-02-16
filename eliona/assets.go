@@ -252,8 +252,16 @@ func upsertAsset(d assetData) (created bool, assetID int32, err error) {
 	if err != nil {
 		return false, 0, fmt.Errorf("finding asset ID: %v", err)
 	}
-	if currentAssetID != nil {
-		return false, *currentAssetID, nil
+	existedInApp := currentAssetID != nil
+	if existedInApp {
+		existsInEliona, err := asset.ExistAsset(*currentAssetID)
+		if err != nil {
+			return false, 0, fmt.Errorf("looking up assset in Eliona: %v", err)
+		}
+		if !existsInEliona {
+			// Exists in app, not in Eliona -> it was deleted from Eliona. Ignore.
+			return false, *currentAssetID, nil
+		}
 	}
 
 	a := api.Asset{
@@ -273,13 +281,14 @@ func upsertAsset(d assetData) (created bool, assetID int32, err error) {
 	if newID == nil {
 		return false, 0, fmt.Errorf("cannot create asset %s", d.name)
 	}
-
-	if err := conf.InsertAsset(context.Background(), d.config, d.projectId, d.identifier, d.assetType, d.providerID, *newID); err != nil {
+	if err := conf.UpsertAsset(context.Background(), d.config, d.projectId, d.identifier, d.assetType, d.providerID, *newID); err != nil {
 		return false, 0, fmt.Errorf("inserting asset to config db: %v", err)
 	}
 
+	if existedInApp {
+		return false, *newID, nil
+	}
 	log.Debug("eliona", "Created new asset for project %s and device %s.", d.projectId, d.identifier)
-
 	return true, *newID, nil
 }
 

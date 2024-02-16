@@ -281,7 +281,7 @@ func InvalidateAuthorization(config apiserver.Configuration) (int64, error) {
 	})
 }
 
-func InsertAsset(ctx context.Context, config apiserver.Configuration, projId, globalAssetID, assetTypeName, providerID string, assetId int32) error {
+func UpsertAsset(ctx context.Context, config apiserver.Configuration, projId, globalAssetID, assetTypeName, providerID string, assetId int32) error {
 	var dbAsset appdb.Asset
 	dbAsset.ConfigurationID = null.Int64FromPtr(config.Id).Int64
 	dbAsset.ProjectID = projId
@@ -289,7 +289,7 @@ func InsertAsset(ctx context.Context, config apiserver.Configuration, projId, gl
 	dbAsset.AssetTypeName = assetTypeName
 	dbAsset.ProviderID = providerID
 	dbAsset.AssetID = null.Int32From(assetId)
-	return dbAsset.InsertG(ctx, boil.Infer())
+	return dbAsset.UpsertG(ctx, true, []string{"asset_id"}, boil.Blacklist("asset_id"), boil.Infer())
 }
 
 func GetAssetId(ctx context.Context, config apiserver.Configuration, projId string, globalAssetID string) (*int32, error) {
