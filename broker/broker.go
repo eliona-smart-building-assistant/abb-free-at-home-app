@@ -53,6 +53,7 @@ const (
 	function_color_temperature     = "color_temperature"
 	function_set_scene             = "set_scene"
 	function_mute_button           = "mute_button"
+	function_floor_call            = "floor_call"
 )
 
 const SET_TEMP_TWICE = function_set_temperature
@@ -80,6 +81,7 @@ var Functions = []string{
 	function_color_temperature,
 	function_set_scene,
 	function_mute_button,
+	function_floor_call,
 }
 
 func getAPI(config *apiserver.Configuration) (*abb.Api, error) {
@@ -628,7 +630,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {
 						if output.PairingId == model.PID_ON_OFF_INFO_GET {
-							outputs[function_status] = model.Datapoint{
+							outputs[function_floor_call] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
 									{
@@ -644,7 +646,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					inputs := make(map[string]string)
 					for datapoint, input := range channel.Inputs {
 						if input.PairingId == model.PID_TIMED_START_STOP {
-							inputs[function_switch] = datapoint
+							inputs[function_floor_call] = datapoint
 						}
 					}
 					assetBase.InputsBase = inputs
@@ -658,7 +660,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {
 						if output.PairingId == model.PID_ON_OFF_INFO_GET {
-							outputs[function_switch] = model.Datapoint{
+							outputs[function_mute_button] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
 									{
