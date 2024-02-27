@@ -303,7 +303,7 @@ func (sys *System) AdheresToFilter(filter [][]apiserver.FilterRule) (bool, error
 	f := apiFilterToCommonFilter(filter)
 	fp, err := utils.StructToMap(sys)
 	if err != nil {
-		return false, fmt.Errorf("converting strict to map: %v", err)
+		return false, fmt.Errorf("converting struct to map: %v", err)
 	}
 	adheres, err := common.Filter(f, fp)
 	if err != nil {
