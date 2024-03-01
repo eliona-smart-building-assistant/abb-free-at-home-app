@@ -711,6 +711,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 		}
 	}
 
+	var batteriesTilesConfig []map[string]any
 	var batteriesData []api.WidgetData
 	for i, bd := range batteryDevices {
 		batteriesData = append(batteriesData, api.WidgetData{
@@ -725,46 +726,48 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 				"subtype":            "status",
 			},
 		})
+
+		percentTileConfig := map[string]any{
+			"defaultColorIndex": i,
+			"progressBar": map[string]any{
+				"divider": "/",
+				"max":     "100",
+				"min":     "0",
+				"type":    "absolute",
+			},
+			"valueMapping": [][]string{
+				{
+					"20",
+					"",
+					"#9E003D",
+				},
+				{
+					"50",
+					"",
+					"#EE9D4C",
+				},
+				{
+					"100",
+					"",
+					"#007305",
+				},
+			},
+		}
+		batteriesTilesConfig = append(batteriesTilesConfig, percentTileConfig)
+	}
+	batteriesDetails := map[string]any{
+		"size":     1,
+		"timespan": 7,
+		"1": map[string]any{
+			"tilesConfig": batteriesTilesConfig,
+		},
 	}
 	widget = api.Widget{
 		WidgetTypeName: "ABB Battery status",
 		AssetId:        rootAsset.Id,
 		Sequence:       nullableInt32(widgetSequence),
-		Details: map[string]any{
-			"size":     1,
-			"timespan": 7,
-			"0": map[string]any{ // TODO: Would be nice, but not works. See discussion in daily-team-two channel for progress.
-				"tilesConfig": []map[string]any{
-					{
-						"defaultColorIndex": 0,
-						"progressBar": map[string]any{
-							"divider": "/",
-							"max":     "100",
-							"min":     "0",
-							"type":    "absolute",
-						},
-						"valueMapping": [][]string{
-							{
-								"20",
-								"",
-								"#9E003D",
-							},
-							{
-								"50",
-								"",
-								"#EE9D4C",
-							},
-							{
-								"100",
-								"",
-								"#007305",
-							},
-						},
-					},
-				},
-			},
-		},
-		Data: batteriesData,
+		Data:           batteriesData,
+		Details:        batteriesDetails,
 	}
 	widgetSequence++
 	dashboard.Widgets = append(dashboard.Widgets, widget)
