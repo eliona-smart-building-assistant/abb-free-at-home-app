@@ -800,6 +800,65 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 	widgetSequence++
 	dashboard.Widgets = append(dashboard.Widgets, widget)
 
+	systems, _, err := client.NewClient().AssetsAPI.
+		GetAssets(client.AuthenticationContext()).
+		AssetTypeName("abb_free_at_home_system").
+		ProjectId(projectId).
+		Execute()
+	if err != nil {
+		return api.Dashboard{}, fmt.Errorf("fetching systems: %v", err)
+	}
+
+	var systemsTilesConfig []map[string]any
+	var systemsData []api.WidgetData
+	for i, s := range systems {
+		systemsData = append(systemsData, api.WidgetData{
+			ElementSequence: nullableInt32(1),
+			AssetId:         s.Id,
+			Data: map[string]interface{}{
+				"aggregatedDataType": "heap",
+				"attribute":          "connection_status",
+				"description":        s.Name,
+				"key":                "",
+				"seq":                i,
+				"subtype":            "status",
+			},
+		})
+
+		percentTileConfig := map[string]any{
+			"defaultColorIndex": i,
+			"valueMapping": [][]string{
+				{
+					"0",
+					"",
+					"#9E003D",
+				},
+				{
+					"1",
+					"",
+					"#007305",
+				},
+			},
+		}
+		systemsTilesConfig = append(systemsTilesConfig, percentTileConfig)
+	}
+	systemsDetails := map[string]any{
+		"size":     1,
+		"timespan": 7,
+		"1": map[string]any{
+			"tilesConfig": systemsTilesConfig,
+		},
+	}
+	widget = api.Widget{
+		WidgetTypeName: "ABB Connectivity",
+		AssetId:        rootAsset.Id,
+		Sequence:       nullableInt32(widgetSequence),
+		Data:           systemsData,
+		Details:        systemsDetails,
+	}
+	widgetSequence++
+	dashboard.Widgets = append(dashboard.Widgets, widget)
+
 	return dashboard, nil
 }
 
