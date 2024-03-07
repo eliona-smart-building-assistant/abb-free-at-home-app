@@ -711,6 +711,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 		}
 	}
 
+	var batteriesTilesConfig []map[string]any
 	var batteriesData []api.WidgetData
 	for i, bd := range batteryDevices {
 		batteriesData = append(batteriesData, api.WidgetData{
@@ -725,46 +726,48 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 				"subtype":            "status",
 			},
 		})
+
+		percentTileConfig := map[string]any{
+			"defaultColorIndex": i,
+			"progressBar": map[string]any{
+				"divider": "/",
+				"max":     "100",
+				"min":     "0",
+				"type":    "absolute",
+			},
+			"valueMapping": [][]string{
+				{
+					"20",
+					"",
+					"#9E003D",
+				},
+				{
+					"50",
+					"",
+					"#EE9D4C",
+				},
+				{
+					"100",
+					"",
+					"#007305",
+				},
+			},
+		}
+		batteriesTilesConfig = append(batteriesTilesConfig, percentTileConfig)
+	}
+	batteriesDetails := map[string]any{
+		"size":     1,
+		"timespan": 7,
+		"1": map[string]any{
+			"tilesConfig": batteriesTilesConfig,
+		},
 	}
 	widget = api.Widget{
 		WidgetTypeName: "ABB Battery status",
 		AssetId:        rootAsset.Id,
 		Sequence:       nullableInt32(widgetSequence),
-		Details: map[string]any{
-			"size":     1,
-			"timespan": 7,
-			"0": map[string]any{ // TODO: Would be nice, but not works. See discussion in daily-team-two channel for progress.
-				"tilesConfig": []map[string]any{
-					{
-						"defaultColorIndex": 0,
-						"progressBar": map[string]any{
-							"divider": "/",
-							"max":     "100",
-							"min":     "0",
-							"type":    "absolute",
-						},
-						"valueMapping": [][]string{
-							{
-								"20",
-								"",
-								"#9E003D",
-							},
-							{
-								"50",
-								"",
-								"#EE9D4C",
-							},
-							{
-								"100",
-								"",
-								"#007305",
-							},
-						},
-					},
-				},
-			},
-		},
-		Data: batteriesData,
+		Data:           batteriesData,
+		Details:        batteriesDetails,
 	}
 	widgetSequence++
 	dashboard.Widgets = append(dashboard.Widgets, widget)
@@ -793,6 +796,65 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 			"timespan": 7,
 		},
 		Data: connectivityData,
+	}
+	widgetSequence++
+	dashboard.Widgets = append(dashboard.Widgets, widget)
+
+	systems, _, err := client.NewClient().AssetsAPI.
+		GetAssets(client.AuthenticationContext()).
+		AssetTypeName("abb_free_at_home_system").
+		ProjectId(projectId).
+		Execute()
+	if err != nil {
+		return api.Dashboard{}, fmt.Errorf("fetching systems: %v", err)
+	}
+
+	var systemsTilesConfig []map[string]any
+	var systemsData []api.WidgetData
+	for i, s := range systems {
+		systemsData = append(systemsData, api.WidgetData{
+			ElementSequence: nullableInt32(1),
+			AssetId:         s.Id,
+			Data: map[string]interface{}{
+				"aggregatedDataType": "heap",
+				"attribute":          "connection_status",
+				"description":        s.Name,
+				"key":                "",
+				"seq":                i,
+				"subtype":            "status",
+			},
+		})
+
+		percentTileConfig := map[string]any{
+			"defaultColorIndex": i,
+			"valueMapping": [][]string{
+				{
+					"0",
+					"",
+					"#9E003D",
+				},
+				{
+					"1",
+					"",
+					"#007305",
+				},
+			},
+		}
+		systemsTilesConfig = append(systemsTilesConfig, percentTileConfig)
+	}
+	systemsDetails := map[string]any{
+		"size":     1,
+		"timespan": 7,
+		"1": map[string]any{
+			"tilesConfig": systemsTilesConfig,
+		},
+	}
+	widget = api.Widget{
+		WidgetTypeName: "ABB Connectivity",
+		AssetId:        rootAsset.Id,
+		Sequence:       nullableInt32(widgetSequence),
+		Data:           systemsData,
+		Details:        systemsDetails,
 	}
 	widgetSequence++
 	dashboard.Widgets = append(dashboard.Widgets, widget)
