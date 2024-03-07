@@ -342,4 +342,9 @@ func initialize() {
 		asset.InitAssetTypeFiles("resources/asset-types/*.json"),
 		dashboard.InitWidgetTypeFiles("resources/widget-types/*.json"),
 	)
+
+	// Patch the app to v1.1.3. Note that database migration must be done manually.
+	app.Patch(conn, app.AppName(), "010103",
+		asset.InitAssetTypeFiles("resources/asset-types/*.json"),
+	)
 }
