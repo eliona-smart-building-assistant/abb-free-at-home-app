@@ -85,6 +85,9 @@ func collectAndStartSubscription(config apiserver.Configuration) {
 		log.Info("main", "Collecting %d started", *config.Id)
 
 		if err := collectResources(&config); err != nil {
+			// Delay before retry. This makes sure that a bug won't put too much
+			// strain on ABB servers.
+			time.Sleep(5 * time.Minute)
 			return // Error is handled in the method itself.
 		}
 
