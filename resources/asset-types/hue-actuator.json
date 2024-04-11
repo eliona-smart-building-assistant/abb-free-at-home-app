@@ -58,6 +58,9 @@
 			"name": "hsv_hue",
 			"subtype": "output",
 			"type": "inputs-and-switches",
+			"unit": "%",
+			"min": 0,
+			"max": 100,
 			"translation": {
 				"de": "HSV - Farbwert",
 				"en": "HSV - Hue"
@@ -68,6 +71,9 @@
 			"name": "hsv_saturation",
 			"subtype": "output",
 			"type": "inputs-and-switches",
+			"unit": "%",
+			"min": 0,
+			"max": 100,
 			"translation": {
 				"de": "HSV - Farbsättigung",
 				"en": "HSV - Saturation"
@@ -78,6 +84,9 @@
 			"name": "hsv_value",
 			"subtype": "output",
 			"type": "inputs-and-switches",
+			"unit": "%",
+			"min": 0,
+			"max": 100,
 			"translation": {
 				"de": "HSV - Hellwert",
 				"en": "HSV - Value"
