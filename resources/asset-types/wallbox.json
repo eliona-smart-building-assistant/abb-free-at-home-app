@@ -1,0 +1,118 @@
+{
+	"attributes": [
+		{
+			"enable": true,
+			"name": "hsv_state",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Aktuelle Farbe (HSV)",
+				"en": "Current Color (HSV)"
+			}
+		},
+		{
+			"enable": true,
+			"name": "color_mode_state",
+			"subtype": "input",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Farbmodus",
+				"en": "Color mode"
+			}
+		},
+		{
+			"enable": true,
+			"name": "switch",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"translation": {
+				"de": "Schalter",
+				"en": "Switch"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
+		},
+		{
+			"enable": true,
+			"name": "dimmer",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"unit": "%",
+			"min": 0,
+			"max": 100,
+			"translation": {
+				"de": "Dimmer",
+				"en": "Dimmer"
+			}
+		},
+		{
+			"enable": true,
+			"name": "hsv_hue",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"unit": "%",
+			"min": 0,
+			"max": 100,
+			"translation": {
+				"de": "HSV - Farbwert",
+				"en": "HSV - Hue"
+			}
+		},
+		{
+			"enable": true,
+			"name": "hsv_saturation",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"unit": "%",
+			"min": 0,
+			"max": 100,
+			"translation": {
+				"de": "HSV - Farbsättigung",
+				"en": "HSV - Saturation"
+			}
+		},
+		{
+			"enable": true,
+			"name": "hsv_value",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"unit": "%",
+			"min": 0,
+			"max": 100,
+			"translation": {
+				"de": "HSV - Hellwert",
+				"en": "HSV - Value"
+			}
+		},
+		{
+			"enable": true,
+			"name": "color_temperature",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"unit": "%",
+			"min": 0,
+			"max": 100,
+			"translation": {
+				"de": "Farbtemperatur",
+				"en": "Color temperature"
+			}
+		}
+	],
+	"custom": false,
+	"icon": null,
+	"name": "abb_free_at_home_wallbox",
+	"translation": {
+		"de": "ABB-free@home Wallbox",
+		"en": "ABB-free@home Wallbox"
+	},
+	"urldoc": "https://apim.eu.mybuildings.abb.com/adtg-api/v1/graphiql/?doc#definition-Channel",
+	"vendor": "ABB"
+}

@@ -752,6 +752,97 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						AssetBase: assetBase,
 						Switch:    switchState,
 					}
+				case model.FID_WALLBOX, model.FID_PANEL_WALLBOX:
+					// ABB->Eli
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, output := range channel.Outputs {
+						switch output.PairingId {
+						case model.PID_ON_OFF_INFO_GET:
+							outputs[function_switch] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "switch",
+									},
+								},
+							}
+						case model.PID_ACTUAL_DIM_VALUE_0_100_GET:
+							outputs[function_dimmer] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "dimmer",
+									},
+								},
+							}
+						case model.PID_HSV_COLOR_GET:
+							outputs[function_hsv] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "hsv_state",
+									},
+								},
+							}
+						case model.PID_COLOR_MODE_GET:
+							outputs[function_color_mode] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_INPUT,
+										AttributeName: "color_mode_state",
+									},
+								},
+							}
+						case model.PID_COLOR_TEMPERATURE_GET:
+							outputs[function_color_temperature] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "color_temperature",
+									},
+								},
+							}
+						}
+					}
+					assetBase.OutputsBase = outputs
+					//Eli->ABB
+					inputs := make(map[string]string)
+					for datapoint, input := range channel.Inputs {
+						switch input.PairingId {
+						case model.PID_SWITCH_ON_OFF_SET:
+							inputs[function_switch] = datapoint
+						case model.PID_ABSOLUTE_VALUE_0_100_SET:
+							inputs[function_dimmer] = datapoint
+						case model.PID_HSV_HUE_SET:
+							inputs[function_hsv_hue] = datapoint
+						case model.PID_HSV_SATURATION_SET:
+							inputs[function_hsv_saturation] = datapoint
+						case model.PID_HSV_VALUE_SET:
+							inputs[function_hsv_value] = datapoint
+						case model.PID_COLOR_TEMPERATURE_SET:
+							inputs[function_color_temperature] = datapoint
+						}
+					}
+					assetBase.InputsBase = inputs
+
+					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_ON_OFF_INFO_GET))
+					dimmerState := parseInt8(channel.FindOutputValueByPairingID(model.PID_ACTUAL_DIM_VALUE_0_100_GET))
+					hsvState := channel.FindOutputValueByPairingID(model.PID_HSV_COLOR_GET)
+					colorMode := channel.FindOutputValueByPairingID(model.PID_COLOR_MODE_GET)
+					colorTemperature := parseInt8(channel.FindOutputValueByPairingID(model.PID_COLOR_TEMPERATURE_GET))
+					c = model.HueActuator{
+						AssetBase:        assetBase,
+						Switch:           switchState,
+						Dimmer:           dimmerState,
+						HSVState:         hsvState,
+						ColorModeState:   colorMode,
+						ColorTemperature: colorTemperature,
+					}
 				default:
 					continue // Don't create any asset if user cannot work with it.
 					// c = model.Channel{

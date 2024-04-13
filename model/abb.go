@@ -40,6 +40,8 @@ const (
 	FID_WINDOW_DOOR_POSITION_SENSOR                    = 0x0064
 	FID_HUE_ACTUATOR                                   = 0x002E
 	FID_WELCOME_IP_MUTE_ACTUATOR                       = 0x005D
+	FID_WALLBOX                                        = 0x00A6
+	FID_PANEL_WALLBOX                                  = 0x00A7
 	FID_SCENE                                          = 0x4800
 	FID_SPECIAL_SCENE_PANIC                            = 0x4801
 	FID_SPECIAL_SCENE_ALL_OFF                          = 0x4802
@@ -85,6 +87,8 @@ func GetFunctionIDsList() []string {
 		FID_WINDOW_DOOR_POSITION_SENSOR,
 		FID_HUE_ACTUATOR,
 		FID_WELCOME_IP_MUTE_ACTUATOR,
+		FID_WALLBOX,
+		FID_PANEL_WALLBOX,
 		FID_SCENE,
 		FID_SPECIAL_SCENE_PANIC,
 		FID_SPECIAL_SCENE_ALL_OFF,

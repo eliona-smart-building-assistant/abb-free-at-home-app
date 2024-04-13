@@ -297,6 +297,26 @@ func (c Scene) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
 }
 
+type Wallbox struct {
+	AssetBase
+	HSVState         string `eliona:"hsv_state" subtype:"input"`
+	ColorModeState   string `eliona:"color_mode_state" subtype:"input"`
+	Switch           int8   `eliona:"switch" subtype:"output"`
+	Dimmer           int8   `eliona:"dimmer" subtype:"output"`
+	HSVHue           int16  `eliona:"hsv_hue" subtype:"output"`
+	HSVSaturation    int8   `eliona:"hsv_saturation" subtype:"output"`
+	HSVValue         int8   `eliona:"hsv_value" subtype:"output"`
+	ColorTemperature int8   `eliona:"color_temperature" subtype:"output"`
+}
+
+func (c Wallbox) AssetType() string {
+	return "abb_free_at_home_wallbox"
+}
+
+func (c Wallbox) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
 //
 
 func (sys *System) AdheresToFilter(filter [][]apiserver.FilterRule) (bool, error) {
