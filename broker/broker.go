@@ -752,6 +752,38 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 						AssetBase: assetBase,
 						Switch:    switchState,
 					}
+				case model.FID_WALLBOX, model.FID_PANEL_WALLBOX:
+					outputs := make(map[string]model.Datapoint)
+					for datapoint, output := range channel.Outputs {
+						switch output.PairingId {
+						case model.PID_AL_INFO_CHARGING_ENABLED:
+							outputs[function_switch] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "switch",
+									},
+								},
+							}
+						}
+					}
+
+					assetBase.OutputsBase = outputs
+					inputs := make(map[string]string)
+					for datapoint, input := range channel.Inputs {
+						switch input.PairingId {
+						case model.PID_AL_STOP_ENABLE_CHARGING_REQUEST:
+							inputs[function_switch] = datapoint
+						}
+					}
+					assetBase.InputsBase = inputs
+
+					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_AL_INFO_CHARGING_ENABLED))
+					c = model.Wallbox{
+						AssetBase: assetBase,
+						Switch:    switchState,
+					}
 				default:
 					continue // Don't create any asset if user cannot work with it.
 					// c = model.Channel{
