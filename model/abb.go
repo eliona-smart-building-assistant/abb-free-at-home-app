@@ -21,7 +21,6 @@ const (
 	FID_DimmerGroup                                    = 0x4001
 	FID_TimerProgramSwitchActuator                     = 0x4A00
 	FID_Scence                                         = 0x4a01
-	FID_DES_LEVEL_CALL_SENSOR                          = 0x001e
 	FID_DES_LEVEL_CALL_ACTUATOR                        = 0x001D
 	FID_DES_AUTOMATIC_DOOR_OPENER_ACTUATOR             = 0x0020
 	FID_DES_DOOR_OPENER_ACTUATOR                       = 0x001A
@@ -66,7 +65,6 @@ func GetFunctionIDsList() []string {
 		FID_DimmerGroup,
 		FID_TimerProgramSwitchActuator,
 		FID_Scence,
-		FID_DES_LEVEL_CALL_SENSOR,
 		FID_DES_LEVEL_CALL_ACTUATOR,
 		FID_DES_AUTOMATIC_DOOR_OPENER_ACTUATOR,
 		FID_DES_DOOR_OPENER_ACTUATOR,
