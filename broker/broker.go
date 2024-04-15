@@ -634,7 +634,7 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 								Name: datapoint,
 								Map: model.DatapointMap{
 									{
-										Subtype:       elionaapi.SUBTYPE_INPUT,
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
 										AttributeName: "floor_call",
 									},
 								},
