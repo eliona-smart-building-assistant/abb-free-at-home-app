@@ -297,6 +297,19 @@ func (c Scene) GAI() string {
 	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
 }
 
+type Wallbox struct {
+	AssetBase
+	Switch int8 `eliona:"switch" subtype:"output"`
+}
+
+func (c Wallbox) AssetType() string {
+	return "abb_free_at_home_wallbox"
+}
+
+func (c Wallbox) GAI() string {
+	return fmt.Sprintf("%s_%s", c.AssetType(), c.GAIBase)
+}
+
 //
 
 func (sys *System) AdheresToFilter(filter [][]apiserver.FilterRule) (bool, error) {
