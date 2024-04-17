@@ -350,4 +350,8 @@ func initialize() {
 	app.Patch(conn, app.AppName(), "010103",
 		asset.InitAssetTypeFiles("resources/asset-types/*.json"),
 	)
+
+	app.Patch(conn, app.AppName(), "010106",
+		asset.InitAssetTypeFiles("resources/asset-types/*.json"),
+	)
 }
