@@ -41,6 +41,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 		return api.Dashboard{}, fmt.Errorf("found %v root assets in project %v, expected 1", len(rootAssets), projectId)
 	}
 	rootAsset := rootAssets[0]
+	widgetSequence := int32(0)
 
 	switches, _, err := client.NewClient().AssetsAPI.
 		GetAssets(client.AuthenticationContext()).
@@ -50,7 +51,6 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 	if err != nil {
 		return api.Dashboard{}, fmt.Errorf("fetching switches: %v", err)
 	}
-	widgetSequence := int32(0)
 	var switchesData []api.WidgetData
 	for i, sw := range switches {
 		switchesData = append(switchesData, api.WidgetData{
@@ -855,6 +855,52 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 		Sequence:       nullableInt32(widgetSequence),
 		Data:           systemsData,
 		Details:        systemsDetails,
+	}
+	widgetSequence++
+	dashboard.Widgets = append(dashboard.Widgets, widget)
+
+	scenes, _, err := client.NewClient().AssetsAPI.
+		GetAssets(client.AuthenticationContext()).
+		AssetTypeName("abb_free_at_home_scene").
+		ProjectId(projectId).
+		Execute()
+	if err != nil {
+		return api.Dashboard{}, fmt.Errorf("fetching scenes: %v", err)
+	}
+	var scenesData []api.WidgetData
+	for i, sw := range scenes {
+		scenesData = append(scenesData, api.WidgetData{
+			ElementSequence: nullableInt32(1),
+			AssetId:         sw.Id,
+			Data: map[string]interface{}{
+				"attribute":   "set_scene",
+				"description": sw.Name,
+				"key":         "_CURRENT",
+				"seq":         i,
+				"subtype":     "output",
+			},
+		})
+		scenesData = append(scenesData, api.WidgetData{
+			ElementSequence: nullableInt32(1),
+			AssetId:         sw.Id,
+			Data: map[string]interface{}{
+				"attribute":   "set_scene",
+				"description": sw.Name,
+				"key":         "_SETPOINT",
+				"seq":         i,
+				"subtype":     "output",
+			},
+		})
+	}
+	widget = api.Widget{
+		WidgetTypeName: "ABB Scene list",
+		AssetId:        rootAsset.Id,
+		Sequence:       nullableInt32(widgetSequence),
+		Details: map[string]any{
+			"size":     1,
+			"timespan": 7,
+		},
+		Data: scenesData,
 	}
 	widgetSequence++
 	dashboard.Widgets = append(dashboard.Widgets, widget)

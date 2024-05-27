@@ -354,4 +354,7 @@ func initialize() {
 	app.Patch(conn, app.AppName(), "010108",
 		asset.InitAssetTypeFiles("resources/asset-types/*.json"),
 	)
+	app.Patch(conn, app.AppName(), "010109",
+		dashboard.InitWidgetTypeFiles("resources/widget-types/*.json"),
+	)
 }
