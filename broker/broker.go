@@ -35,6 +35,7 @@ import (
 const (
 	function_switch                = "switch"
 	function_status                = "status" // For simple abb outputs
+	function_enable                = "enable"
 	function_dimmer                = "dimmer"
 	function_measured_temperature  = "measured_temperature"
 	function_set_temperature       = "set_temperature"
@@ -54,6 +55,9 @@ const (
 	function_set_scene             = "set_scene"
 	function_mute_button           = "mute_button"
 	function_floor_call            = "floor_call"
+	function_installed_power       = "installed_power"
+	function_total_energy          = "total_energy"
+	function_start_last_charging   = "start_last_charging"
 )
 
 const SET_TEMP_TWICE = function_set_temperature
@@ -63,6 +67,7 @@ var Functions = []string{
 	function_status,
 	// Note: Depends on order.
 	function_switch,
+	function_enable,
 	function_dimmer,
 	function_measured_temperature,
 	function_set_temperature,
@@ -82,6 +87,9 @@ var Functions = []string{
 	function_set_scene,
 	function_mute_button,
 	function_floor_call,
+	function_installed_power,
+	function_total_energy,
+	function_start_last_charging,
 }
 
 func getAPI(config *apiserver.Configuration) (*abb.Api, error) {
@@ -756,13 +764,63 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					outputs := make(map[string]model.Datapoint)
 					for datapoint, output := range channel.Outputs {
 						switch output.PairingId {
-						case model.PID_AL_INFO_CHARGING_ENABLED:
+						case model.PID_AL_INFO_CHARGING:
 							outputs[function_switch] = model.Datapoint{
 								Name: datapoint,
 								Map: model.DatapointMap{
 									{
 										Subtype:       elionaapi.SUBTYPE_OUTPUT,
 										AttributeName: "switch",
+									},
+								},
+							}
+						case model.PID_AL_INFO_CHARGING_ENABLED:
+							outputs[function_enable] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "enable",
+									},
+								},
+							}
+						case model.PID_AL_INFO_INSTALLED_POWER:
+							outputs[function_installed_power] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "installed_power",
+									},
+								},
+							}
+						case model.PID_AL_INFO_ENERGY_TRANSMITTED:
+							outputs[function_total_energy] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "total_energy",
+									},
+								},
+							}
+						case model.PID_AL_INFO_START_OF_CHARGING_SESSION:
+							outputs[function_start_last_charging] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "start_last_charging",
+									},
+								},
+							}
+						case model.PID_AL_INFO_WALLBOX_STATUS:
+							outputs[function_status] = model.Datapoint{
+								Name: datapoint,
+								Map: model.DatapointMap{
+									{
+										Subtype:       elionaapi.SUBTYPE_OUTPUT,
+										AttributeName: "status",
 									},
 								},
 							}
@@ -773,16 +831,39 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					inputs := make(map[string]string)
 					for datapoint, input := range channel.Inputs {
 						switch input.PairingId {
-						case model.PID_AL_STOP_ENABLE_CHARGING_REQUEST:
+						case model.PID_AL_SWITCH_CHARGING:
 							inputs[function_switch] = datapoint
+						case model.PID_AL_STOP_ENABLE_CHARGING_REQUEST:
+							inputs[function_enable] = datapoint
 						}
 					}
 					assetBase.InputsBase = inputs
 
-					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_AL_INFO_CHARGING_ENABLED))
+					// 					04B4 - odp0000:
+					// 	8388609 - connected, not charging
+					// 	1610874881 - charging
+					// 	1612709889 - not charging, was stopped by disabling charging
+
+					// odp0001 - charging or not
+					// odp0002 - charging allowed or not
+					// odp0003 - 04B7 - installed power [kW] (weird value)
+					// odp0004 - 04B8 - total energy [Wh]
+					// odp0005 - 04BA - start of charging session [datetime]
+
+					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_AL_INFO_CHARGING))
+					enableState := parseInt8(channel.FindOutputValueByPairingID(model.PID_AL_INFO_CHARGING_ENABLED))
+					installedPower := parseFloat64(channel.FindOutputValueByPairingID(model.PID_AL_INFO_INSTALLED_POWER))
+					totalEnergy := parseFloat64(channel.FindOutputValueByPairingID(model.PID_AL_INFO_ENERGY_TRANSMITTED))
+					startLastCharging := channel.FindOutputValueByPairingID(model.PID_AL_INFO_START_OF_CHARGING_SESSION)
+					status := channel.FindOutputValueByPairingID(model.PID_AL_INFO_WALLBOX_STATUS)
 					c = model.Wallbox{
-						AssetBase: assetBase,
-						Switch:    switchState,
+						AssetBase:         assetBase,
+						Switch:            switchState,
+						Enable:            enableState,
+						InstalledPower:    installedPower,
+						TotalEnergy:       totalEnergy,
+						StartLastCharging: startLastCharging,
+						Status:            status,
 					}
 				default:
 					continue // Don't create any asset if user cannot work with it.
@@ -819,6 +900,17 @@ func parseFloat32(str string) float32 {
 		log.Error("broker", "parsing value '%s': %v", str, err)
 	}
 	return float32(f)
+}
+
+func parseFloat64(str string) float64 {
+	if str == "" {
+		return float64(0)
+	}
+	f, err := strconv.ParseFloat(str, 64)
+	if err != nil {
+		log.Error("broker", "parsing value '%s': %v", str, err)
+	}
+	return f
 }
 
 func ListenForDataChanges(config *apiserver.Configuration, datapoints []appdb.Datapoint, ch chan<- abbgraphql.DataPoint) error {

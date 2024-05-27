@@ -6,6 +6,26 @@
 			"subtype": "output",
 			"type": "inputs-and-switches",
 			"translation": {
+				"de": "Laden",
+				"en": "Charging"
+			},
+			"map": [
+				{
+					"value": 0,
+					"text": "OFF"
+				},
+				{
+					"value": 1,
+					"text": "ON"
+				}
+			]
+		},
+		{
+			"enable": true,
+			"name": "enable",
+			"subtype": "output",
+			"type": "inputs-and-switches",
+			"translation": {
 				"de": "Ladefunktion aktiviert",
 				"en": "Charging enabled"
 			},
@@ -22,67 +42,44 @@
 		},
 		{
 			"enable": true,
-			"name": "dimmer",
-			"subtype": "output",
+			"name": "installed_power",
+			"subtype": "info",
 			"type": "inputs-and-switches",
-			"unit": "%",
-			"min": 0,
-			"max": 100,
+			"unit": "kW",
 			"translation": {
-				"de": "Dimmer",
-				"en": "Dimmer"
+				"de": "Installierte Leistung",
+				"en": "Installed power"
 			}
 		},
 		{
 			"enable": true,
-			"name": "hsv_hue",
-			"subtype": "output",
+			"name": "total_energy",
+			"subtype": "input",
 			"type": "inputs-and-switches",
-			"unit": "%",
-			"min": 0,
-			"max": 100,
+			"unit": "Wh",
 			"translation": {
-				"de": "HSV - Farbwert",
-				"en": "HSV - Hue"
+				"de": "Gesamtenergie",
+				"en": "Total energy"
 			}
 		},
 		{
 			"enable": true,
-			"name": "hsv_saturation",
-			"subtype": "output",
+			"name": "start_last_charging",
+			"subtype": "input",
 			"type": "inputs-and-switches",
-			"unit": "%",
-			"min": 0,
-			"max": 100,
 			"translation": {
-				"de": "HSV - Farbsättigung",
-				"en": "HSV - Saturation"
+				"de": "Beginn des letzten Ladevorgangs",
+				"en": "Start of last charging session"
 			}
 		},
 		{
 			"enable": true,
-			"name": "hsv_value",
-			"subtype": "output",
+			"name": "status",
+			"subtype": "input",
 			"type": "inputs-and-switches",
-			"unit": "%",
-			"min": 0,
-			"max": 100,
 			"translation": {
-				"de": "HSV - Hellwert",
-				"en": "HSV - Value"
-			}
-		},
-		{
-			"enable": true,
-			"name": "color_temperature",
-			"subtype": "output",
-			"type": "inputs-and-switches",
-			"unit": "%",
-			"min": 0,
-			"max": 100,
-			"translation": {
-				"de": "Farbtemperatur",
-				"en": "Color temperature"
+				"de": "Zustand",
+				"en": "Status"
 			}
 		}
 	],

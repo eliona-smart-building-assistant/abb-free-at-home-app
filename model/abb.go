@@ -162,6 +162,12 @@ const (
 	PID_COLOR_TEMPERATURE_GET                      = 0x0118
 	PID_COLOR_TEMPERATURE_SET                      = 0x0016
 	PID_FIRE_ALARM_ACTIVE                          = 0x02C3
+	PID_AL_SWITCH_CHARGING                         = 0x04B1
 	PID_AL_STOP_ENABLE_CHARGING_REQUEST            = 0x04B2
+	PID_AL_INFO_WALLBOX_STATUS                     = 0x04B4
+	PID_AL_INFO_CHARGING                           = 0x04B5
 	PID_AL_INFO_CHARGING_ENABLED                   = 0x04B6
+	PID_AL_INFO_INSTALLED_POWER                    = 0x04B7
+	PID_AL_INFO_ENERGY_TRANSMITTED                 = 0x04B8
+	PID_AL_INFO_START_OF_CHARGING_SESSION          = 0x04BA
 )

@@ -299,7 +299,12 @@ func (c Scene) GAI() string {
 
 type Wallbox struct {
 	AssetBase
-	Switch int8 `eliona:"switch" subtype:"output"`
+	Switch            int8    `eliona:"switch" subtype:"output"`
+	Enable            int8    `eliona:"enable" subtype:"output"`
+	InstalledPower    float64 `eliona:"installed_power" subtype:"status"`
+	TotalEnergy       float64 `eliona:"total_energy" subtype:"input"`
+	StartLastCharging string  `eliona:"start_last_charging" subtype:"input"`
+	Status            string  `eliona:"status" subtype:"input"`
 }
 
 func (c Wallbox) AssetType() string {

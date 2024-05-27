@@ -1,0 +1,30 @@
+{
+	"name": "ABB Scene list",
+	"custom": true,
+	"translation": {
+		"de": "ABB Szenenliste",
+		"en": "ABB Scene list"
+	},
+	"icon": "widgetSlider",
+	"withAlarm": true,
+	"withTimespan": true,
+	"elements": [
+		{
+			"category": "input",
+			"sequence": 1,
+			"config": {
+				"description": "",
+				"resetTime": 2,
+				"type": "switch"
+			}
+		},
+		{
+			"category": "value",
+			"sequence": 2,
+			"config": {
+				"description": "",
+				"variant": "tiles"
+			}
+		}
+	]
+}

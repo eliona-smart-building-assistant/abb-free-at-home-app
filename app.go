@@ -175,12 +175,12 @@ func subscribeToDataChanges(config *apiserver.Configuration) {
 	for dp := range dataPointChan {
 		datapoint, err := conf.FindOutputDatapoint(dp.SerialNumber, dp.ChannelNumber, dp.DatapointId)
 		if err != nil {
-			log.Error("conf", "finding datapoint %+v: %v", dp, err)
-			return
+			log.Error("conf", "finding output datapoint %+v: %v", dp, err)
+			continue
 		}
 		if err := eliona.UpsertDatapointData(*config, datapoint, dp.Value); err != nil {
 			log.Error("eliona", "upserting datapoint data %+v: %v", dp, err)
-			return
+			continue
 		}
 	}
 }
@@ -349,5 +349,12 @@ func initialize() {
 	// Patch the app to v1.1.3. Note that database migration must be done manually.
 	app.Patch(conn, app.AppName(), "010103",
 		asset.InitAssetTypeFiles("resources/asset-types/*.json"),
+	)
+
+	app.Patch(conn, app.AppName(), "010108",
+		asset.InitAssetTypeFiles("resources/asset-types/*.json"),
+	)
+	app.Patch(conn, app.AppName(), "010109",
+		dashboard.InitWidgetTypeFiles("resources/widget-types/*.json"),
 	)
 }
