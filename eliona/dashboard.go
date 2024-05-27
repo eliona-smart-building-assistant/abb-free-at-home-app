@@ -863,5 +863,5 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 }
 
 func nullableInt32(val int32) api.NullableInt32 {
-	return *api.NewNullableInt32(common.Ptr[int32](val))
+	return *api.NewNullableInt32(common.Ptr(val))
 }
