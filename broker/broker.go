@@ -839,6 +839,17 @@ func GetSystems(config *apiserver.Configuration) ([]model.System, error) {
 					}
 					assetBase.InputsBase = inputs
 
+					// 					04B4 - odp0000:
+					// 	8388609 - connected, not charging
+					// 	1610874881 - charging
+					// 	1612709889 - not charging, was stopped by disabling charging
+
+					// odp0001 - charging or not
+					// odp0002 - charging allowed or not
+					// odp0003 - 04B7 - installed power [kW] (weird value)
+					// odp0004 - 04B8 - total energy [Wh]
+					// odp0005 - 04BA - start of charging session [datetime]
+
 					switchState := parseInt8(channel.FindOutputValueByPairingID(model.PID_AL_INFO_CHARGING))
 					enableState := parseInt8(channel.FindOutputValueByPairingID(model.PID_AL_INFO_CHARGING_ENABLED))
 					installedPower := parseFloat64(channel.FindOutputValueByPairingID(model.PID_AL_INFO_INSTALLED_POWER))
