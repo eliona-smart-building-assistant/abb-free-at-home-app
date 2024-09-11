@@ -12,11 +12,11 @@
 			"map": [
 				{
 					"value": 0,
-					"text": "Closed"
+					"map": "Closed"
 				},
 				{
 					"value": 1,
-					"text": "Open"
+					"map": "Open"
 				}
 			]
 		}

@@ -12,15 +12,15 @@
 			"map": [
 				{
 					"value": 0,
-					"text": "Closed"
+					"map": "Closed"
 				},
 				{
 					"value": 33,
-					"text": "Tilted"
+					"map": "Tilted"
 				},
 				{
 					"value": 100,
-					"text": "Open"
+					"map": "Open"
 				}
 			]
 		}
