@@ -12,11 +12,11 @@
 			"map": [
 				{
 					"value": 0,
-					"text": "Disconnected"
+					"map": "Disconnected"
 				},
 				{
 					"value": 1,
-					"text": "Connected"
+					"map": "Connected"
 				}
 			]
 		}

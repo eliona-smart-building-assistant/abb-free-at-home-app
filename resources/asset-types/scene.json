@@ -12,11 +12,11 @@
 			"map": [
 				{
 					"value": 0,
-					"text": "No operation"
+					"map": "No operation"
 				},
 				{
 					"value": 1,
-					"text": "Trigger"
+					"map": "Trigger"
 				}
 			]
 		}
