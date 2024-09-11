@@ -23,11 +23,11 @@
 			"map": [
 				{
 					"value": 0,
-					"text": "OFF"
+					"map": "OFF"
 				},
 				{
 					"value": 1,
-					"text": "ON"
+					"map": "ON"
 				}
 			]
 		},
