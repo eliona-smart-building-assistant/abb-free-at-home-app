@@ -357,4 +357,8 @@ func initialize() {
 	app.Patch(conn, app.AppName(), "010109",
 		dashboard.InitWidgetTypeFiles("resources/widget-types/*.json"),
 	)
+	// Update asset types definition - value mapping
+	app.Patch(conn, app.AppName(), "010112",
+		asset.InitAssetTypeFiles("resources/asset-types/*.json"),
+	)
 }
